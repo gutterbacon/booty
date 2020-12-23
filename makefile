@@ -1,5 +1,5 @@
 
-.DEFAULT_GOAL=all
+
 include *.mk
 
 all: print example-build
