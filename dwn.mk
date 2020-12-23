@@ -23,6 +23,9 @@ dwn-print:
 	@echo
 	@echo -- DWN Downloader --
 	@echo
+	@echo uname_s: $(uname_s)
+	@echo uname_m: $(uname_m)
+	@echo
 	@echo DWN_URL: $(DWN_URL)
 	@echo DWN_FILENAME: $(DWN_FILENAME)
 	@echo DWN_BIN_NAME: $(DWN_BIN_NAME)
