@@ -1,4 +1,4 @@
-include gitr.mk
+include *.mk
 
 print:
 	$(MAKE) gitr-print
