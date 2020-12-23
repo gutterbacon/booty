@@ -2,7 +2,7 @@
 BOOTY_FSPATH=./../
 include $(BOOTY_FSPATH)/*.mk
 
-all: print dep build
+all: print dep build release
 
 print:
 	@echo -- OS --
@@ -14,11 +14,19 @@ dep:
 	# TODO: should call dep and do nothing because parent make already did all deps.
 
 build:
-	cd ./main/cmd/cli && go build .
-	cd ./main/cmd/server && go build .
+	cd ./go/cmd/cli && go build .
+	cd ./go/cmd/server && go build .
+
 server-run:
-	cd ./main/cmd/server && ./server
+	cd ./go/cmd/server && ./server
 cli-run:
-	cd ./main/cmd/cli && ./cli
+	cd ./go/cmd/cli && ./cli
+
+release:
+	#git tag -a $(VERSION) -m "Release" || true
+	#git push origin $(VERSION)
+	#goreleaser --rm-dist
+	goreleaser --rm-dist --skip-publish --snapshot
+
 
 
