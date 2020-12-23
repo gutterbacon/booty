@@ -27,6 +27,7 @@ GITR_COMMIT_MESSAGE ?= autocommit
 #GITR_BRANCH_NAME=main # Later for gitea
 GITR_BRANCH_NAME=master
 
+.PHONY: gitr-*
 
 ## Prints the git setting
 gitr-print:
