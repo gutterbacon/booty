@@ -2,7 +2,7 @@
 
 include *.mk
 
-all: print example-build example-release
+all: print dep example-build example-release
 
 print:
 	$(MAKE) gitr-print
@@ -10,7 +10,7 @@ print:
 	$(MAKE) os-print
 
 dep:
-	@echo fake dep ...
+	$(MAKE) gor-dep
 
 example-build:
 	cd ./example && $(MAKE) all
