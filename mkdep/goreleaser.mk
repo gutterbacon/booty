@@ -10,8 +10,6 @@ GOR_BIN=goreleaser
 # https://github.com/goreleaser/goreleaser/releases/download/v0.149.0/goreleaser_Darwin_x86_64.tar.gz
 # https://github.com/goreleaser/goreleaser/releases/download/v0.149.0/goreleaser_Linux_arm64.tar.gz
 GOR_BIN_VERSION=0.149.0
-# switch for OS (https://stackoverflow.com/questions/714100/os-detecting-makefile)
-GOR_BIN_PLATFORM:=??
 ifeq ($(GOOS),darwin)
     GOR_BIN_PLATFORM:=Darwin_x86_64.tar.gz
 endif
@@ -21,7 +19,6 @@ endif
 ifeq ($(GOOS),linux)
     GOR_BIN_PLATFORM:=Linux_x86_64.tar.gz
 endif
-
 GOR_BIN_FILE=goreleaser_$(GOR_BIN_PLATFORM)
 GOR_BIN_URL=https://github.com/goreleaser/goreleaser/releases/download/v$(GOR_BIN_VERSION)/$(GOR_BIN_FILE)
 

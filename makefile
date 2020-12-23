@@ -10,17 +10,24 @@ all: print dep example-build example-release
 
 #all: print dep
 
+## print all
 print:
 	$(MAKE) os-print
 	$(MAKE) gitr-print
 
+## dep all
 dep:
-	$(MAKE) dwn-print
-	$(MAKE) gor-dep
+	$(MAKE) dep-all
 
-example-build:
+## example all
+example-all:
 	cd ./example && $(MAKE) all
 
+## example build
+example-build: 
+	cd ./example && $(MAKE) build
+
+## example release
 example-release:
 	cd ./example && $(MAKE) release
 
