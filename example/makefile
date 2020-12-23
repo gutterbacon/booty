@@ -1,5 +1,5 @@
 # boot repo makefiles
-BOOTY_FSPATH=./../
+BOOTY_FSPATH=./..
 include $(BOOTY_FSPATH)/*.mk
 
 all: print dep build release
@@ -12,6 +12,7 @@ print:
 dep:
 	@echo dep
 	# TODO: should call dep and do nothing because parent make already did all deps.
+	# - can just check if download exists.
 
 build:
 	cd ./go/cmd/cli && go build .

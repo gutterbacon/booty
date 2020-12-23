@@ -1,5 +1,4 @@
-
-# git general stuff
+# git
 
 # hardcoded
 GITR_SERVER ?= github.com
@@ -23,11 +22,8 @@ GITR_VERSION ?= $(shell echo $(TAGGED_VERSION) | cut -c 2-)
 
 GITR_COMMIT_MESSAGE ?= autocommit
 
-
 #GITR_BRANCH_NAME=main # Later for gitea
 GITR_BRANCH_NAME=master
-
-.PHONY: gitr-*
 
 ## Prints the git setting
 gitr-print:
@@ -57,21 +53,23 @@ gitr-print:
 
 ### GIT-FORK
 
-#See: https://help.github.com/en/github/collaborating-with-issues-and-pull-requests/syncing-a-fork
-
+## gitr-fork-all
 gitr-fork-all: gitr-status gitr-fork-catchup gitr-status gitr-fork-commit gitr-fork-push gitr-fork-open
+	#See: https://help.github.com/en/github/collaborating-with-issues-and-pull-requests/syncing-a-fork
 
+## gitr-status
 gitr-status:
 	# Test
 	git status
 
-
 ### FORK
 
 ## Prints the exact Git Clone command you need :)
-# You can call this from your Org folder:
-# make -f shared/boilerplate/gitr.mk gitr-fork-clone-template
 gitr-fork-clone-template:
+
+	# You can call this from your Org folder:
+	# make -f shared/boilerplate/gitr.mk gitr-fork-clone-template
+
 	@echo
 	@echo
 	@echo Template is:
@@ -103,27 +101,6 @@ gitr-fork-setup:
 	# WORKS
 	git remote add upstream git@$(GITR_SERVER)-$(GITR_USER):$(GITR_ORG_UPSTREAM)/$(GITR_REPO_NAME)
 	@echo
-
-GITR_SHARED_URL=https://github.com/getcouragenow/sys
-gitr-fork-submod-setup:
-	# THis is to get shared into a repo as a sumodule. SO that its easy to do CI
-	# DONT do this in SHared !! Will be crazy recursive
-	git submodule add -b master $(GITR_SHARED_URL)
-	git submodule init
-gitr-fork-submod-update:
-	git submodule update --remote
-gitr-fork-submod-delete:
-	# Steps: https://git.wiki.kernel.org/index.php/GitSubmoduleTutorial#Removal
-	# Delete the relevant line from the .gitmodules file.
-	# Delete the relevant section from .git/config.
-	# Run git rm --cached path_to_submodule (no trailing slash).
-	# Commit the superproject.
-	# Delete the now untracked submodule files.
-
-	git submodule deinit -f — mymodule
-	rm -rf .git/modules/mymodule
-	git rm -f mymodule
-
 
 ## Sync upstream with your fork. Use this to make a PR.
 gitr-fork-catchup:
