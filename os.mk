@@ -1,30 +1,42 @@
 # os tools
 
-export GO_OS 		:= $(shell go env GOOS)
-export GO_ARCH		?= $(shell go env GOARCH)
+#export GO_OS 		:= $(shell go env GOOS)
+#export GO_ARCH		?= $(shell go env GOARCH)
 
-export OS_detected	:=
-
-# other
-ifeq '$(findstring ;,$(PATH))' ';'
-    OS_detected := Windows
+# SOURCE: https://github.com/containerd/containerd/blob/master/Makefile#L28
+ifneq "$(strip $(shell command -v go 2>/dev/null))" ""
+	GOOS ?= $(shell go env GOOS)
+	GOARCH ?= $(shell go env GOARCH)
 else
-    OS_detected := $(shell uname 2>/dev/null || echo Unknown)
-    OS_detected := $(patsubst CYGWIN%,Cygwin,$(OS_detected))
-    OS_detected := $(patsubst MSYS%,MSYS,$(OS_detected))
-    OS_detected := $(patsubst MINGW%,MSYS,$(OS_detected))
+	ifeq ($(GOOS),)
+		# approximate GOOS for the platform if we don't have Go and GOOS isn't
+		# set. We leave GOARCH unset, so that may need to be fixed.
+		ifeq ($(OS),Windows_NT)
+			GOOS = windows
+		else
+			UNAME_S := $(shell uname -s)
+			ifeq ($(UNAME_S),Linux)
+				GOOS = linux
+			endif
+			ifeq ($(UNAME_S),Darwin)
+				GOOS = darwin
+			endif
+			ifeq ($(UNAME_S),FreeBSD)
+				GOOS = freebsd
+			endif
+		endif
+	else
+		GOOS ?= $$GOOS
+		GOARCH ?= $$GOARCH
+	endif
 endif
-
 
 ## Prints the OS settings
 os-print:
 	@echo
 	@echo -- OS --
-	@echo GO_OS: $(GO_OS)
-	@echo GO_ARCH: $(GO_ARCH)
-	@echo
-	@echo -- OS --
-	@echo OS_detected: $(GO_ARCH)
+	@echo GOOS: $(GOOS)
+	@echo GOARCH: $(GOARCH)
 	@echo
 
 

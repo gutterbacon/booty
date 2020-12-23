@@ -16,15 +16,14 @@ ifeq ($(DWN_FILENAME_EXT),)
 	DWN_FILENAME_EXT += NONE
 endif
 
-uname_s = $(shell uname -s)
-uname_m = $(shell uname -m)
+
 
 dwn-print:
 	@echo
 	@echo -- DWN Downloader --
 	@echo
-	@echo uname_s: $(uname_s)
-	@echo uname_m: $(uname_m)
+	@echo GOOS: $(GOOS)
+	@echo GOARCH: $(GOARCH)
 	@echo
 	@echo DWN_URL: $(DWN_URL)
 	@echo DWN_FILENAME: $(DWN_FILENAME)
@@ -44,9 +43,7 @@ dwn-download: dwn-delete
 	@echo DWN_FILENAME_BASE: $(DWN_FILENAME_BASE)
 	@echo DWN_FILENAME_EXT: $(DWN_FILENAME_EXT)
 
-#	 Curl from github release
-#	 switch for OS (https://stackoverflow.com/questions/714100/os-detecting-makefile)
-	if [[ $(uname_s) = Darwin || $(uname_s) = Linux ]]; then \
+	if [[ $(GOOS) = darwin || $(GOOS) = linux ]]; then \
 		mkdir -p $(DWN_BIN_OUTPUT_DIR) && \
 		curl -L -o $(DWN_BIN_OUTPUT_DIR)/$(DWN_FILENAME_CALC) $(DWN_URL) && \
 		if [[ $(DWN_FILENAME_EXT) = .gz || $(DWN_FILENAME_EXT) = .tar.gz ]]; then \
@@ -59,7 +56,28 @@ dwn-download: dwn-delete
 		chmod +x $(DWN_BIN_OUTPUT_DIR)/$(DWN_BIN_NAME); \
 	fi
 
+	if [[ $(GOOS) = windows ]]; then \
+		mkdir -p $(DWN_BIN_OUTPUT_DIR) && \
+		curl -L -o $(DWN_BIN_OUTPUT_DIR)/$(DWN_FILENAME_CALC) $(DWN_URL) && \
+		if [[ $(DWN_FILENAME_EXT) = .gz || $(DWN_FILENAME_EXT) = .tar.gz ]]; then \
+			tar -zvxf $(DWN_BIN_OUTPUT_DIR)/$(DWN_FILENAME_CALC) -C $(DWN_BIN_OUTPUT_DIR); \
+		elif [[ $(DWN_FILENAME_EXT) = .zip ]]; then \
+			unzip -d $(DWN_BIN_OUTPUT_DIR) $(DWN_BIN_OUTPUT_DIR)/$(DWN_FILENAME_CALC); \
+		else \
+			mv $(DWN_BIN_OUTPUT_DIR)/$(DWN_FILENAME_CALC) $(DWN_BIN_OUTPUT_DIR)/$(DWN_BIN_NAME); \
+		fi && \
+		chmod +x $(DWN_BIN_OUTPUT_DIR)/$(DWN_BIN_NAME); \
+	fi
+
+
 dwn-delete:
 	# deletes the tar and binary
-	rm -rf $(DWN_BIN_OUTPUT_DIR)/$(DWN_FILENAME)
-	rm -rf $(DWN_BIN_OUTPUT_DIR)/$(DWN_BIN_NAME)
+	if [[ $(GOOS) = darwin || $(GOOS) = linux ]]; then \
+		rm -rf $(DWN_BIN_OUTPUT_DIR)/$(DWN_FILENAME); \
+		rm -rf $(DWN_BIN_OUTPUT_DIR)/$(DWN_BIN_NAME); \
+	fi
+
+	if [[ $(GOOS) = windows ]]; then \
+		rm -rf $(DWN_BIN_OUTPUT_DIR)/$(DWN_FILENAME); \
+		rm -rf $(DWN_BIN_OUTPUT_DIR)/$(DWN_BIN_NAME); \
+	fi
