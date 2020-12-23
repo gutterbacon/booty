@@ -52,7 +52,7 @@ gor-dep-delete:
 	$(MAKE) DWN_URL=$(GOR_BIN_URL) \
 		DWN_FILENAME=$(GOR_BIN_FILE) \
 		DWN_BIN_NAME=$(GOR_BIN) \
-		DWN_BIN_OUTPUT_DIR=$(GOR_OUTPUT_DIR) dwn-delete
+		DWN_BIN_OUTPUT_DIR=$(GOR_OUTPUT_DIR) dwn-delete	
 
 	if [[ $(GOOS) = darwin || $(GOOS) = linux ]]; then \
 		sudo rm -rf $(PREFIX)/$(GOR_BIN); \

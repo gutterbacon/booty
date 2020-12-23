@@ -6,9 +6,9 @@ include ./help.mk
 include ./gitr.mk
 include ./mkdep/*.mk
 
-#all: print dep example-build example-release
+all: print dep example-build example-release
 
-all: print dep
+#all: print dep
 
 print:
 	$(MAKE) os-print
