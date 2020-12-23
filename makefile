@@ -17,7 +17,7 @@ print:
 
 ## dep all
 dep:
-	$(MAKE) dep-all-devtime
+	$(MAKE) dep-all
 
 ## example all
 example-all:
