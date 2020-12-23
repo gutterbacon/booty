@@ -1,8 +1,5 @@
 # help
 
-# Note assumes AWK is installed
-
-.DEFAULT_GOAL       := help-print
 HELP_TARGET_MAX_CHAR_NUM := 20
 
 HELP_GREEN  := $(shell tput -Txterm setaf 2)
