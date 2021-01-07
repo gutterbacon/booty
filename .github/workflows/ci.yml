@@ -43,7 +43,6 @@ jobs:
           ref: ${{ github.event.pull_request.head.sha }}
           path: ${{ github.workspace }}/go/src/github.com/${{ github.repository }}
 
-     
       - name: make ${{ matrix.target }}
         shell: bash
         run: |
