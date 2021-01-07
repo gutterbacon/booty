@@ -8,7 +8,7 @@ ifeq ($(GOOS),darwin)
 	INSTALL_PREFIX:=/usr/local/bin
 endif
 ifeq ($(GOOS),windows)
-	INSTALL_PREFIX:=/usr/local/bin
+	INSTALL_PREFIX:=/usr/bin
 endif
 ifeq ($(GOOS),linux)
 	INSTALL_PREFIX:=/usr/local/bin
