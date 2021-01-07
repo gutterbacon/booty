@@ -13,12 +13,17 @@ ifeq ($(GOOS),linux)
 	INSTALL_PREFIX:=/usr/local/bin
 endif
 
+
+
+
 ## print all tools
 dep-all-print:
 	@echo
 	@echo -- dep-all-print  -- 
 	@echo
 	@echo INSTALL_PREFIX: 	$(INSTALL_PREFIX)
+	# where is home fo each OS ?
+	@echo HOME_ENV: 		$${HOME}
 	$(MAKE) gor-print
 	#$(MAKE) grafana-print
 
