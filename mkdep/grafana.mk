@@ -4,9 +4,6 @@
 ## TODO: We should try to do what tiup does ? 
 
 ### BIN
-PREFIX=/usr/local/bin
-PREFIX=$(GOBIN)
-
 GRAFANA_OUTPUT_DIR=downloaded
 GRAFANA_BIN=grafana
 # DARWIN: https://dl.grafana.com/oss/release/grafana-7.3.6.darwin-amd64.tar.gz
@@ -41,11 +38,11 @@ grafana-dep: grafana-dep-delete
  		DWN_BIN_OUTPUT_DIR=$(GRAFANA_OUTPUT_DIR) dwn-download
 
 	if [[ $(GOOS) = darwin || $(GOOS) = linux ]]; then \
-  		sudo install -m755 $(GRAFANA_OUTPUT_DIR)/$(GRAFANA_BIN) $(PREFIX)/$(GRAFANA_BIN); \
+  		sudo install -m755 $(GRAFANA_OUTPUT_DIR)/$(GRAFANA_BIN) $(INSTALL_PREFIX)/$(GRAFANA_BIN); \
   	fi
 
 	if [[ $(GOOS) = windows ]]; then \
-		sudo install -m755 $(GRAFANA_OUTPUT_DIR)/$(GRAFANA_BIN) $(PREFIX)/$(GRAFANA_BIN); \
+		sudo install -m755 $(GRAFANA_OUTPUT_DIR)/$(GRAFANA_BIN) $(INSTALL_PREFIX)/$(GRAFANA_BIN); \
 	fi
 
 grafana-dep-delete:
@@ -55,11 +52,11 @@ grafana-dep-delete:
 		DWN_BIN_OUTPUT_DIR=$(GRAFANA_OUTPUT_DIR) dwn-delete	
 
 	if [[ $(GOOS) = darwin || $(GOOS) = linux ]]; then \
-		sudo rm -rf $(PREFIX)/$(GRAFANA_BIN); \
+		sudo rm -rf $(INSTALL_PREFIX)/$(GRAFANA_BIN); \
 	fi
 
 	if [[ $(GOOS) = windows ]]; then \
-		sudo rm -rf $(PREFIX)/$(GRAFANA_BIN); \
+		sudo rm -rf $(INSTALL_PREFIX)/$(GRAFANA_BIN); \
 	fi
 
 
