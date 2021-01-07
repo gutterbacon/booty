@@ -15,6 +15,7 @@ ifeq ($(GOOS),darwin)
 endif
 ifeq ($(GOOS),windows)
     GOR_BIN_PLATFORM:=Windows_x86_64.zip
+	PREFIX:=%APPDATA%
 endif
 ifeq ($(GOOS),linux)
     GOR_BIN_PLATFORM:=Linux_x86_64.tar.gz
@@ -29,6 +30,7 @@ gor-print:
 	@echo GOR_BIN_URL: 		$(GOR_BIN_URL)
 	@echo GOR_BIN_URLFILE: 	$(GOR_BIN_FILE)
 	@echo GOR_BIN: 			$(GOR_BIN)
+	@echo PREFIX: 			$(PREFIX)
 	@echo
 	
 gor-dep: gor-dep-delete

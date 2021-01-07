@@ -1,17 +1,18 @@
-dep-all: dep-all-devtime dep-all-deploytime
+dep-all: dep-all-print dep-all-install
 
-## install all development tools
-dep-all-devtime:
+## print all tools
+dep-all-print:
 	@echo
-	@echo -- dep-all-devtime  -- 
+	@echo -- dep-all-print  -- 
 	@echo
-	$(MAKE) dwn-print
-	#$(MAKE) proto-dep:
+	$(MAKE) gor-print
+	#$(MAKE) grafana-print
 
-## install all deployment tools
-dep-all-deploytime:
+## install all tools
+dep-all-install:
 	@echo
-	@echo -- dep-all-deploytime -- 
+	@echo -- dep-all-install -- 
 	@echo
 	$(MAKE) dwn-print
 	$(MAKE) gor-dep
+	#$(MAKE) grafana-dep
