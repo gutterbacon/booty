@@ -44,7 +44,7 @@ gor-dep: gor-dep-delete
   	fi
 
 	if [[ $(GOOS) = windows ]]; then \
-		sudo install -m755 $(GOR_OUTPUT_DIR)/$(GOR_BIN) $(PREFIX)/$(GOR_BIN); \
+		Copy-Item $(GOR_OUTPUT_DIR)/$(GOR_BIN) -Destination $(PREFIX)/$(GOR_BIN); \
 	fi
 
 gor-dep-delete:
