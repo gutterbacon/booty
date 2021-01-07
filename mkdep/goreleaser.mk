@@ -2,7 +2,6 @@
 # https://github.com/goreleaser/goreleaser
 
 ### BIN
-PREFIX=/usr/local/bin
 GOR_OUTPUT_DIR=downloaded
 GOR_BIN=goreleaser
 # https://github.com/goreleaser/goreleaser/releases/tag/v0.149.0
@@ -15,7 +14,6 @@ ifeq ($(GOOS),darwin)
 endif
 ifeq ($(GOOS),windows)
     GOR_BIN_PLATFORM:=Windows_x86_64.zip
-	PREFIX:=%APPDATA%
 endif
 ifeq ($(GOOS),linux)
     GOR_BIN_PLATFORM:=Linux_x86_64.tar.gz
@@ -30,7 +28,7 @@ gor-print:
 	@echo GOR_BIN_URL: 		$(GOR_BIN_URL)
 	@echo GOR_BIN_URLFILE: 	$(GOR_BIN_FILE)
 	@echo GOR_BIN: 			$(GOR_BIN)
-	@echo PREFIX: 			$(PREFIX)
+	
 	@echo
 	
 gor-dep: gor-dep-delete
@@ -40,11 +38,12 @@ gor-dep: gor-dep-delete
  		DWN_BIN_OUTPUT_DIR=$(GOR_OUTPUT_DIR) dwn-download
 
 	if [[ $(GOOS) = darwin || $(GOOS) = linux ]]; then \
-  		sudo install -m755 $(GOR_OUTPUT_DIR)/$(GOR_BIN) $(PREFIX)/$(GOR_BIN); \
+  		sudo install -m755 $(GOR_OUTPUT_DIR)/$(GOR_BIN) $(INSTALL_PREFIX)/$(GOR_BIN); \
   	fi
 
 	if [[ $(GOOS) = windows ]]; then \
-		sudo install -m755 $(GOR_OUTPUT_DIR)/$(GOR_BIN) $(PREFIX)/$(GOR_BIN); \
+		mkdir -p $(INSTALL_PREFIX); \
+		cp $(GOR_OUTPUT_DIR)/$(GOR_BIN) $(INSTALL_PREFIX)/$(GOR_BIN); \
 	fi
 
 gor-dep-delete:
@@ -54,11 +53,11 @@ gor-dep-delete:
 		DWN_BIN_OUTPUT_DIR=$(GOR_OUTPUT_DIR) dwn-delete	
 
 	if [[ $(GOOS) = darwin || $(GOOS) = linux ]]; then \
-		sudo rm -rf $(PREFIX)/$(GOR_BIN); \
+		sudo rm -rf $(INSTALL_PREFIX)/$(GOR_BIN); \
 	fi
 
 	if [[ $(GOOS) = windows ]]; then \
-		sudo rm -rf $(PREFIX)/$(GOR_BIN); \
+		rm -rf $(INSTALL_PREFIX)/$(GOR_BIN); \
 	fi
 
 
