@@ -28,6 +28,6 @@ this-example-build:
 	cd ./example && $(MAKE) build
 
 ## example release
-this.example-release:
+this-example-release:
 	cd ./example && $(MAKE) release
 

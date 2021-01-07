@@ -18,16 +18,20 @@ build:
 	cd ./go/cmd/cli && go build .
 	cd ./go/cmd/server && go build .
 
-server-run:
-	cd ./go/cmd/server && ./server
-cli-run:
-	cd ./go/cmd/cli && ./cli
-
 release:
 	#git tag -a $(VERSION) -m "Release" || true
 	#git push origin $(VERSION)
 	#goreleaser --rm-dist
 	goreleaser --rm-dist --skip-publish --snapshot
+
+
+
+server-run:
+	cd ./go/cmd/server && ./server
+cli-run:
+	cd ./go/cmd/cli && ./cli
+
+
 
 
 
