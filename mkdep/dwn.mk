@@ -1,11 +1,10 @@
-
-# downloads things from github releases or anywhere. ( dwn for short)
+# downloads (dwn) releases from github to local
 SHELL = bash
 
 # variables to overide.
 DWN_URL:=getcourage.org	# Github URL to the file
 DWN_FILENAME:=hello		# Github FileName
-DWN_BIN_NAME:=?		# Local filename ( the actual bin)
+DWN_BIN_NAME:=?			# Local filename (the actual bin)
 DWN_BIN_OUTPUT_DIR:=downloaded
 
 # calculated private variables
@@ -17,14 +16,9 @@ ifeq ($(DWN_FILENAME_EXT),)
 endif
 
 
-
 dwn-print:
 	@echo
 	@echo -- DWN Downloader --
-	@echo
-	@echo GOOS: $(GOOS)
-	@echo GOARCH: $(GOARCH)
-	@echo
 	@echo DWN_URL: $(DWN_URL)
 	@echo DWN_FILENAME: $(DWN_FILENAME)
 	@echo DWN_BIN_NAME: $(DWN_BIN_NAME)
@@ -56,6 +50,7 @@ dwn-download: dwn-delete
 		chmod +x $(DWN_BIN_OUTPUT_DIR)/$(DWN_BIN_NAME); \
 	fi
 
+	
 	if [[ $(GOOS) = windows ]]; then \
 		mkdir -p $(DWN_BIN_OUTPUT_DIR) && \
 		curl -L -o $(DWN_BIN_OUTPUT_DIR)/$(DWN_FILENAME_CALC) $(DWN_URL) && \

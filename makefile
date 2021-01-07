@@ -6,28 +6,28 @@ include ./help.mk
 include ./gitr.mk
 include ./mkdep/*.mk
 
-all: print dep example-build example-release
+all: this-print this-dep this-example-build this-example-release
 
 #all: print dep
 
 ## print all
-print:
+this-print:
 	$(MAKE) os-print
 	$(MAKE) gitr-print
 
 ## dep all
-dep:
+this-dep:
 	$(MAKE) dep-all
 
 ## example all
-example-all:
+this-example-all:
 	cd ./example && $(MAKE) all
 
 ## example build
-example-build: 
+this-example-build: 
 	cd ./example && $(MAKE) build
 
 ## example release
-example-release:
+this-example-release:
 	cd ./example && $(MAKE) release
 
