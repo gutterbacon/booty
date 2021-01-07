@@ -56,7 +56,7 @@ gor-dep-delete:
 	fi
 
 	if [[ $(GOOS) = windows ]]; then \
-		sudo rm -rf $(INSTALL_PREFIX)/$(GOR_BIN); \
+		Remove-Item $(INSTALL_PREFIX)/$(GOR_BIN); \
 	fi
 
 
