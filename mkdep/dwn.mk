@@ -65,6 +65,16 @@ dwn-download: dwn-delete
 	fi
 
 
+	# copy / install into the install location
+	if [[ $(GOOS) = darwin || $(GOOS) = linux ]]; then \
+  		sudo install -m755 $(GOR_OUTPUT_DIR)/$(GOR_BIN) $(INSTALL_PREFIX)/$(GOR_BIN); \
+  	fi
+
+	if [[ $(GOOS) = windows ]]; then \
+		mkdir -p $(INSTALL_PREFIX); \
+		cp $(GOR_OUTPUT_DIR)/$(GOR_BIN) $(INSTALL_PREFIX)/$(GOR_BIN); \
+	fi
+
 dwn-delete:
 	# deletes the tar and binary
 	if [[ $(GOOS) = darwin || $(GOOS) = linux ]]; then \
@@ -75,4 +85,13 @@ dwn-delete:
 	if [[ $(GOOS) = windows ]]; then \
 		rm -rf $(DWN_BIN_OUTPUT_DIR)/$(DWN_FILENAME); \
 		rm -rf $(DWN_BIN_OUTPUT_DIR)/$(DWN_BIN_NAME); \
+	fi
+
+	# delete the install
+	if [[ $(GOOS) = darwin || $(GOOS) = linux ]]; then \
+		sudo rm -rf $(INSTALL_PREFIX)/$(GOR_BIN); \
+	fi
+
+	if [[ $(GOOS) = windows ]]; then \
+		rm -rf $(INSTALL_PREFIX)/$(GOR_BIN); \
 	fi

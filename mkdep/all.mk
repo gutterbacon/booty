@@ -2,11 +2,12 @@ dep-all: dep-all-print dep-all-install
 
 # This is the location that all deps use for the Folder to place / install the binary on the OS.
 # The actual binary is controlled by each dep make, like goreleaser.mk.
+
 INSTALL_PREFIX=?
-# INSTALL_PREFIX:=%APPDATA%
 ifeq ($(GOOS),darwin)
 	INSTALL_PREFIX:=/usr/local/bin
 endif
+# For Windows we use a bash shell, and so Install Prefix is : https://medium.com/prodopsio/3rd-party-binaries-in-windows-git-bash-d882905e470c
 ifeq ($(GOOS),windows)
 	INSTALL_PREFIX:=/usr/bin
 endif
