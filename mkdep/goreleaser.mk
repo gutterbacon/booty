@@ -42,7 +42,7 @@ gor-dep: gor-dep-delete
   	fi
 
 	if [[ $(GOOS) = windows ]]; then \
-		mkdir -p $(INSTALL_PREFIX)
+		mkdir -p $(INSTALL_PREFIX); \
 		cp $(GOR_OUTPUT_DIR)/$(GOR_BIN) $(INSTALL_PREFIX)/$(GOR_BIN); \
 	fi
 
