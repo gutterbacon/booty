@@ -42,7 +42,7 @@ gor-dep: gor-dep-delete
   	fi
 
 	if [[ $(GOOS) = windows ]]; then \
-		Copy-Item $(GOR_OUTPUT_DIR)/$(GOR_BIN) -Destination $(INSTALL_PREFIX)/$(GOR_BIN); \
+		cp $(GOR_OUTPUT_DIR)/$(GOR_BIN) -Destination $(INSTALL_PREFIX)/$(GOR_BIN); \
 	fi
 
 gor-dep-delete:
