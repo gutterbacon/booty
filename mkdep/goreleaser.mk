@@ -2,7 +2,6 @@
 # https://github.com/goreleaser/goreleaser
 
 ### BIN
-GOR_OUTPUT_DIR=downloaded
 GOR_BIN=goreleaser
 # https://github.com/goreleaser/goreleaser/releases/tag/v0.149.0
 # https://github.com/goreleaser/goreleaser/releases/download/v0.149.0/goreleaser_Windows_x86_64.zip
@@ -28,20 +27,19 @@ gor-print:
 	@echo GOR_BIN_URL: 		$(GOR_BIN_URL)
 	@echo GOR_BIN_URLFILE: 	$(GOR_BIN_FILE)
 	@echo GOR_BIN: 			$(GOR_BIN)
-	
 	@echo
 	
 gor-dep: gor-dep-delete
 	$(MAKE) DWN_URL=$(GOR_BIN_URL) \
 		DWN_FILENAME=$(GOR_BIN_FILE) \
  		DWN_BIN_NAME=$(GOR_BIN) \
- 		DWN_BIN_OUTPUT_DIR=$(GOR_OUTPUT_DIR) dwn-download
+ 		DWN_BIN_OUTPUT_DIR=$(INSTALL_DOWNLOAD_DIR) dwn-download
 
 gor-dep-delete:
 	$(MAKE) DWN_URL=$(GOR_BIN_URL) \
 		DWN_FILENAME=$(GOR_BIN_FILE) \
 		DWN_BIN_NAME=$(GOR_BIN) \
-		DWN_BIN_OUTPUT_DIR=$(GOR_OUTPUT_DIR) dwn-delete
+		DWN_BIN_OUTPUT_DIR=$(INSTALL_DOWNLOAD_DIR) dwn-delete
 
 
 	

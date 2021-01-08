@@ -15,9 +15,28 @@ this-print:
 	$(MAKE) os-print
 	$(MAKE) gitr-print
 
+### Mage
+
+this-mage-dep:
+	go install github.com/magefile/mage
+
+this-mage-run:
+	# assumes you have mage installed on path
+	mage -l
+
+this-mage-build:
+	mkdir -p ./dist
+	go build -o ./dist/booty mage.go
+	# TODO use goxc to build cross platform. I dont think goreleaser will build mage cross platform.
+	# Can then release booty as a binary as part of its own CI.
+
+
+
 ## dep all
 this-dep:
 	$(MAKE) dep-all
+
+
 
 ## example all
 this-example-all:
