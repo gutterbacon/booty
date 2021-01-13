@@ -73,8 +73,8 @@ func init() {
 
 // ---
 
-// PrintAll prints gitr attributes
-func PrintAll() error {
+// Print prints gitr attributes
+func Print() error {
 
 	gitrReflect := reflect.ValueOf(currentGitr)
 	typeOfTarget := gitrReflect.Type()
