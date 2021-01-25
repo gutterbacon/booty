@@ -1,6 +1,6 @@
 # Booty
 
-Inspired by https://github.com/pingcap/tidb-operator
+Inspired by https://github.com/pingcap/tidb-operator and https://github.com/pingcap/tiup
 
 Booty installs the dependencies for your local machine, for the CI ( github actions ), or for your deployment ot a laptop or sever with zero changes to the make files or a standard CI GitHub script.
 
