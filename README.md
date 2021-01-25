@@ -2,13 +2,15 @@
 
 Inspired by https://github.com/pingcap/tidb-operator
 
-Booty installs the dependencies for your local machine or for the CI ( github actions ) with zero changes to the make files or a standard CI GitHub script.
+Booty installs the dependencies for your local machine, for the CI ( github actions ), or for your deployment ot a laptop or sever with zero changes to the make files or a standard CI GitHub script.
 
-It maeans that the CI github actions call the same makefile that a developer calls on their local machine. CI calls makefile that then calls booty. Local dev just calls make file directly. It’s all the same.
+It means that the CI github actions call the same makefile that a developer calls on their local machine. CI calls makefile that then calls booty. Local dev just calls make file directly. It’s all the same.
 
-The only thing CI script installs is golang anf flutter. So it’s same as dev local where it’s expected you have golang, flutter, make and git installed but nothing else because booty does all the other dependency installs for you.
+The only thing the CI git hbu action script installs is golang and flutter. So it’s same as dev local where it’s expected you have golang, flutter, make and git installed but nothing else because booty does all the other dependency installs for you.
 
-The real code in in shared, and so booty import shared. Its designed this way so that Cli and Server also import shared as needed.
+For Users, it also can deploy any things needed on a server outside our main cli and server.
+
+The real code that does all the work is in shared, and so booty imports shared. Its designed this way so that main Cli and Server also import shared as needed.
 
 So from booty you can install everything you need.
 
