@@ -15,3 +15,8 @@ So from booty you can install everything you need.
 Booty installs any binaries needed by a dev or user and the tools used by a dev or user.
 
 Each repo has the same CI script, that just uses a github actions to install go and flutter and then calls the makefile....
+
+
+https://github.com/getcouragenow/booty/blob/master/.github/workflows/ci.yml is enough for all repos to do what they need to do.
+
+The CI installs golang and then calls the make file target called "all".
