@@ -87,23 +87,28 @@ jobs:
         uses: actions/download-artifact@master
         with:
           name: booty-ubuntu-latest
-          path: ${{ github.workspace }}/go/src/github.com/${{ github.repository }}/example/dist/
+          path: ~/booty/booty-ubuntu-latest
       
       - name: Get Windows artifacts
         uses: actions/download-artifact@master
         with:
           name: booty-windows-latest
-          path: ${{ github.workspace }}/go/src/github.com/${{ github.repository }}/example/dist/
+          path: ~/booty/booty-windows-latest
       
       - name: Get MacOS artifacts
         uses: actions/download-artifact@master
         with:
           name: booty-macos-latest
-          path: ${{ github.workspace }}/go/src/github.com/${{ github.repository }}/example/dist/
-      
+          path: ~/booty/booty-macos-latest
+      - name: Show artifacts
+        shell: bash
+        run: |
+          ls ~/booty/booty-ubuntu-latest
+          ls ~/booty/booty-macos-latest
+          ls ~/booty/booty-windows-latest
       - name: Release
         uses: fnkr/github-action-ghr@v1
         env:
           # GHR_COMPRESS: xz
-          GHR_PATH: ${{ github.workspace }}/go/src/github.com/${{ github.repository }}/example/dist/
+          GHR_PATH: ~/booty/
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
