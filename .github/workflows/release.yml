@@ -75,6 +75,7 @@ jobs:
 
       - name: Release
         uses: fnkr/github-action-ghr@v1
+        if: ${{ matrix.os }} == 'ubuntu-latest'
         env:
           # GHR_COMPRESS: xz
           GHR_PATH: ${{ github.workspace }}/go/src/github.com/${{ github.repository }}/example/dist/
