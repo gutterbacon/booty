@@ -45,12 +45,17 @@ parse_args() {
 execute() {
   tmpdir=$(mktemp -d)
   log_debug "downloading files into ${tmpdir}"
+  echo "${tmpdir}/${TARBALL}" "${TARBALL_URL}"
   http_download "${tmpdir}/${TARBALL}" "${TARBALL_URL}"
+  echo "here"
   http_download "${tmpdir}/${CHECKSUM}" "${CHECKSUM_URL}"
+  
   hash_sha256_verify "${tmpdir}/${TARBALL}" "${tmpdir}/${CHECKSUM}"
   srcdir="${tmpdir}"
+  
   (cd "${tmpdir}" && untar "${TARBALL}")
   test ! -d "${BINDIR}" && install -d "${BINDIR}"
+  
   for binexe in $BINARIES; do
     if [ "$OS" = "windows" ]; then
       binexe="${binexe}.exe"

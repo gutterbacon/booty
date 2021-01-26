@@ -30,7 +30,7 @@ jobs:
       matrix:
         os: [ubuntu-latest] #[ubuntu-latest, macos-latest, windows-latest]
         go-version: [1.15.6]
-        target: ["all"]
+        target: ["all-release"]
 
     runs-on: ${{ matrix.os }}
 
@@ -70,8 +70,8 @@ jobs:
         env:
           target: ${{ matrix.target }}
 
-      - name: Release
-        uses: fnkr/github-action-ghr@v1
-        env:
-          GHR_PATH: ${{ github.workspace }}/go/src/github.com/${{ github.repository }}/example/dist/
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      # - name: Release
+      #   uses: fnkr/github-action-ghr@v1
+      #   env:
+      #     GHR_PATH: ${{ github.workspace }}/go/src/github.com/${{ github.repository }}/example/dist/
+      #     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
