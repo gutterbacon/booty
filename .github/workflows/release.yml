@@ -70,4 +70,4 @@ jobs:
         uses: actions/upload-artifact@v2
         with:
           name: booty
-          path: dist/*
+          path: /home/runner/work/booty/booty/go/src/github.com/applinh-getcouragenow/booty/example/dist/*
