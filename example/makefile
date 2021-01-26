@@ -22,8 +22,8 @@ release:
 	#git tag -a $(VERSION) -m "Release" || true
 	#git push origin $(VERSION)
 	#goreleaser --rm-dist
-	goreleaser --rm-dist --skip-publish --snapshot
-	goreleaser release
+	goreleaser release --rm-dist --skip-publish --snapshot
+	# goreleaser release
 
 server-run:
 	cd ./go/cmd/server && ./server
