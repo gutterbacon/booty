@@ -83,11 +83,24 @@ jobs:
     needs: create_release_assets
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/download-artifact@master
+      - name: Get Ubuntu artifacts
+        uses: actions/download-artifact@master
         with:
           name: booty-ubuntu-latest
           path: ${{ github.workspace }}/go/src/github.com/${{ github.repository }}/example/dist/
-
+      
+      - name: Get Windows artifacts
+        uses: actions/download-artifact@master
+        with:
+          name: booty-windows-latest
+          path: ${{ github.workspace }}/go/src/github.com/${{ github.repository }}/example/dist/
+      
+      - name: Get MacOS artifacts
+        uses: actions/download-artifact@master
+        with:
+          name: booty-macos-latest
+          path: ${{ github.workspace }}/go/src/github.com/${{ github.repository }}/example/dist/
+      
       - name: Release
         uses: fnkr/github-action-ghr@v1
         env:
