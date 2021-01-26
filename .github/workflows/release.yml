@@ -75,17 +75,17 @@ jobs:
       - name: Share artifacts
         uses: actions/upload-artifact@master
         with:
-          name: ${{ github.repository }} - ${{ matrix.os }}
+          name: booty-${{ matrix.os }}
           path: ${{ github.workspace }}/go/src/github.com/${{ github.repository }}/example/dist/
 
   upload_release_assets:
-    name: Create Release Assets
+    name: Upload Release Assets
     needs: create_release_assets
     runs-on: ubuntu-latest
     steps:
       - uses: actions/download-artifact@master
         with:
-          name: ${{ github.repository }} - ubuntu-latest
+          name: booty-ubuntu-latest
           path: ${{ github.workspace }}/go/src/github.com/${{ github.repository }}/example/dist/
 
       - name: Release
