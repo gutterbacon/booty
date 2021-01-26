@@ -26,6 +26,7 @@ dep-all-print:
 	# where is home for each OS ?
 	@echo HOME_ENV: 		$${HOME}
 	$(MAKE) gor-print
+	$(MAKE) god-dep
 	$(MAKE) pro-print
 	#$(MAKE) grafana-print
 
@@ -36,4 +37,5 @@ dep-all-install:
 	@echo
 	$(MAKE) dwn-print
 	$(MAKE) gor-dep
+	$(MAKE) god-dep
 	#$(MAKE) grafana-dep
