@@ -3,7 +3,6 @@ BOOTY_FSPATH=./..
 include $(BOOTY_FSPATH)/*.mk
 
 all: print dep build release
-all-release: all full-release
 
 print:
 	@echo -- OS --
@@ -24,8 +23,6 @@ release:
 	#git push origin $(VERSION)
 	#goreleaser --rm-dist
 	goreleaser --rm-dist --skip-publish --snapshot
-
-full-release:
 	goreleaser release
 
 server-run:
