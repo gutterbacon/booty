@@ -1,0 +1,39 @@
+on:
+  push:
+    tags:
+    - '*'
+
+name: Upload Release Asset
+
+jobs:
+  build:
+    name: Upload Release Asset
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+      - name: make ${{ matrix.target }}
+        shell: bash
+        run: |
+          # workaround for https://github.com/actions/setup-go/issues/14
+          #export GOPATH=${GITHUB_WORKSPACE}/go
+          #export PATH=$PATH:$GOPATH/bin
+          make $target
+        working-directory: ${{ github.workspace }}/go/src/github.com/${{ github.repository }}
+        env:
+          target: ${{ matrix.target }}
+      - name: Create Release
+        id: create_release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ github.ref }}
+          release_name: Release ${{ github.ref }}
+          draft: false
+          prerelease: false
+      - name: Upload assets
+        uses: actions/upload-artifact@v2
+        with:
+          name: booty
+          path: dist/*
