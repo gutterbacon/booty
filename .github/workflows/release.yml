@@ -71,7 +71,7 @@ jobs:
       - name: Release
         uses: fnkr/github-action-ghr@v1
         env:
-          GHR_COMPRESS: xz
+          # GHR_COMPRESS: xz
           GHR_PATH: ${{ github.workspace }}/go/src/github.com/${{ github.repository }}/example/dist/
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       
