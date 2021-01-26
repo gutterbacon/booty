@@ -22,8 +22,8 @@ jobs:
           draft: false
           prerelease: false
 
-  upload_release_assets:
-    name:  Upload Release Assets
+  create_release_assets:
+    name:  Create Release Assets
    
     strategy:
       fail-fast: false
@@ -71,11 +71,25 @@ jobs:
           target: ${{ matrix.target }}
 
       # ${{ github.workspace }}/go/src/github.com/${{ github.repository }}/example/dist/        
-  
+      
+      - name: Share artifacts
+        uses: actions/upload-artifact@master
+        with:
+          name: ${{ github.repository }} - ${{ matrix.os }}
+          path: ${{ github.workspace }}/go/src/github.com/${{ github.repository }}/example/dist/
+
+  upload_release_assets:
+    name: Create Release Assets
+    needs: create_release_assets
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@master
+        with:
+          name: ${{ github.repository }} - ubuntu-latest
+          path: ${{ github.workspace }}/go/src/github.com/${{ github.repository }}/example/dist/
 
       - name: Release
         uses: fnkr/github-action-ghr@v1
-        if: ${{ matrix.os }} == 'ubuntu-latest'
         env:
           # GHR_COMPRESS: xz
           GHR_PATH: ${{ github.workspace }}/go/src/github.com/${{ github.repository }}/example/dist/
