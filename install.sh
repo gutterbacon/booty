@@ -334,7 +334,7 @@ End of functions from https://github.com/client9/shlib
 EOF
 
 PROJECT_NAME="booty"
-OWNER='applinh-getcouragenow'
+OWNER='getcouragenow'
 REPO="booty"
 BINARY=booty
 FORMAT=tar.gz
