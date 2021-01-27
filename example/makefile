@@ -24,7 +24,6 @@ release:
 	#goreleaser --rm-dist
 	#goreleaser --rm-dist --skip-publish --snapshot
 	goreleaser release
-	godownloader --repo=applinh-getcouragenow/booty > ./godownloader-booty.sh
 
 
 server-run:

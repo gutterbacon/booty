@@ -48,7 +48,7 @@ execute() {
   http_download "${tmpdir}/${TARBALL}" "${TARBALL_URL}"
   http_download "${tmpdir}/${CHECKSUM}" "${CHECKSUM_URL}"
   echo "${tmpdir}/${CHECKSUM}" "${CHECKSUM_URL}"
-  #hash_sha256_verify "${tmpdir}/${TARBALL}" "${tmpdir}/${CHECKSUM}"
+  #hash_sha256_verify "${tmpdir}/${TARBALL}" "${tmpdir}/${CHECKSUM}" <- TODO: fix this
   srcdir="${tmpdir}"
   
   (cd "${tmpdir}" && untar "${TARBALL}")
