@@ -6,7 +6,9 @@ include ./help.mk
 include ./gitr.mk
 include ./mkdep/*.mk
 
-all: this-print this-dep this-example-build this-example-release
+all: this-print this-dep this-example-build 
+all-ci: all this-example-release-ci
+all-release: all this-example-release
 
 #all: print dep
 
@@ -46,7 +48,10 @@ this-example-all:
 this-example-build: 
 	cd ./example && $(MAKE) build
 
+## example release ci
+this-example-release-ci:
+	cd ./example && $(MAKE) release-ci
+
 ## example release
 this-example-release:
 	cd ./example && $(MAKE) release
-
