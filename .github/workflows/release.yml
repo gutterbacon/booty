@@ -1,20 +1,36 @@
-name: CI
-
 on:
-  pull_request:
-    branches:
-      - "*"
+  push:
+    tags:
+    - 'v*'
+
+name: Upload Release Asset
+
 
 jobs:
-  all:
-    name: CI
-   
+  create_release:
+    name: Create Release
+    runs-on: ubuntu-16.04
+    steps:
+      - name: Create Release
+        id: create_release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ github.ref }}
+          release_name: ${{ github.ref }}
+          draft: false
+          prerelease: false
+
+  create_and_upload_release_assets:
+    name:  Create and Upload Release Assets
+    needs: create_release
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest, macos-latest, windows-latest]
+        os: [ubuntu-latest] #[ubuntu-latest, macos-latest, windows-latest]
         go-version: [1.15.6]
-        target: ["all-ci"]
+        target: ["all-release"]
 
     runs-on: ${{ matrix.os }}
 
@@ -53,5 +69,10 @@ jobs:
         working-directory: ${{ github.workspace }}/go/src/github.com/${{ github.repository }}
         env:
           target: ${{ matrix.target }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-    
+      # - name: Release
+      #   uses: fnkr/github-action-ghr@v1
+      #   env:
+      #     GHR_PATH: ${{ github.workspace }}/go/src/github.com/${{ github.repository }}/example/dist/
+      #     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
