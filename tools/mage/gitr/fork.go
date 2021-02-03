@@ -21,13 +21,13 @@ func ForkCloneTemplate() error {
 	// 	# make -f shared/boilerplate/gitr.mk gitr-fork-clone-template
 	fmt.Println(`
 Template is:
-EX "git clone git@github.com-ME-getcouragenow:ME-getcouragenow/REPO_NAME"
+EX "git clone git@github.com-ME-amplify-cms:ME-amplify-cms/REPO_NAME"
 
 So if your fork is:
-github.com/james-getcouragenow/dev
+github.com/james-amplify-cms/dev
 
 You use:
-EX: "git clone git@github.com-james-getcouragenow:james-getcouragenow/dev"
+EX: "git clone git@github.com-james-amplify-cms:james-amplify-cms/dev"
 	`)
 
 	return nil
@@ -56,7 +56,7 @@ func ForkSetup() error {
 	// 	# Pre: you git forked ( via web) and git cloned (via ssh)
 	// 	# Sets up git config upstreak to point to the upstream origin
 	// 	@echo
-	// 	@echo EX git remote add upstream git@github.com-joe-getcouragenow:getcouragenow/dev
+	// 	@echo EX git remote add upstream git@github.com-joe-amplify-cms:amplify-cms/dev
 	// 	@echo
 	// 	@echo EX git remote add upstream git@$(GITR_SERVER)-$(GITR_USER):$(GITR_ORG_UPSTREAM)/$(GITR_REPO_NAME)
 	// 	@echo
@@ -67,7 +67,7 @@ func ForkSetup() error {
 	fmt.Println("Pre: you git forked ( via web) and git cloned (via ssh)")
 	fmt.Println("Sets up git config upstreak to point to the upstream origin")
 	fmt.Println()
-	fmt.Println("EX git remote add upstream git@github.com-joe-getcouragenow:getcouragenow/dev")
+	fmt.Println("EX git remote add upstream git@github.com-joe-amplify-cms:amplify-cms/dev")
 	fmt.Printf("EX git remote add upstream git@%s-%s:%s/%s \n", currentGitr.GITR_SERVER, currentGitr.GITR_USER, currentGitr.GITR_ORG_UPSTREAM, currentGitr.GITR_REPO_NAME)
 
 	_, err := currentGitr.repoController.CreateRemote(&config.RemoteConfig{

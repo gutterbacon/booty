@@ -38,7 +38,7 @@ func NewGitrAttrs() (GitrAttrs, error) {
 	// abs, _ := filepath.Abs(dir)
 
 	GITR_SERVER := "github.com"
-	GITR_ORG_UPSTREAM := "getcouragenow"
+	GITR_ORG_UPSTREAM := "amplify-cms"
 	GITR_ORG_FORK := filepath.Base(filepath.Dir(wd)) //$(shell basename $(dir $(abspath $(dir $$PWD))))
 	GITR_USER := filepath.Base(filepath.Dir(wd))
 	GITR_REPO_NAME := filepath.Base(wd)

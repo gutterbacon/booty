@@ -5,7 +5,7 @@ package main
 import (
 	"fmt"
 	// mage:import gitr
-	_ "github.com/getcouragenow/booty/tools/mage/gitr"
+	_ "github.com/amplify-cms/booty/tools/mage/gitr"
 )
 
 // Hello says hello
