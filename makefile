@@ -1,10 +1,20 @@
 .DEFAULT_GOAL := all
 
 # OS.mk must be explicitly first...
-include ./os.mk
-include ./help.mk
-include ./gitr.mk
-include ./mkdep/*.mk
+#BOILERPLATE_FSPATH=./../boot/boilerplate
+BOILERPLATE_FSPATH=./../shared/boilerplate
+
+include $(BOILERPLATE_FSPATH)/help.mk
+include $(BOILERPLATE_FSPATH)/os.mk
+include $(BOILERPLATE_FSPATH)/gitr.mk
+include $(BOILERPLATE_FSPATH)/tool.mk
+include $(BOILERPLATE_FSPATH)/flu.mk
+include $(BOILERPLATE_FSPATH)/go.mk
+
+#include ./os.mk
+#include ./help.mk
+#include ./gitr.mk
+#include ./mkdep/*.mk
 
 all: this-print this-dep this-example-build 
 all-ci: all this-example-release-ci
