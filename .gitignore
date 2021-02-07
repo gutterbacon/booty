@@ -17,3 +17,4 @@ downloaded
 
 dist
 /depmanager/binaries/testdata/**
+/pkg/helpers/fileutil/testdata/yeah.md

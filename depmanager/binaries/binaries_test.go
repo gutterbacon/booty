@@ -16,4 +16,7 @@ func testGrafana(t *testing.T) {
 	gf := binaries.NewGrafana("7.4.0")
 	err := gf.Download("./testdata")
 	require.NoError(t, err)
+
+	err = gf.Install()
+	require.NoError(t, err)
 }

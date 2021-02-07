@@ -1,7 +1,12 @@
 package osdetect
 
 import (
+	"fmt"
+	"os"
+	"os/exec"
+	"os/user"
 	"runtime"
+	"strings"
 )
 
 func GetOS() string {
@@ -24,3 +29,38 @@ func GetAltArch() string {
 	}
 }
 
+func GetInstallPrefix() string {
+	switch strings.ToLower(GetOS()) {
+	case "windows":
+		return `C:\\ProgramData`
+	case "linux", "darwin":
+		return "/usr/local"
+	default:
+		return "/usr/local"
+	}
+}
+
+func CurUserChown(dir string) error {
+	u, err := user.Current()
+	if err != nil {
+		return err
+	}
+	g, err := user.LookupGroupId(u.Gid)
+	if err != nil {
+		return err
+	}
+	c := exec.Command("sudo", "chown", fmt.Sprintf("%s:%s", u.Name, g.Name), dir)
+	c.Stderr = os.Stderr
+	c.Stdout = os.Stdout
+	return c.Run()
+}
+
+// ExecSudo executes a command under "sudo".
+func ExecSudo(cmd string, args ...string) error {
+	scmd := exec.Command("sudo", append([]string{cmd}, args...)...)
+	scmd.Stdin = os.Stdin
+	scmd.Stderr = os.Stderr
+	scmd.Stdout = os.Stdout
+
+	return scmd.Run()
+}
