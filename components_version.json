@@ -1,0 +1,16 @@
+{
+  "binaries": [
+    {
+      "name": "grafana",
+      "version": "7.4.0"
+    },
+    {
+      "name": "goreleaser",
+      "version": "0.155.0"
+    },
+    {
+      "name": "caddy",
+      "version": "2.3.0"
+    }
+  ]
+}
