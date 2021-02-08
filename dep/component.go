@@ -29,7 +29,7 @@ type Component interface {
 	Download(targetDir string) error // download to dir
 	Install() error
 	Uninstall() error
-	Run() error
+	Run(args ...string) error
 	Stop() error
 	Backup() error
 }

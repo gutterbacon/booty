@@ -125,7 +125,7 @@ func (c *Caddy) Update(version string) error {
 	return c.Install()
 }
 
-func (c *Caddy) Run() error {
+func (c *Caddy) Run(args ...string) error {
 	return nil
 }
 

@@ -2,6 +2,7 @@ package main
 
 import (
 	"github.com/spf13/cobra"
+
 	"go.amplifyedge.org/booty-v2/cmd"
 	"go.amplifyedge.org/booty-v2/config"
 	"go.amplifyedge.org/booty-v2/dep"
@@ -44,8 +45,9 @@ func main() {
 	}
 	if isDev {
 		comps = append(comps, components.NewGoreleaser(db, vi.GetVersion("goreleaser")))
+		rootCmd.AddCommand(cmd.ReleaseCommand(logger, comps))
 	}
-	rootCmd.AddCommand(cmd.InstallCommand(logger, comps), cmd.RunCommand(logger, comps))
+	rootCmd.AddCommand(cmd.InstallCommand(logger, comps))
 
 	if err := rootCmd.Execute(); err != nil {
 		logger.Errorf("error: %v", err)

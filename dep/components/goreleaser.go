@@ -2,13 +2,14 @@ package components
 
 import (
 	"fmt"
-	"go.amplifyedge.org/booty-v2/pkg/downloader"
-	"go.amplifyedge.org/booty-v2/pkg/fileutil"
 	"os"
 	"path/filepath"
 	"strings"
 
-	//"path/filepath"
+	"go.amplifyedge.org/booty-v2/pkg/downloader"
+	"go.amplifyedge.org/booty-v2/pkg/fileutil"
+
+	// "path/filepath"
 
 	"go.amplifyedge.org/booty-v2/pkg/osutil"
 	"go.amplifyedge.org/booty-v2/pkg/store"
@@ -127,14 +128,14 @@ func (g *Goreleaser) Update(version string) error {
 	return g.Install()
 }
 
-func (g *Goreleaser) Run() error {
+func (g *Goreleaser) Run(args ...string) error {
 	pkg, err := g.db.Get(g.Name())
 	if err != nil {
 		return err
 	}
-	for k := range pkg.FilesMap {
-		if k == g.Name() {
-			return osutil.Exec(k)
+	for k, _ := range pkg.FilesMap {
+		if strings.Contains(k, g.Name()) {
+			return osutil.Exec(k, args...)
 		}
 	}
 	return nil

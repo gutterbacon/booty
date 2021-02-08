@@ -130,7 +130,7 @@ func (g *Grafana) Update(version string) error {
 	return g.Install()
 }
 
-func (g *Grafana) Run() error {
+func (g *Grafana) Run(args ...string) error {
 	return nil
 }
 

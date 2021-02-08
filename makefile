@@ -25,8 +25,7 @@ this-dep:
 	./bin/booty -d -c ./components_version.json install
 
 this-mock-release:
-	./bin/booty -d run goreleaser --rm-dist --skip-publish --snapshot
-	rm -rf dist
+	./bin/booty release --rm-dist --skip-publish --snapshot
 
 this-release:
-	./bin/booty -d run goreleaser release
+	./bin/booty release release
