@@ -7,7 +7,8 @@ import (
 	"go.amplifyedge.org/booty-v2/pkg/logging"
 )
 
-// runs protoc under the hood
+// wrapper around protoc
+// runs protoc under the hood with the necessary include
 func ProtoCommand(logger logging.Logger, comps []dep.Component) *cobra.Command {
 	runCmd := &cobra.Command{Use: "protoc", DisableFlagParsing: true}
 	runCmd.DisableFlagParsing = true
