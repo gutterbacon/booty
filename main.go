@@ -9,8 +9,6 @@ import (
 	"go.amplifyedge.org/booty-v2/pkg/logging/zaplog"
 	"go.amplifyedge.org/booty-v2/pkg/osutil"
 	"go.amplifyedge.org/booty-v2/pkg/store"
-	"os"
-	"path/filepath"
 )
 
 const (
@@ -24,23 +22,17 @@ var (
 )
 
 func main() {
-	logger := zaplog.NewZapLogger(zaplog.INFO, "booty-v2", true)
+	logger := zaplog.NewZapLogger(zaplog.INFO, "booty", true)
 	logger.InitLogger(nil)
-	// global prefix
-	prefix := osutil.GetInstallPrefix()
-	prefix = filepath.Join(prefix, "booty")
-	err := os.MkdirAll(prefix, 0755)
+	// setup directories
+	err := osutil.SetupDirs()
 	if err != nil {
-		logger.Fatalf("unable to create prefix directory: %v", err)
+		logger.Fatalf("unable to setup directories: %v", err)
 	}
+
 	// global db directory
-	dbDir := filepath.Join(prefix, "data")
-	err = os.MkdirAll(dbDir, 0755)
-	if err != nil {
-		logger.Fatalf("unable to create data directory: %v", err)
-	}
-	db := store.NewDB(logger, dbDir)
-	rootCmd := &cobra.Command{Use: "booty-v2"}
+	db := store.NewDB(logger, osutil.GetDataDir())
+	rootCmd := &cobra.Command{Use: "booty [commands]"}
 	rootCmd.PersistentFlags().BoolVarP(&isDev, "dev", "d", defaultDev, "run tools in dev mode instead of user mode")
 	rootCmd.PersistentFlags().StringVarP(&versionInfo, "config-version-info-file", "c", defaultVersionInfoFile, "path to config file")
 	var vi *config.VersionInfo
@@ -53,7 +45,7 @@ func main() {
 	if isDev {
 		comps = append(comps, components.NewGoreleaser(db, vi.GetVersion("goreleaser")))
 	}
-	rootCmd.AddCommand(cmd.ComponentsCommand(logger, comps))
+	rootCmd.AddCommand(cmd.InstallCommand(logger, comps), cmd.RunCommand(logger, comps))
 
 	if err := rootCmd.Execute(); err != nil {
 		logger.Errorf("error: %v", err)

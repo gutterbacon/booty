@@ -22,3 +22,5 @@ Each repo has the same CI script, that just uses a github actions to install go 
 https://github.com/getcouragenow/booty/blob/master/.github/workflows/ci.yml is enough for all repos to do what they need to do.
 
 The CI installs golang and then calls the make file target called "all".
+
+## 

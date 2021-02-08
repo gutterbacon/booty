@@ -1,7 +1,7 @@
 package components_test
 
 import (
-	"go.amplifyedge.org/booty-v2/depmanager/components"
+	"go.amplifyedge.org/booty-v2/dep/components"
 	"go.amplifyedge.org/booty-v2/pkg/logging/zaplog"
 	"go.amplifyedge.org/booty-v2/pkg/store"
 

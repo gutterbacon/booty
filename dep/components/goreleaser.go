@@ -57,15 +57,10 @@ func (g *Goreleaser) Download(targetDir string) error {
 func (g *Goreleaser) Install() error {
 	var err error
 	// install to global path
-	prefixDir := osutil.GetInstallPrefix()
 	switch strings.ToLower(osutil.GetOS()) {
 	case "linux", "darwin":
 		// create bin directory under $PREFIX
-		binDir := filepath.Join(prefixDir, "bin")
-		_ = os.MkdirAll(binDir, 0755)
-		if err = osutil.CurUserChown(binDir); err != nil {
-			return err
-		}
+		binDir := osutil.GetBinDir()
 		// all files that are going to be installed
 		filesMap := map[string][]interface{}{
 			filepath.Join(g.dlPath, "goreleaser"): {filepath.Join(binDir, "goreleaser"), 0755},
@@ -146,5 +141,9 @@ func (g *Goreleaser) Run() error {
 }
 
 func (g *Goreleaser) Backup() error {
+	return nil
+}
+
+func (g *Goreleaser) Stop() error {
 	return nil
 }

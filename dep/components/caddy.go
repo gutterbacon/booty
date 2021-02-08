@@ -56,15 +56,9 @@ func (c *Caddy) Download(targetDir string) error {
 func (c *Caddy) Install() error {
 	var err error
 	// install to global path
-	prefixDir := osutil.GetInstallPrefix()
+	binDir := osutil.GetBinDir()
 	switch strings.ToLower(osutil.GetOS()) {
 	case "linux", "darwin":
-		// create bin directory under $PREFIX
-		binDir := filepath.Join(prefixDir, "bin")
-		_ = os.MkdirAll(binDir, 0755)
-		if err = osutil.CurUserChown(binDir); err != nil {
-			return err
-		}
 		// all files that are going to be installed
 		filesMap := map[string][]interface{}{
 			filepath.Join(c.dlPath, "caddy"): {filepath.Join(binDir, "caddy"), 0755},
@@ -136,5 +130,9 @@ func (c *Caddy) Run() error {
 }
 
 func (c *Caddy) Backup() error {
+	return nil
+}
+
+func (c *Caddy) Stop() error {
 	return nil
 }

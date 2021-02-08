@@ -30,6 +30,6 @@ type Component interface {
 	Install() error
 	Uninstall() error
 	Run() error
+	Stop() error
 	Backup() error
 }
-

@@ -5,6 +5,7 @@ import (
 	"os"
 	"os/exec"
 	"os/user"
+	"path/filepath"
 	"runtime"
 	"strings"
 )
@@ -42,18 +43,46 @@ func GetAltArch() string {
 	}
 }
 
-func GetInstallPrefix() string {
+func getInstallPrefix() string {
+	u, _ := user.Current()
 	switch strings.ToLower(GetOS()) {
 	case "windows":
-		return `C:\\ProgramData`
+		return filepath.Join(`C:\\ProgramData`, "booty")
 	case "linux":
-		u, _ := user.Current()
-		return fmt.Sprintf("%s/.local", u.HomeDir)
+		return fmt.Sprintf("%s/.local/%s", u.HomeDir, "booty")
 	case "darwin":
-		return "/usr/local"
+		return fmt.Sprintf("%s/Library/Application Support/%s", u.HomeDir, "booty")
 	default:
 		return "/usr/local"
 	}
+}
+
+func SetupDirs() (err error) {
+	prefix := getInstallPrefix()
+	dirs := []string{"bin", "etc", "data", "downloads"}
+	for i := range dirs {
+		dirPath := filepath.Join(prefix, dirs[i])
+		if err = os.MkdirAll(dirPath, 0755); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func GetBinDir() string {
+	return filepath.Join(getInstallPrefix(), "bin")
+}
+
+func GetEtcDir() string {
+	return filepath.Join(getInstallPrefix(), "etc")
+}
+
+func GetDataDir() string {
+	return filepath.Join(getInstallPrefix(), "data")
+}
+
+func GetDownloadDir() string {
+	return filepath.Join(getInstallPrefix(), "downloads")
 }
 
 func CurUserChown(dir string) error {

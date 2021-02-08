@@ -53,23 +53,12 @@ func (g *Grafana) Download(targetDir string) error {
 
 func (g *Grafana) Install() error {
 	var err error
-	// install to global path
-	prefixDir := osutil.GetInstallPrefix()
+	// install to path
+	binDir := osutil.GetBinDir()
+	etcDir := osutil.GetEtcDir()
+
 	switch strings.ToLower(osutil.GetOS()) {
 	case "linux", "darwin":
-		// create bin directory under $PREFIX
-		binDir := filepath.Join(prefixDir, "bin")
-		_ = os.MkdirAll(binDir, 0755)
-		if err = osutil.CurUserChown(binDir); err != nil {
-			return err
-		}
-		// create etc dir under $PREFIX
-		etcDir := filepath.Join(prefixDir, "etc")
-		_ = os.MkdirAll(etcDir, 0755)
-		if err = osutil.CurUserChown(etcDir); err != nil {
-			return err
-		}
-
 		// all files that are going to be installed
 		filesMap := map[string][]interface{}{
 			filepath.Join(g.dlPath, "bin", "grafana-server"): {filepath.Join(binDir, "grafana-server"), 0755},
@@ -146,5 +135,9 @@ func (g *Grafana) Run() error {
 }
 
 func (g *Grafana) Backup() error {
+	return nil
+}
+
+func (g *Grafana) Stop() error {
 	return nil
 }
