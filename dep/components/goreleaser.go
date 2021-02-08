@@ -58,34 +58,31 @@ func (g *Goreleaser) Download(targetDir string) error {
 func (g *Goreleaser) Install() error {
 	var err error
 	// install to global path
-	switch strings.ToLower(osutil.GetOS()) {
-	case "linux", "darwin":
-		// create bin directory under $PREFIX
-		binDir := osutil.GetBinDir()
-		// all files that are going to be installed
-		filesMap := map[string][]interface{}{
-			filepath.Join(g.dlPath, "goreleaser"): {filepath.Join(binDir, "goreleaser"), 0755},
-		}
-		ip := store.InstalledPackage{
-			Name:     g.Name(),
-			Version:  g.version,
-			FilesMap: map[string]int{},
-		}
-		// copy file to the global bin directory
-		for k, v := range filesMap {
-			if err = fileutil.Copy(k, v[0].(string)); err != nil {
-				return err
-			}
-			installedName := v[0].(string)
-			installedMode := v[1].(int)
-			if err = os.Chmod(installedName, os.FileMode(installedMode)); err != nil {
-				return err
-			}
-			ip.FilesMap[installedName] = installedMode
-		}
-		if err = g.db.New(&ip); err != nil {
+	// create bin directory under $PREFIX
+	binDir := osutil.GetBinDir()
+	// all files that are going to be installed
+	filesMap := map[string][]interface{}{
+		filepath.Join(g.dlPath, "goreleaser"): {filepath.Join(binDir, "goreleaser"), 0755},
+	}
+	ip := store.InstalledPackage{
+		Name:     g.Name(),
+		Version:  g.version,
+		FilesMap: map[string]int{},
+	}
+	// copy file to the global bin directory
+	for k, v := range filesMap {
+		if err = fileutil.Copy(k, v[0].(string)); err != nil {
 			return err
 		}
+		installedName := v[0].(string)
+		installedMode := v[1].(int)
+		if err = os.Chmod(installedName, os.FileMode(installedMode)); err != nil {
+			return err
+		}
+		ip.FilesMap[installedName] = installedMode
+	}
+	if err = g.db.New(&ip); err != nil {
+		return err
 	}
 	return os.RemoveAll(g.dlPath)
 }
@@ -93,23 +90,20 @@ func (g *Goreleaser) Install() error {
 func (g *Goreleaser) Uninstall() error {
 	var err error
 	// install to global path
-	switch strings.ToLower(osutil.GetOS()) {
-	case "linux", "darwin":
-		// all files that are going to be installed
-		var pkg *store.InstalledPackage
-		pkg, err = g.db.Get(g.Name())
-		if err != nil {
+	// all files that are going to be installed
+	var pkg *store.InstalledPackage
+	pkg, err = g.db.Get(g.Name())
+	if err != nil {
+		return err
+	}
+	var filesList []string
+	for k := range pkg.FilesMap {
+		filesList = append(filesList, k)
+	}
+	// uninstall listed files
+	for _, file := range filesList {
+		if err = osutil.ExecSudo("rm", "-rf", file); err != nil {
 			return err
-		}
-		var filesList []string
-		for k := range pkg.FilesMap {
-			filesList = append(filesList, k)
-		}
-		// uninstall listed files
-		for _, file := range filesList {
-			if err = osutil.ExecSudo("rm", "-rf", file); err != nil {
-				return err
-			}
 		}
 	}
 	// remove downloaded files

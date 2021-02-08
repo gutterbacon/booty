@@ -2,12 +2,13 @@ package components
 
 import (
 	"fmt"
-	"go.amplifyedge.org/booty-v2/pkg/fileutil"
-	"go.amplifyedge.org/booty-v2/pkg/osutil"
-	"go.amplifyedge.org/booty-v2/pkg/store"
 	"os"
 	"path/filepath"
 	"strings"
+
+	"go.amplifyedge.org/booty-v2/pkg/fileutil"
+	"go.amplifyedge.org/booty-v2/pkg/osutil"
+	"go.amplifyedge.org/booty-v2/pkg/store"
 
 	"go.amplifyedge.org/booty-v2/pkg/downloader"
 )
@@ -63,37 +64,34 @@ func (g *Grafana) Install() error {
 	binDir := osutil.GetBinDir()
 	etcDir := osutil.GetEtcDir()
 
-	switch strings.ToLower(osutil.GetOS()) {
-	case "linux", "darwin":
-		// all files that are going to be installed
-		filesMap := map[string][]interface{}{
-			filepath.Join(g.dlPath, "bin", "grafana-server"): {filepath.Join(binDir, "grafana-server"), 0755},
-			filepath.Join(g.dlPath, "bin", "grafana-cli"):    {filepath.Join(binDir, "grafana-cli"), 0755},
-			filepath.Join(g.dlPath, "conf", "defaults.ini"):  {filepath.Join(etcDir, "grafana.ini"), 0644},
-			filepath.Join(g.dlPath, "conf", "sample.ini"):    {filepath.Join(etcDir, "grafana.sample.ini"), 0644},
-		}
+	// all files that are going to be installed
+	filesMap := map[string][]interface{}{
+		filepath.Join(g.dlPath, "bin", "grafana-server"): {filepath.Join(binDir, "grafana-server"), 0755},
+		filepath.Join(g.dlPath, "bin", "grafana-cli"):    {filepath.Join(binDir, "grafana-cli"), 0755},
+		filepath.Join(g.dlPath, "conf", "defaults.ini"):  {filepath.Join(etcDir, "grafana.ini"), 0644},
+		filepath.Join(g.dlPath, "conf", "sample.ini"):    {filepath.Join(etcDir, "grafana.sample.ini"), 0644},
+	}
 
-		ip := store.InstalledPackage{
-			Name:     g.Name(),
-			Version:  g.version,
-			FilesMap: map[string]int{},
-		}
+	ip := store.InstalledPackage{
+		Name:     g.Name(),
+		Version:  g.version,
+		FilesMap: map[string]int{},
+	}
 
-		// copy file to the bin directory
-		for k, v := range filesMap {
-			if err = fileutil.Copy(k, v[0].(string)); err != nil {
-				return err
-			}
-			installedName := v[0].(string)
-			installedMode := v[1].(int)
-			if err = os.Chmod(installedName, os.FileMode(installedMode)); err != nil {
-				return err
-			}
-			ip.FilesMap[installedName] = installedMode
-		}
-		if err = g.db.New(&ip); err != nil {
+	// copy file to the bin directory
+	for k, v := range filesMap {
+		if err = fileutil.Copy(k, v[0].(string)); err != nil {
 			return err
 		}
+		installedName := v[0].(string)
+		installedMode := v[1].(int)
+		if err = os.Chmod(installedName, os.FileMode(installedMode)); err != nil {
+			return err
+		}
+		ip.FilesMap[installedName] = installedMode
+	}
+	if err = g.db.New(&ip); err != nil {
+		return err
 	}
 	return os.RemoveAll(g.dlPath)
 }
@@ -101,23 +99,20 @@ func (g *Grafana) Install() error {
 func (g *Grafana) Uninstall() error {
 	var err error
 	// install to global path
-	switch strings.ToLower(osutil.GetOS()) {
-	case "linux", "darwin":
-		// all files that are going to be installed
-		var pkg *store.InstalledPackage
-		pkg, err = g.db.Get(g.Name())
-		if err != nil {
+	// all files that are going to be installed
+	var pkg *store.InstalledPackage
+	pkg, err = g.db.Get(g.Name())
+	if err != nil {
+		return err
+	}
+	var filesList []string
+	for k := range pkg.FilesMap {
+		filesList = append(filesList, k)
+	}
+	// uninstall listed files
+	for _, file := range filesList {
+		if err = osutil.ExecSudo("rm", "-rf", file); err != nil {
 			return err
-		}
-		var filesList []string
-		for k := range pkg.FilesMap {
-			filesList = append(filesList, k)
-		}
-		// uninstall listed files
-		for _, file := range filesList {
-			if err = osutil.ExecSudo("rm", "-rf", file); err != nil {
-				return err
-			}
 		}
 	}
 	// remove downloaded files

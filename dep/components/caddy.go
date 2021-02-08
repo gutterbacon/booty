@@ -2,10 +2,10 @@ package components
 
 import (
 	"fmt"
-	"go.amplifyedge.org/booty-v2/pkg/fileutil"
 	"os"
 	"path/filepath"
-	"strings"
+
+	"go.amplifyedge.org/booty-v2/pkg/fileutil"
 
 	"go.amplifyedge.org/booty-v2/pkg/downloader"
 	"go.amplifyedge.org/booty-v2/pkg/osutil"
@@ -57,32 +57,30 @@ func (c *Caddy) Install() error {
 	var err error
 	// install to global path
 	binDir := osutil.GetBinDir()
-	switch strings.ToLower(osutil.GetOS()) {
-	case "linux", "darwin":
-		// all files that are going to be installed
-		filesMap := map[string][]interface{}{
-			filepath.Join(c.dlPath, "caddy"): {filepath.Join(binDir, "caddy"), 0755},
-		}
-		ip := store.InstalledPackage{
-			Name:     c.Name(),
-			Version:  c.version,
-			FilesMap: map[string]int{},
-		}
-		// copy file to the global bin directory
-		for k, v := range filesMap {
-			if err = fileutil.Copy(k, v[0].(string)); err != nil {
-				return err
-			}
-			installedName := v[0].(string)
-			installedMode := v[1].(int)
-			if err = os.Chmod(installedName, os.FileMode(installedMode)); err != nil {
-				return err
-			}
-			ip.FilesMap[installedName] = installedMode
-		}
-		if err = c.db.New(&ip); err != nil {
+
+	// all files that are going to be installed
+	filesMap := map[string][]interface{}{
+		filepath.Join(c.dlPath, "caddy"): {filepath.Join(binDir, "caddy"), 0755},
+	}
+	ip := store.InstalledPackage{
+		Name:     c.Name(),
+		Version:  c.version,
+		FilesMap: map[string]int{},
+	}
+	// copy file to the global bin directory
+	for k, v := range filesMap {
+		if err = fileutil.Copy(k, v[0].(string)); err != nil {
 			return err
 		}
+		installedName := v[0].(string)
+		installedMode := v[1].(int)
+		if err = os.Chmod(installedName, os.FileMode(installedMode)); err != nil {
+			return err
+		}
+		ip.FilesMap[installedName] = installedMode
+	}
+	if err = c.db.New(&ip); err != nil {
+		return err
 	}
 	return os.RemoveAll(c.dlPath)
 }
@@ -90,23 +88,21 @@ func (c *Caddy) Install() error {
 func (c *Caddy) Uninstall() error {
 	var err error
 	// install to global path
-	switch strings.ToLower(osutil.GetOS()) {
-	case "linux", "darwin":
-		// all files that are going to be installed
-		var pkg *store.InstalledPackage
-		pkg, err = c.db.Get(c.Name())
-		if err != nil {
+
+	// all files that are going to be installed
+	var pkg *store.InstalledPackage
+	pkg, err = c.db.Get(c.Name())
+	if err != nil {
+		return err
+	}
+	var filesList []string
+	for k := range pkg.FilesMap {
+		filesList = append(filesList, k)
+	}
+	// uninstall listed files
+	for _, file := range filesList {
+		if err = osutil.ExecSudo("rm", "-rf", file); err != nil {
 			return err
-		}
-		var filesList []string
-		for k := range pkg.FilesMap {
-			filesList = append(filesList, k)
-		}
-		// uninstall listed files
-		for _, file := range filesList {
-			if err = osutil.ExecSudo("rm", "-rf", file); err != nil {
-				return err
-			}
 		}
 	}
 	// remove downloaded files
