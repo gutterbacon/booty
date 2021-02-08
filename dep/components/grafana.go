@@ -14,7 +14,7 @@ import (
 
 const (
 	// version -- os-arch
-	fetchUrlFormat = "https://dl.grafana.com/oss/release/grafana-%s.%s.tar.gz"
+	fetchUrlFormat = "https://dl.grafana.com/oss/release/grafana-%s.%s.%s"
 )
 
 // Grafana implements Component interface
@@ -42,7 +42,13 @@ func (g *Grafana) Download(targetDir string) error {
 	_ = os.MkdirAll(targetDir, 0755)
 
 	osname := fmt.Sprintf("%s-%s", strings.ToLower(osutil.GetOS()), osutil.GetArch())
-	fetchUrl := fmt.Sprintf(fetchUrlFormat, g.version, osname)
+	var fetchUrl string
+	switch osutil.GetOS() {
+	case "linux", "darwin":
+		fetchUrl = fmt.Sprintf(fetchUrlFormat, g.version, osname, "tar.gz")
+	case "windows":
+		fetchUrl = fmt.Sprintf(fetchUrlFormat, g.version, osname, "zip")
+	}
 	err := downloader.Download(fetchUrl, targetDir)
 	if err != nil {
 		return err

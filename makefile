@@ -26,6 +26,7 @@ this-dep:
 
 this-mock-release:
 	./bin/booty release --rm-dist --skip-publish --snapshot
+	rm -rf dist
 
 this-release:
 	./bin/booty release release
