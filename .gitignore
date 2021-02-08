@@ -25,3 +25,4 @@ dist
 /pkg/fileutil/testdata/yeah.md
 /bin/
 /dep/components/testdata/db/
+/dep/components/prototest/prototest/

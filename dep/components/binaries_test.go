@@ -1,6 +1,8 @@
 package components_test
 
 import (
+	"os"
+
 	"go.amplifyedge.org/booty-v2/dep/components"
 	"go.amplifyedge.org/booty-v2/pkg/logging/zaplog"
 	"go.amplifyedge.org/booty-v2/pkg/store"
@@ -17,6 +19,7 @@ var (
 func init() {
 	l := zaplog.NewZapLogger(zaplog.DEBUG, "store-test", true)
 	l.InitLogger(nil)
+	_ = os.MkdirAll("./testdata/db", 0755)
 	db = store.NewDB(l, "./testdata/db")
 }
 
@@ -24,6 +27,7 @@ func TestBinaries(t *testing.T) {
 	t.Run("testGrafana", testGrafana)
 	t.Run("testGoreleaser", testGoreleaser)
 	t.Run("testCaddy", testCaddy)
+	t.Run("testProto", testProto)
 }
 
 func testGrafana(t *testing.T) {
@@ -68,11 +72,35 @@ func testCaddy(t *testing.T) {
 	err = cdy.Install()
 	require.NoError(t, err)
 
-	//// update
+	// update
 	err = cdy.Update("2.3.0")
 	require.NoError(t, err)
 
-	//// uninstall
+	// uninstall
 	err = cdy.Uninstall()
 	require.NoError(t, err)
+}
+
+func testProto(t *testing.T) {
+	p := components.NewProtoc(db, "3.13.0")
+	err := p.Download("./testdata/downloads")
+	require.NoError(t, err)
+
+	// install
+	err = p.Install()
+	require.NoError(t, err)
+
+	// update
+	err = p.Update("3.14.0")
+	require.NoError(t, err)
+
+	// run
+	err = p.Run("-I./proto/v2/", "-I.", "--go_out=./prototest/", "--go_opt=paths=source_relative", "./prototest/test.proto")
+	require.NoError(t, err)
+	_ = os.RemoveAll("./prototest/prototest")
+
+	// uninstall
+	err = p.Uninstall()
+	require.NoError(t, err)
+
 }

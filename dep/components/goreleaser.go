@@ -102,7 +102,7 @@ func (g *Goreleaser) Uninstall() error {
 	}
 	// uninstall listed files
 	for _, file := range filesList {
-		if err = osutil.ExecSudo("rm", "-rf", file); err != nil {
+		if err = os.RemoveAll(file); err != nil {
 			return err
 		}
 	}
@@ -136,9 +136,11 @@ func (g *Goreleaser) Run(args ...string) error {
 }
 
 func (g *Goreleaser) Backup() error {
+	// We don't need to implement this
 	return nil
 }
 
 func (g *Goreleaser) Stop() error {
+	// We don't need to implement this
 	return nil
 }

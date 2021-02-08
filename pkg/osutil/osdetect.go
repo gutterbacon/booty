@@ -59,7 +59,7 @@ func getInstallPrefix() string {
 
 func SetupDirs() (err error) {
 	prefix := getInstallPrefix()
-	dirs := []string{"bin", "etc", "data", "downloads"}
+	dirs := []string{"bin", "etc", "data", "downloads", "include"}
 	for i := range dirs {
 		dirPath := filepath.Join(prefix, dirs[i])
 		if err = os.MkdirAll(dirPath, 0755); err != nil {
@@ -83,6 +83,10 @@ func GetDataDir() string {
 
 func GetDownloadDir() string {
 	return filepath.Join(getInstallPrefix(), "downloads")
+}
+
+func GetIncludeDir() string {
+	return filepath.Join(getInstallPrefix(), "include")
 }
 
 func CurUserChown(dir string) error {

@@ -1,9 +1,11 @@
 package fileutil
 
 import (
-	"fmt"
 	"io"
 	"os"
+	"strings"
+
+	"github.com/otiai10/copy"
 )
 
 func Copy(src, dst string) error {
@@ -12,23 +14,32 @@ func Copy(src, dst string) error {
 		return err
 	}
 
-	if !sourceFileStat.Mode().IsRegular() {
-		return fmt.Errorf("%s is not a regular file", src)
-	}
+	if sourceFileStat.Mode().IsRegular() {
+		source, err := os.Open(src)
+		if err != nil {
+			return err
+		}
 
-	source, err := os.Open(src)
-	if err != nil {
+		destination, err := os.Create(dst)
+		if err != nil {
+			return err
+		}
+
+		_, err = io.Copy(destination, source)
+		_ = source.Close()
+		_ = destination.Close()
 		return err
+
 	}
 
-	destination, err := os.Create(dst)
-	if err != nil {
-		return err
+	opt := copy.Options{
+		Skip: func(src string) (bool, error) {
+			return strings.HasSuffix(src, ".git"), nil
+		},
+		OnSymlink: func(src string) copy.SymlinkAction {
+			return copy.Shallow
+		},
 	}
 
-	_, err = io.Copy(destination, source)
-	_ = source.Close()
-	_ = destination.Close()
-	return err
+	return copy.Copy(src, dst, opt)
 }
-

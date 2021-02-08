@@ -39,9 +39,6 @@ func (g *Grafana) Name() string {
 }
 
 func (g *Grafana) Download(targetDir string) error {
-	// create target dir
-	_ = os.MkdirAll(targetDir, 0755)
-
 	osname := fmt.Sprintf("%s-%s", strings.ToLower(osutil.GetOS()), osutil.GetArch())
 	var fetchUrl string
 	switch osutil.GetOS() {
@@ -111,7 +108,7 @@ func (g *Grafana) Uninstall() error {
 	}
 	// uninstall listed files
 	for _, file := range filesList {
-		if err = osutil.ExecSudo("rm", "-rf", file); err != nil {
+		if err = os.RemoveAll(file); err != nil {
 			return err
 		}
 	}
