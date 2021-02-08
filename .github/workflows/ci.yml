@@ -56,5 +56,6 @@ jobs:
         working-directory: ${{ github.workspace }}/go/src/github.com/${{ github.repository }}
         env:
           target: ${{ matrix.target }}
+        timeout-minutes: 12
 
     

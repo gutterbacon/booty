@@ -9,7 +9,7 @@ name: Upload Release Asset
 jobs:
   create_release:
     name: Create Release
-    runs-on: ubuntu-16.04
+    runs-on: ubuntu-latest
     steps:
       - name: Create Release
         id: create_release
