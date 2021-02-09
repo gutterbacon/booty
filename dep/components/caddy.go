@@ -14,7 +14,7 @@ import (
 
 const (
 	// version -- version -- os_arch
-	caddyUrlFormat = "https://github.com/caddyserver/caddy/releases/download/v%s/caddy_%s_%s.tar.gz"
+	caddyUrlFormat = "https://github.com/caddyserver/caddy/releases/download/v%s/caddy_%s_%s.%s"
 )
 
 type Caddy struct {
@@ -40,10 +40,17 @@ func (c *Caddy) Name() string {
 }
 
 func (c *Caddy) Download(targetDir string) error {
-	downloadDir := filepath.Join(targetDir, c.Name())
+	downloadDir := filepath.Join(targetDir, c.Name()+"-"+c.version)
 	_ = os.MkdirAll(downloadDir, 0755)
 	osname := fmt.Sprintf("%s_%s", osutil.GetAltOs(), osutil.GetArch())
-	fetchUrl := fmt.Sprintf(caddyUrlFormat, c.version, c.version, osname)
+	var ext string
+	switch osutil.GetOS() {
+	case "linux", "darwin":
+		ext = "tar.gz"
+	case "windows":
+		ext = "zip"
+	}
+	fetchUrl := fmt.Sprintf(caddyUrlFormat, c.version, c.version, osname, ext)
 	fmt.Printf("Fetch URL: %s", fetchUrl)
 	err := downloader.Download(fetchUrl, downloadDir)
 	if err != nil {
@@ -59,8 +66,13 @@ func (c *Caddy) Install() error {
 	binDir := osutil.GetBinDir()
 
 	// all files that are going to be installed
+	executableName := c.Name()
+	switch osutil.GetOS() {
+	case "windows":
+		executableName += ".exe"
+	}
 	filesMap := map[string][]interface{}{
-		filepath.Join(c.dlPath, "caddy"): {filepath.Join(binDir, "caddy"), 0755},
+		filepath.Join(c.dlPath, executableName): {filepath.Join(binDir, executableName), 0755},
 	}
 	ip := store.InstalledPackage{
 		Name:     c.Name(),
@@ -129,6 +141,6 @@ func (c *Caddy) Backup() error {
 	return nil
 }
 
-func (c *Caddy) Stop() error {
+func (c *Caddy) RunStop() error {
 	return nil
 }

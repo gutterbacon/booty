@@ -61,10 +61,19 @@ func (g *Grafana) Install() error {
 	binDir := osutil.GetBinDir()
 	etcDir := osutil.GetEtcDir()
 
+	serverExecutable := g.Name() + "-server"
+	clientExecutable := g.Name() + "-cli"
+
+	switch osutil.GetOS() {
+	case "windows":
+		serverExecutable += ".exe"
+		clientExecutable += ".exe"
+	}
+
 	// all files that are going to be installed
 	filesMap := map[string][]interface{}{
-		filepath.Join(g.dlPath, "bin", "grafana-server"): {filepath.Join(binDir, "grafana-server"), 0755},
-		filepath.Join(g.dlPath, "bin", "grafana-cli"):    {filepath.Join(binDir, "grafana-cli"), 0755},
+		filepath.Join(g.dlPath, "bin", serverExecutable): {filepath.Join(binDir, serverExecutable), 0755},
+		filepath.Join(g.dlPath, "bin", clientExecutable): {filepath.Join(binDir, clientExecutable), 0755},
 		filepath.Join(g.dlPath, "conf", "defaults.ini"):  {filepath.Join(etcDir, "grafana.ini"), 0644},
 		filepath.Join(g.dlPath, "conf", "sample.ini"):    {filepath.Join(etcDir, "grafana.sample.ini"), 0644},
 	}
@@ -136,6 +145,6 @@ func (g *Grafana) Backup() error {
 	return nil
 }
 
-func (g *Grafana) Stop() error {
+func (g *Grafana) RunStop() error {
 	return nil
 }

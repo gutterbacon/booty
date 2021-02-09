@@ -13,7 +13,7 @@ import (
 )
 
 const (
-	defaultDev             = true
+	defaultDev             = false
 	defaultVersionInfoFile = "./components_version.json"
 )
 
@@ -34,17 +34,23 @@ func main() {
 	// global db directory
 	db := store.NewDB(logger, osutil.GetDataDir())
 	rootCmd := &cobra.Command{Use: "booty [commands]"}
-	rootCmd.PersistentFlags().BoolVarP(&isDev, "dev", "d", defaultDev, "run tools in dev mode instead of user mode")
+	rootCmd.PersistentFlags().BoolVarP(&isDev, "dev", "d", defaultDev, "run tools as dev activating several more components useful for developing")
 	rootCmd.PersistentFlags().StringVarP(&versionInfo, "config-version-info-file", "c", defaultVersionInfoFile, "path to config file")
 	var vi *config.VersionInfo
 	var comps []dep.Component
 	vi = config.NewVersionInfo(logger, versionInfo)
-	comps = []dep.Component{
+	comps = append(comps,
 		components.NewCaddy(db, vi.GetVersion("caddy")),
-	}
+	)
 	if isDev {
-		comps = append(comps, 
+		if err = osutil.DetectPreq(); err != nil {
+			logger.Fatalf(err.Error())
+		}
+		comps = append(comps,
 			components.NewGoreleaser(db, vi.GetVersion("goreleaser")),
+			components.NewProtocGenGo(db, vi.GetVersion("protoc-gen-go")),
+			//components.NewProtocGenGoGrpc(db, vi.GetVersion("protoc-gen-go-grpc")),
+			components.NewProtocGenCobra(db, vi.GetVersion("protoc-gen-cobra")),
 			components.NewProtoc(db, vi.GetVersion("protoc")),
 			components.NewGrafana(db, vi.GetVersion("grafana")),
 		)

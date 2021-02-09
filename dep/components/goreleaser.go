@@ -43,7 +43,7 @@ func (g *Goreleaser) Name() string {
 }
 
 func (g *Goreleaser) Download(targetDir string) error {
-	downloadDir := filepath.Join(targetDir, g.Name())
+	downloadDir := filepath.Join(targetDir, g.Name()+"-"+g.version)
 	_ = os.MkdirAll(downloadDir, 0755)
 	osname := fmt.Sprintf("%s_%s", osutil.GetOS(), osutil.GetAltArch())
 	fetchUrl := fmt.Sprintf(goreleaserUrlFormat, g.version, osname)
@@ -61,8 +61,13 @@ func (g *Goreleaser) Install() error {
 	// create bin directory under $PREFIX
 	binDir := osutil.GetBinDir()
 	// all files that are going to be installed
+	executableName := g.Name()
+	switch osutil.GetOS() {
+	case "windows":
+		executableName += ".exe"
+	}
 	filesMap := map[string][]interface{}{
-		filepath.Join(g.dlPath, "goreleaser"): {filepath.Join(binDir, "goreleaser"), 0755},
+		filepath.Join(g.dlPath, executableName): {filepath.Join(binDir, executableName), 0755},
 	}
 	ip := store.InstalledPackage{
 		Name:     g.Name(),
@@ -140,7 +145,7 @@ func (g *Goreleaser) Backup() error {
 	return nil
 }
 
-func (g *Goreleaser) Stop() error {
+func (g *Goreleaser) RunStop() error {
 	// We don't need to implement this
 	return nil
 }

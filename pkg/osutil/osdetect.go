@@ -73,6 +73,10 @@ func GetBinDir() string {
 	return filepath.Join(getInstallPrefix(), "bin")
 }
 
+func GetGoPath() string {
+	return os.Getenv("GOPATH")
+}
+
 func GetEtcDir() string {
 	return filepath.Join(getInstallPrefix(), "etc")
 }
@@ -122,4 +126,25 @@ func Exec(cmd string, args ...string) error {
 	scmd.Stdout = os.Stdout
 
 	return scmd.Run()
+}
+
+// DetectPreq detect prequisite dependencies (golang and flutter)
+// if it doesn't exists in the system, then return error
+func DetectPreq() error {
+	golangExists := ExeExists("go")
+	gopathExists := checkEnv("GOPATH")
+	if golangExists && gopathExists {
+		return nil
+	}
+	return fmt.Errorf("golang executable doesn't exists, please install golang first")
+}
+
+func ExeExists(cmd string) bool {
+	_, err := exec.LookPath(cmd)
+	return err == nil
+}
+
+func checkEnv(key string) bool {
+	env := os.Getenv(key)
+	return env != ""
 }

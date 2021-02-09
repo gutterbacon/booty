@@ -13,6 +13,7 @@ func NewDB(logger logging.Logger, dir string) *DB {
 	options := bhold.DefaultOptions
 	options.Dir = dir
 	options.ValueDir = dir
+	options.Truncate = true
 
 	store, err := bhold.Open(options)
 	if err != nil {

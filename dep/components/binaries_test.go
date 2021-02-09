@@ -1,6 +1,7 @@
 package components_test
 
 import (
+	"go.amplifyedge.org/booty-v2/pkg/osutil"
 	"os"
 
 	"go.amplifyedge.org/booty-v2/dep/components"
@@ -27,6 +28,9 @@ func TestBinaries(t *testing.T) {
 	t.Run("testGrafana", testGrafana)
 	t.Run("testGoreleaser", testGoreleaser)
 	t.Run("testCaddy", testCaddy)
+	t.Run("testProtocGenGo", testProtocGenGo)
+	//t.Run("testProtocGenGrpc", testProtocGenGrpc)
+	t.Run("testProtocGenCobra", testProtocGenCobra)
 	t.Run("testProto", testProto)
 }
 
@@ -103,4 +107,67 @@ func testProto(t *testing.T) {
 	err = p.Uninstall()
 	require.NoError(t, err)
 
+}
+
+func testProtocGenGo(t *testing.T) {
+	p := components.NewProtocGenGo(db, "1.25.0")
+	err := p.Download("./testdata/downloads")
+	require.NoError(t, err)
+
+	// install
+	err = p.Install()
+	require.NoError(t, err)
+
+	exists := osutil.ExeExists("protoc-gen-go")
+	require.Equal(t, true, exists)
+
+	// update
+	err = p.Update("1.25.0")
+	require.NoError(t, err)
+
+	// uninstall
+	err = p.Uninstall()
+	require.NoError(t, err)
+}
+
+func testProtocGenCobra(t *testing.T) {
+	p := components.NewProtocGenCobra(db, "0.4.0")
+	err := p.Download("./testdata/downloads")
+	require.NoError(t, err)
+
+	// install
+	err = p.Install()
+	require.NoError(t, err)
+
+	exists := osutil.ExeExists("protoc-gen-cobra")
+	require.Equal(t, true, exists)
+
+	// update
+	err = p.Update("0.4.0")
+	require.NoError(t, err)
+
+	// uninstall
+	err = p.Uninstall()
+	require.NoError(t, err)
+}
+
+func testProtocGenGrpc(t *testing.T) {
+	p := components.NewProtocGenGoGrpc(db, "1.1.0")
+	err := p.Download("./testdata/downloads")
+	require.NoError(t, err)
+
+	// install
+	//err = p.Install()
+	//require.NoError(t, err)
+	//
+	//exists := osutil.ExeExists("protoc-gen-go-grpc")
+	//require.Equal(t, true, exists)
+	//
+	//// update
+	//err = p.Update("1.1.0")
+	//require.NoError(t, err)
+	//
+	//// uninstall
+	//err = p.Uninstall()
+	//require.NoError(t, err)
 }

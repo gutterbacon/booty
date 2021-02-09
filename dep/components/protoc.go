@@ -2,6 +2,7 @@ package components
 
 import (
 	"fmt"
+	"go.amplifyedge.org/booty-v2/dep"
 	"os"
 	"path/filepath"
 	"strings"
@@ -18,9 +19,10 @@ const (
 )
 
 type Protoc struct {
-	version string
-	dlPath  string
-	db      *store.DB
+	version      string
+	dlPath       string
+	db           *store.DB
+	dependencies []dep.Component
 }
 
 func NewProtoc(db *store.DB, version string) *Protoc {
@@ -61,7 +63,7 @@ func (p *Protoc) Download(targetDir string) error {
 	if err != nil {
 		return err
 	}
-	p.dlPath = filepath.Join(targetDir)
+	p.dlPath = targetDir
 	return nil
 }
 
@@ -71,10 +73,15 @@ func (p *Protoc) Install() error {
 	binDir := osutil.GetBinDir()
 	includeDir := osutil.GetIncludeDir()
 
+	executableName := p.Name()
+	if osutil.GetOS() == "windows" {
+		executableName += ".exe"
+	}
+
 	// all files that are going to be installed
 	filesMap := map[string][]interface{}{
-		filepath.Join(p.dlPath, "bin", p.Name()):     {filepath.Join(binDir, p.Name()), 0755},
-		filepath.Join(p.dlPath, "include", "google"): {filepath.Join(includeDir, "google"), 0755},
+		filepath.Join(p.dlPath, "bin", executableName): {filepath.Join(binDir, executableName), 0755},
+		filepath.Join(p.dlPath, "include", "google"):   {filepath.Join(includeDir, "google"), 0755},
 	}
 
 	ip := store.InstalledPackage{
@@ -149,7 +156,7 @@ func (p *Protoc) Run(args ...string) error {
 	return osutil.Exec(executable, arguments...)
 }
 
-func (p *Protoc) Stop() error {
+func (p *Protoc) RunStop() error {
 	// We do not need to implement this
 	return nil
 }

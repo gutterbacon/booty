@@ -31,6 +31,6 @@ type Component interface {
 	Uninstall() error
 	Run(args ...string) error
 	Update(version string) error
-	Stop() error
+	RunStop() error
 	Backup() error
 }
