@@ -4,6 +4,7 @@ package config
 
 import (
 	"encoding/json"
+	"io"
 	"io/ioutil"
 
 	"go.amplifyedge.org/booty-v2/pkg/logging"
@@ -15,15 +16,16 @@ type BinaryInfo struct {
 }
 
 type VersionInfo struct {
+	DevMode  bool         `json:"dev"`
 	Binaries []BinaryInfo `json:"binaries"`
 }
 
-func NewVersionInfo(logger logging.Logger, jsonFile string) *VersionInfo {
-	var vi VersionInfo
-	b, err := ioutil.ReadFile(jsonFile)
+func NewVersionInfo(logger logging.Logger, r io.Reader) *VersionInfo {
+	b, err := ioutil.ReadAll(r)
 	if err != nil {
-		logger.Fatalf("error getting version information: %v", err)
+		logger.Fatalf("error reading version information: %v", err)
 	}
+	var vi VersionInfo
 	if err = json.Unmarshal(b, &vi); err != nil {
 		logger.Fatalf("error parsing version information: %v", err)
 	}

@@ -22,11 +22,10 @@ this-build:
 	$(GO_LDFLAGS) -o bin/booty main.go
 
 this-dep:
-	./bin/booty -d -c ./components_version.json install
+	./bin/booty install
 
 this-mock-release:
 	./bin/booty release --rm-dist --skip-publish --snapshot
-	# rm -rf dist
 
 this-release:
 	./bin/booty release release

@@ -1,48 +1,96 @@
 package main
 
 import (
+	"bytes"
 	"github.com/spf13/cobra"
-
-	"go.amplifyedge.org/booty-v2/cmd"
+	c "go.amplifyedge.org/booty-v2/cmd"
 	"go.amplifyedge.org/booty-v2/config"
 	"go.amplifyedge.org/booty-v2/dep"
 	"go.amplifyedge.org/booty-v2/dep/components"
 	"go.amplifyedge.org/booty-v2/pkg/logging/zaplog"
 	"go.amplifyedge.org/booty-v2/pkg/osutil"
 	"go.amplifyedge.org/booty-v2/pkg/store"
+	"io"
+	"io/ioutil"
+	"path/filepath"
+	"strings"
 )
 
-const (
-	defaultDev             = false
-	defaultVersionInfoFile = "./components_version.json"
-)
+//golang 1.16 should be able to do this natively
+//go:embed config.json
+
+
+const defaultConfig = `
+{
+  "dev": true,
+  "binaries": [
+    {
+      "name": "grafana",
+      "version": "7.4.0"
+    },
+    {
+      "name": "goreleaser",
+      "version": "0.155.1"
+    },
+    {
+      "name": "caddy",
+      "version": "2.3.0"
+    },
+    {
+      "name": "protoc",
+      "version": "3.14.0"
+    },
+    {
+      "name": "protoc-gen-go",
+      "version": "1.25.0"
+    },
+    {
+      "name": "protoc-gen-cobra",
+      "version": "0.4.0"
+    },
+    {
+      "name": "protoc-gen-go-grpc",
+      "version": "master"
+    }
+  ]
+}
+`
 
 var (
-	isDev       bool
-	versionInfo string
+	rootCmd = &cobra.Command{
+		Use: "booty [commands]",
+	}
+	logger *zaplog.ZapLogger
 )
 
 func main() {
-	logger := zaplog.NewZapLogger(zaplog.INFO, "booty", true)
+	var vi *config.VersionInfo
+	var comps []dep.Component
+	logger = zaplog.NewZapLogger(zaplog.WARN, "booty", true)
 	logger.InitLogger(nil)
 	// setup directories
 	err := osutil.SetupDirs()
 	if err != nil {
 		logger.Fatalf("unable to setup directories: %v", err)
 	}
+	// config, loads default config if it doesn't exists
+	etc := osutil.GetEtcDir()
+	var r io.Reader
+	fileContent, err := ioutil.ReadFile(filepath.Join(etc, "config.json"))
+	if err != nil {
+		// use default config
+		r = strings.NewReader(defaultConfig)
+	} else {
+		r = bytes.NewBuffer(fileContent)
+	}
+	vi = config.NewVersionInfo(logger, r)
 
 	// global db directory
 	db := store.NewDB(logger, osutil.GetDataDir())
-	rootCmd := &cobra.Command{Use: "booty [commands]"}
-	rootCmd.PersistentFlags().BoolVarP(&isDev, "dev", "d", defaultDev, "run tools as dev activating several more components useful for developing")
-	rootCmd.PersistentFlags().StringVarP(&versionInfo, "config-version-info-file", "c", defaultVersionInfoFile, "path to config file")
-	var vi *config.VersionInfo
-	var comps []dep.Component
-	vi = config.NewVersionInfo(logger, versionInfo)
 	comps = append(comps,
 		components.NewCaddy(db, vi.GetVersion("caddy")),
 	)
-	if isDev {
+	if vi.DevMode {
 		if err = osutil.DetectPreq(); err != nil {
 			logger.Fatalf(err.Error())
 		}
@@ -55,13 +103,12 @@ func main() {
 			components.NewGrafana(db, vi.GetVersion("grafana")),
 		)
 		rootCmd.AddCommand(
-			cmd.ReleaseCommand(logger, comps),
-			cmd.ProtoCommand(logger, comps),
+			c.ReleaseCommand(logger, comps),
+			c.ProtoCommand(logger, comps),
 		)
 	}
-	rootCmd.AddCommand(cmd.InstallCommand(logger, comps))
-
-	if err := rootCmd.Execute(); err != nil {
+	rootCmd.AddCommand(c.InstallCommand(logger, comps))
+	if err = rootCmd.Execute(); err != nil {
 		logger.Errorf("error: %v", err)
 	}
 }
