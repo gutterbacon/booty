@@ -1,6 +1,9 @@
 name: CI
 
 on:
+  push:
+    branches:
+      - '*'
   pull_request:
     branches:
       - "*"
@@ -8,18 +11,18 @@ on:
 jobs:
   all:
     name: CI
-   
+
     strategy:
-      fail-fast: false
+      fail-fast: false # saves ci time, won't be worth it if it even runs other platform
       matrix:
-        os: [ubuntu-latest, macos-latest, windows-latest]
-        go-version: [1.15.6]
-        target: ["all-ci"]
+        os: [ ubuntu-latest, macos-latest, windows-latest ]
+        go-version: [ 1.15.7 ]
+        target: [ "all-ci" ]
 
     runs-on: ${{ matrix.os }}
 
     steps:
-      - name: Set up Go 
+      - name: Set up Go
         uses: actions/setup-go@v2
         with:
           go-version: ${{ matrix.go-version }}
@@ -53,5 +56,6 @@ jobs:
         working-directory: ${{ github.workspace }}/go/src/github.com/${{ github.repository }}
         env:
           target: ${{ matrix.target }}
+        timeout-minutes: 12
 
     

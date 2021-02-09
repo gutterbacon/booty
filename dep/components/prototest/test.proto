@@ -1,0 +1,14 @@
+syntax = "proto3";
+
+import "google/protobuf/timestamp.proto";
+import "google/protobuf/empty.proto";
+
+option go_package = "go.amplifyedge.org/booty-v2/dep/components/prototest";
+
+message TimeMsg {
+  google.protobuf.Timestamp ts = 1;
+}
+
+service ErrorService {
+  rpc ErrorService(google.protobuf.Empty) returns (TimeMsg);
+}
