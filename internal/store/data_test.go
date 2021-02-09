@@ -3,8 +3,8 @@ package store_test
 import (
 	"github.com/stretchr/testify/require"
 	bhold "github.com/timshannon/badgerhold/v2"
-	"go.amplifyedge.org/booty-v2/pkg/logging/zaplog"
-	"go.amplifyedge.org/booty-v2/pkg/store"
+	"go.amplifyedge.org/booty-v2/internal/logging/zaplog"
+	"go.amplifyedge.org/booty-v2/internal/store"
 	"testing"
 )
 

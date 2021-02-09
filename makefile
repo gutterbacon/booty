@@ -22,7 +22,7 @@ this-build:
 	$(GO_LDFLAGS) -o bin/booty main.go
 
 this-dep:
-	./bin/booty install
+	./bin/booty install-all
 
 this-mock-release:
 	./bin/booty release --rm-dist --skip-publish --snapshot

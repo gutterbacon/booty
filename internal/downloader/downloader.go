@@ -1,7 +1,7 @@
 package downloader
 
 import (
-	"go.amplifyedge.org/booty-v2/pkg/osutil"
+	"go.amplifyedge.org/booty-v2/internal/osutil"
 	"io"
 	"net/url"
 	"path/filepath"

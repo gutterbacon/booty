@@ -2,13 +2,11 @@ package zaplog
 
 import (
 	"errors"
-	"go.amplifyedge.org/booty-v2/pkg/logging"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
-	"google.golang.org/grpc"
 	"os"
 
-	grpcZap "github.com/grpc-ecosystem/go-grpc-middleware/logging/zap"
+	"go.amplifyedge.org/booty-v2/internal/logging"
 )
 
 const (
@@ -96,11 +94,11 @@ func (l *ZapLogger) Infof(template string, args ...interface{}) {
 	l.sugarLogger.Infof(template, args...)
 }
 
-func (l *ZapLogger) Warn(args ...interface{}) {
+func (l *ZapLogger) Warning(args ...interface{}) {
 	l.sugarLogger.Warn(args...)
 }
 
-func (l *ZapLogger) Warnf(template string, args ...interface{}) {
+func (l *ZapLogger) Warningf(template string, args ...interface{}) {
 	l.sugarLogger.Warnf(template, args...)
 }
 
@@ -128,16 +126,3 @@ func (l *ZapLogger) Fatalf(template string, args ...interface{}) {
 	l.sugarLogger.Fatalf(template, args...)
 }
 
-func (l *ZapLogger) GetServerUnaryInterceptor() grpc.UnaryServerInterceptor {
-	zapOpts := []grpcZap.Option{
-		grpcZap.WithLevels(grpcZap.DefaultCodeToLevel),
-	}
-	return grpcZap.UnaryServerInterceptor(l.sugarLogger.Desugar(), zapOpts...)
-}
-
-func (l *ZapLogger) GetServerStreamInterceptor() grpc.StreamServerInterceptor {
-	zapOpts := []grpcZap.Option{
-		grpcZap.WithLevels(grpcZap.DefaultCodeToLevel),
-	}
-	return grpcZap.StreamServerInterceptor(l.sugarLogger.Desugar(), zapOpts...)
-}

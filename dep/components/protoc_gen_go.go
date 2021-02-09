@@ -2,10 +2,11 @@ package components
 
 import (
 	"fmt"
-	"go.amplifyedge.org/booty-v2/pkg/downloader"
-	"go.amplifyedge.org/booty-v2/pkg/fileutil"
-	"go.amplifyedge.org/booty-v2/pkg/osutil"
-	"go.amplifyedge.org/booty-v2/pkg/store"
+	"go.amplifyedge.org/booty-v2/dep"
+	"go.amplifyedge.org/booty-v2/internal/downloader"
+	"go.amplifyedge.org/booty-v2/internal/fileutil"
+	"go.amplifyedge.org/booty-v2/internal/osutil"
+	"go.amplifyedge.org/booty-v2/internal/store"
 	"os"
 	"path/filepath"
 )
@@ -122,6 +123,10 @@ func (p *ProtocGenGo) RunStop() error {
 }
 
 func (p *ProtocGenGo) Backup() error {
+	return nil
+}
+
+func (p *ProtocGenGo) Dependencies() []dep.Component {
 	return nil
 }
 
