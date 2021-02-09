@@ -67,7 +67,7 @@ func (p *ProtocGenCobra) Install() error {
 	if err = p.db.New(&ip); err != nil {
 		return err
 	}
-	return os.RemoveAll(p.dlPath)
+	return nil
 }
 
 func (p *ProtocGenCobra) Uninstall() error {
