@@ -2,7 +2,7 @@ package fileutil_test
 
 import (
 	"github.com/stretchr/testify/require"
-	"go.amplifyedge.org/booty-v2/pkg/fileutil"
+	"go.amplifyedge.org/booty-v2/internal/fileutil"
 	"testing"
 )
 

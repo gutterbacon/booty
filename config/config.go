@@ -4,10 +4,8 @@ package config
 
 import (
 	"encoding/json"
-	"io"
-	"io/ioutil"
 
-	"go.amplifyedge.org/booty-v2/pkg/logging"
+	"go.amplifyedge.org/booty-v2/internal/logging"
 )
 
 type BinaryInfo struct {
@@ -15,25 +13,21 @@ type BinaryInfo struct {
 	Version string `json:"version"`
 }
 
-type VersionInfo struct {
+type AppConfig struct {
 	DevMode  bool         `json:"dev"`
 	Binaries []BinaryInfo `json:"binaries"`
 }
 
-func NewVersionInfo(logger logging.Logger, r io.Reader) *VersionInfo {
-	b, err := ioutil.ReadAll(r)
-	if err != nil {
-		logger.Fatalf("error reading version information: %v", err)
-	}
-	var vi VersionInfo
-	if err = json.Unmarshal(b, &vi); err != nil {
+func NewAppConfig(logger logging.Logger, r []byte) *AppConfig {
+	var ac AppConfig
+	if err := json.Unmarshal(r, &ac); err != nil {
 		logger.Fatalf("error parsing version information: %v", err)
 	}
-	return &vi
+	return &ac
 }
 
-func (vi *VersionInfo) GetVersion(pkgName string) string {
-	for _, pkg := range vi.Binaries {
+func (ac *AppConfig) GetVersion(pkgName string) string {
+	for _, pkg := range ac.Binaries {
 		if pkgName == pkg.Name {
 			return pkg.Version
 		}
@@ -41,38 +35,36 @@ func (vi *VersionInfo) GetVersion(pkgName string) string {
 	return ""
 }
 
-const DefaultConfig = `
-{
-  "dev": true,
-  "binaries": [
-    {
-      "name": "grafana",
-      "version": "7.4.0"
-    },
-    {
-      "name": "goreleaser",
-      "version": "0.155.1"
-    },
-    {
-      "name": "caddy",
-      "version": "2.3.0"
-    },
-    {
-      "name": "protoc",
-      "version": "3.14.0"
-    },
-    {
-      "name": "protoc-gen-go",
-      "version": "1.25.0"
-    },
-    {
-      "name": "protoc-gen-cobra",
-      "version": "0.4.0"
-    },
-    {
-      "name": "protoc-gen-go-grpc",
-      "version": "master"
-    }
-  ]
+var DefaultConfig = AppConfig{
+	DevMode: true,
+	Binaries: []BinaryInfo{
+		{
+			Name:    "grafana",
+			Version: "7.4.0",
+		},
+		{
+			Name:    "goreleaser",
+			Version: "0.155.1",
+		},
+		{
+			Name:    "caddy",
+			Version: "2.3.0",
+		},
+		{
+			Name:    "protoc",
+			Version: "3.14.0",
+		},
+		{
+			Name:    "protoc-gen-go",
+			Version: "1.25.0",
+		},
+		{
+			Name:    "protoc-gen-cobra",
+			Version: "0.4.1",
+		},
+		{
+			Name:    "protoc-gen-go-grpc",
+			Version: "1.1.0",
+		},
+	},
 }
-`

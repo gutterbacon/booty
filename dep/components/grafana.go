@@ -6,11 +6,12 @@ import (
 	"path/filepath"
 	"strings"
 
-	"go.amplifyedge.org/booty-v2/pkg/fileutil"
-	"go.amplifyedge.org/booty-v2/pkg/osutil"
-	"go.amplifyedge.org/booty-v2/pkg/store"
+	"go.amplifyedge.org/booty-v2/dep"
+	"go.amplifyedge.org/booty-v2/internal/fileutil"
+	"go.amplifyedge.org/booty-v2/internal/osutil"
+	"go.amplifyedge.org/booty-v2/internal/store"
 
-	"go.amplifyedge.org/booty-v2/pkg/downloader"
+	"go.amplifyedge.org/booty-v2/internal/downloader"
 )
 
 const (
@@ -146,5 +147,9 @@ func (g *Grafana) Backup() error {
 }
 
 func (g *Grafana) RunStop() error {
+	return nil
+}
+
+func (g *Grafana) Dependencies() []dep.Component {
 	return nil
 }

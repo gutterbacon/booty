@@ -2,15 +2,16 @@ package components
 
 import (
 	"fmt"
-	"go.amplifyedge.org/booty-v2/dep"
 	"os"
 	"path/filepath"
 	"strings"
 
-	"go.amplifyedge.org/booty-v2/pkg/downloader"
-	"go.amplifyedge.org/booty-v2/pkg/fileutil"
-	"go.amplifyedge.org/booty-v2/pkg/osutil"
-	"go.amplifyedge.org/booty-v2/pkg/store"
+	"go.amplifyedge.org/booty-v2/dep"
+
+	"go.amplifyedge.org/booty-v2/internal/downloader"
+	"go.amplifyedge.org/booty-v2/internal/fileutil"
+	"go.amplifyedge.org/booty-v2/internal/osutil"
+	"go.amplifyedge.org/booty-v2/internal/store"
 )
 
 const (
@@ -25,11 +26,12 @@ type Protoc struct {
 	dependencies []dep.Component
 }
 
-func NewProtoc(db *store.DB, version string) *Protoc {
+func NewProtoc(db *store.DB, version string, deps []dep.Component) *Protoc {
 	return &Protoc{
-		version: version,
-		dlPath:  "",
-		db:      db,
+		version:      version,
+		dlPath:       "",
+		db:           db,
+		dependencies: deps,
 	}
 }
 
@@ -45,6 +47,22 @@ func (p *Protoc) Download(targetDir string) error {
 	if osutil.GetArch() != "amd64" {
 		return fmt.Errorf("error: unsupported arch: %v", osutil.GetArch())
 	}
+	// download all dependencies
+	// for _, d := range p.dependencies {
+	// 	if err := d.Download(targetDir); err != nil {
+	// 		return err
+	// 	}
+	// }
+	// errChan := make(chan error, 1)
+	// for i := 0; i < len(p.dependencies); i++ {
+	// 	j := i
+	// 	w := newWorkerType("download", targetDir, p.dependencies, errChan)
+	// 	go w.do(j)
+	// }
+	// if err := <-errChan; err != nil {
+	// 	return err
+	// }
+
 	var osName string
 	var fetchUrl string
 	switch osutil.GetOS() {
@@ -77,6 +95,13 @@ func (p *Protoc) Install() error {
 	if osutil.GetOS() == "windows" {
 		executableName += ".exe"
 	}
+
+	// install all dependencies
+	// for _, d := range p.dependencies {
+	// 	if err = d.Install(); err != nil {
+	// 		return err
+	// 	}
+	// }
 
 	// all files that are going to be installed
 	filesMap := map[string][]interface{}{
@@ -122,6 +147,18 @@ func (p *Protoc) Update(version string) error {
 
 func (p *Protoc) Uninstall() error {
 	var err error
+
+	// uninstall all dependencies
+	// errChan := make(chan error, 1)
+	// for i := 0; i < len(p.dependencies); i++ {
+	// 	j := i
+	// 	w := newWorkerType("uninstall", "", p.dependencies, errChan)
+	// 	go w.do(j)
+	// }
+	// if err = <-errChan; err != nil {
+	// 	return err
+	// }
+
 	var pkg *store.InstalledPackage
 	pkg, err = p.db.Get(p.Name())
 	if err != nil {
@@ -164,4 +201,8 @@ func (p *Protoc) RunStop() error {
 func (p *Protoc) Backup() error {
 	// We do not need to implement this.
 	return nil
+}
+
+func (p *Protoc) Dependencies() []dep.Component {
+	return p.dependencies
 }

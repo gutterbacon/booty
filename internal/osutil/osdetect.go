@@ -2,6 +2,7 @@ package osutil
 
 import (
 	"fmt"
+	"log"
 	"os"
 	"os/exec"
 	"os/user"
@@ -10,37 +11,110 @@ import (
 	"strings"
 )
 
-func GetOS() string {
-	return runtime.GOOS
-}
+// global variables
+// yes.
+var (
+	dirs  appDirs
+	rinfo runtimeInfo
+	err   error
+)
 
-func GetAltOs() string {
-	switch GetOS() {
-	case "linux":
-		return "linux"
-	case "darwin":
-		return "mac"
-	case "windows":
-		return "windows"
-	default:
-		return ""
+func init() {
+	rinfo = setupRuntimeInfo()
+	dirs, err = setupDirs()
+	if err != nil {
+		log.Fatal(err)
 	}
 }
 
+func setupDirs() (appDirs, error) {
+	prefix := getInstallPrefix()
+	dirs := []string{"bin", "etc", "data", "cache", "include"}
+	ad := appDirs{}
+	for i := range dirs {
+		dirPath := filepath.Join(prefix, dirs[i])
+		if err = os.MkdirAll(dirPath, 0755); err != nil {
+			return ad, err
+		}
+		switch dirs[i] {
+		case "bin":
+			ad.bin = dirPath
+		case "etc":
+			ad.etc = dirPath
+		case "data":
+			ad.data = dirPath
+		case "cache":
+			ad.cache = dirPath
+		case "include":
+			ad.include = dirPath
+		}
+	}
+	return ad, nil
+}
+
+// appDirs containing directories this app is using
+type appDirs struct {
+	bin     string // contains binaries
+	data    string // contains database
+	etc     string // contains configurations
+	include string // contains shared library
+	cache   string // contains downloaded tarballs
+}
+
+// runtimeInfo for the whole application
+type runtimeInfo struct {
+	osName  string // os name
+	arch    string // arch name
+	altOs   string // alt os name
+	altArch string // alt architecture
+}
+
+func setupRuntimeInfo() runtimeInfo {
+	osName := runtime.GOOS
+	arch := runtime.GOARCH
+	var altOs string
+	var altArch string
+	switch osName {
+	case "linux":
+		altOs = "Linux"
+	case "darwin":
+		altOs = "Mac"
+	case "windows":
+		altOs = "Win"
+	default:
+		altOs = ""
+	}
+	switch arch {
+	case "amd64":
+		altArch = "x86_64"
+	case "arm64":
+		altArch = "arm64v8"
+	default:
+		altArch = ""
+	}
+	return runtimeInfo{
+		osName:  osName,
+		arch:    arch,
+		altOs:   altOs,
+		altArch: altArch,
+	}
+}
+
+func GetOS() string {
+	return rinfo.osName
+}
+
+func GetAltOs() string {
+	return rinfo.altOs
+}
+
 func GetArch() string {
-	return runtime.GOARCH
+	return rinfo.arch
 }
 
 // We support only x86_64 or arm64 only for now
 func GetAltArch() string {
-	switch GetArch() {
-	case "amd64":
-		return "x86_64"
-	case "arm64":
-		return "arm64v8"
-	default:
-		return ""
-	}
+	return rinfo.altArch
 }
 
 func getInstallPrefix() string {
@@ -57,20 +131,8 @@ func getInstallPrefix() string {
 	}
 }
 
-func SetupDirs() (err error) {
-	prefix := getInstallPrefix()
-	dirs := []string{"bin", "etc", "data", "downloads", "include"}
-	for i := range dirs {
-		dirPath := filepath.Join(prefix, dirs[i])
-		if err = os.MkdirAll(dirPath, 0755); err != nil {
-			return err
-		}
-	}
-	return nil
-}
-
 func GetBinDir() string {
-	return filepath.Join(getInstallPrefix(), "bin")
+	return dirs.bin
 }
 
 func GetGoPath() string {
@@ -78,19 +140,19 @@ func GetGoPath() string {
 }
 
 func GetEtcDir() string {
-	return filepath.Join(getInstallPrefix(), "etc")
+	return dirs.etc
 }
 
 func GetDataDir() string {
-	return filepath.Join(getInstallPrefix(), "data")
+	return dirs.data
 }
 
 func GetDownloadDir() string {
-	return filepath.Join(getInstallPrefix(), "downloads")
+	return dirs.cache
 }
 
 func GetIncludeDir() string {
-	return filepath.Join(getInstallPrefix(), "include")
+	return dirs.include
 }
 
 func CurUserChown(dir string) error {

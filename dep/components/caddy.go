@@ -5,11 +5,12 @@ import (
 	"os"
 	"path/filepath"
 
-	"go.amplifyedge.org/booty-v2/pkg/fileutil"
+	"go.amplifyedge.org/booty-v2/dep"
+	"go.amplifyedge.org/booty-v2/internal/fileutil"
 
-	"go.amplifyedge.org/booty-v2/pkg/downloader"
-	"go.amplifyedge.org/booty-v2/pkg/osutil"
-	"go.amplifyedge.org/booty-v2/pkg/store"
+	"go.amplifyedge.org/booty-v2/internal/downloader"
+	"go.amplifyedge.org/booty-v2/internal/osutil"
+	"go.amplifyedge.org/booty-v2/internal/store"
 )
 
 const (
@@ -142,5 +143,9 @@ func (c *Caddy) Backup() error {
 }
 
 func (c *Caddy) RunStop() error {
+	return nil
+}
+
+func (c *Caddy) Dependencies() []dep.Component {
 	return nil
 }

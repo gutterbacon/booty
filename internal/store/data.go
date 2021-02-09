@@ -2,7 +2,8 @@ package store
 
 import (
 	bhold "github.com/timshannon/badgerhold/v2"
-	"go.amplifyedge.org/booty-v2/pkg/logging"
+
+	"go.amplifyedge.org/booty-v2/internal/logging"
 )
 
 type DB struct {
@@ -14,6 +15,7 @@ func NewDB(logger logging.Logger, dir string) *DB {
 	options.Dir = dir
 	options.ValueDir = dir
 	options.Truncate = true
+	options.Logger = logger
 
 	store, err := bhold.Open(options)
 	if err != nil {

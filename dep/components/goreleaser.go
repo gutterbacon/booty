@@ -6,13 +6,14 @@ import (
 	"path/filepath"
 	"strings"
 
-	"go.amplifyedge.org/booty-v2/pkg/downloader"
-	"go.amplifyedge.org/booty-v2/pkg/fileutil"
+	"go.amplifyedge.org/booty-v2/dep"
+	"go.amplifyedge.org/booty-v2/internal/downloader"
+	"go.amplifyedge.org/booty-v2/internal/fileutil"
 
 	// "path/filepath"
 
-	"go.amplifyedge.org/booty-v2/pkg/osutil"
-	"go.amplifyedge.org/booty-v2/pkg/store"
+	"go.amplifyedge.org/booty-v2/internal/osutil"
+	"go.amplifyedge.org/booty-v2/internal/store"
 )
 
 const (
@@ -154,5 +155,9 @@ func (g *Goreleaser) Backup() error {
 
 func (g *Goreleaser) RunStop() error {
 	// We don't need to implement this
+	return nil
+}
+
+func (g *Goreleaser) Dependencies() []dep.Component {
 	return nil
 }

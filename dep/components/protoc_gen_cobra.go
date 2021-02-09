@@ -1,15 +1,20 @@
 package components
 
 import (
-	"go.amplifyedge.org/booty-v2/pkg/downloader"
-	"go.amplifyedge.org/booty-v2/pkg/osutil"
-	"go.amplifyedge.org/booty-v2/pkg/store"
+	"fmt"
 	"os"
 	"path/filepath"
+
+	"go.amplifyedge.org/booty-v2/dep"
+	"go.amplifyedge.org/booty-v2/internal/downloader"
+	"go.amplifyedge.org/booty-v2/internal/fileutil"
+	"go.amplifyedge.org/booty-v2/internal/osutil"
+	"go.amplifyedge.org/booty-v2/internal/store"
 )
 
 const (
-	protoCobraUrl = "https://github.com/amplify-edge/protoc-gen-cobra/archive/v0.4.0.tar.gz"
+	// version -- version -- os_arch -- ext
+	protoCobraUrlFormat = "https://github.com/amplify-edge/protoc-gen-cobra/releases/download/v%s/protoc-gen-cobra-%s-%s.%s"
 )
 
 type ProtocGenCobra struct {
@@ -36,7 +41,16 @@ func (p *ProtocGenCobra) Version() string {
 
 func (p *ProtocGenCobra) Download(targetDir string) error {
 	target := filepath.Join(targetDir, p.Name()+"-"+p.version)
-	err := downloader.Download(protoCobraUrl, targetDir)
+	var ext string
+	switch osutil.GetOS() {
+	case "linux", "darwin":
+		ext = "tar.gz"
+	case "windows":
+		ext = "zip"
+	}
+	osName := fmt.Sprintf("%s_%s", osutil.GetOS(), osutil.GetArch())
+	fetchUrl := fmt.Sprintf(protoCobraUrlFormat, p.version, p.version, osName, ext)
+	err := downloader.Download(fetchUrl, target)
 	if err != nil {
 		return err
 	}
@@ -53,10 +67,11 @@ func (p *ProtocGenCobra) Install() error {
 	if osutil.GetOS() == "windows" {
 		executableName += ".exe"
 	}
-	_ = os.Chdir(p.dlPath)
-	if err = osutil.Exec("go", "install"); err != nil {
-		return err
+	// all files that are going to be installed
+	filesMap := map[string][]interface{}{
+		filepath.Join(p.dlPath, executableName): {filepath.Join(goBinDir, executableName), 0755},
 	}
+
 	ip := store.InstalledPackage{
 		Name:    p.Name(),
 		Version: p.version,
@@ -64,10 +79,22 @@ func (p *ProtocGenCobra) Install() error {
 			filepath.Join(goBinDir, executableName): 0755,
 		},
 	}
+	// copy file to the bin directory
+	for k, v := range filesMap {
+		if err = fileutil.Copy(k, v[0].(string)); err != nil {
+			return err
+		}
+		installedName := v[0].(string)
+		installedMode := v[1].(int)
+		if err = os.Chmod(installedName, os.FileMode(installedMode)); err != nil {
+			return err
+		}
+		ip.FilesMap[installedName] = installedMode
+	}
 	if err = p.db.New(&ip); err != nil {
 		return err
 	}
-	return nil
+	return os.RemoveAll(p.dlPath)
 }
 
 func (p *ProtocGenCobra) Uninstall() error {
@@ -110,5 +137,9 @@ func (p *ProtocGenCobra) RunStop() error {
 }
 
 func (p *ProtocGenCobra) Backup() error {
+	return nil
+}
+
+func (p *ProtocGenCobra) Dependencies() []dep.Component {
 	return nil
 }

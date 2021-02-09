@@ -1,12 +1,14 @@
 package components_test
 
 import (
-	"go.amplifyedge.org/booty-v2/pkg/osutil"
 	"os"
 
+	"go.amplifyedge.org/booty-v2/dep"
+	"go.amplifyedge.org/booty-v2/internal/osutil"
+
 	"go.amplifyedge.org/booty-v2/dep/components"
-	"go.amplifyedge.org/booty-v2/pkg/logging/zaplog"
-	"go.amplifyedge.org/booty-v2/pkg/store"
+	"go.amplifyedge.org/booty-v2/internal/logging/zaplog"
+	"go.amplifyedge.org/booty-v2/internal/store"
 
 	"testing"
 
@@ -18,7 +20,7 @@ var (
 )
 
 func init() {
-	l := zaplog.NewZapLogger(zaplog.DEBUG, "store-test", true)
+	l := zaplog.NewZapLogger(zaplog.WARN, "store-test", true)
 	l.InitLogger(nil)
 	_ = os.MkdirAll("./testdata/db", 0755)
 	db = store.NewDB(l, "./testdata/db")
@@ -86,7 +88,11 @@ func testCaddy(t *testing.T) {
 }
 
 func testProto(t *testing.T) {
-	p := components.NewProtoc(db, "3.13.0")
+	p := components.NewProtoc(db, "3.13.0", []dep.Component{
+		components.NewProtocGenCobra(db, "0.4.1"),
+		components.NewProtocGenGo(db, "1.25.0"),
+		components.NewProtocGenGoGrpc(db, "1.1.0"),
+	})
 	err := p.Download("./testdata/downloads")
 	require.NoError(t, err)
 
@@ -99,7 +105,7 @@ func testProto(t *testing.T) {
 	require.NoError(t, err)
 
 	// run
-	err = p.Run("-I./proto/v2/", "-I.", "--go_out=./prototest/", "--go_opt=paths=source_relative", "./prototest/test.proto")
+	err = p.Run("-I.", "--go_out=./prototest/", "--go_opt=paths=source_relative", "./prototest/test.proto")
 	require.NoError(t, err)
 	_ = os.RemoveAll("./prototest/prototest")
 
@@ -131,7 +137,7 @@ func testProtocGenGo(t *testing.T) {
 }
 
 func testProtocGenCobra(t *testing.T) {
-	p := components.NewProtocGenCobra(db, "0.4.0")
+	p := components.NewProtocGenCobra(db, "0.4.1")
 	err := p.Download("./testdata/downloads")
 	require.NoError(t, err)
 
@@ -143,7 +149,7 @@ func testProtocGenCobra(t *testing.T) {
 	require.Equal(t, true, exists)
 
 	// update
-	err = p.Update("0.4.0")
+	err = p.Update("0.4.1")
 	require.NoError(t, err)
 
 	// uninstall
