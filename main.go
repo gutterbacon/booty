@@ -40,12 +40,18 @@ func main() {
 	var comps []dep.Component
 	vi = config.NewVersionInfo(logger, versionInfo)
 	comps = []dep.Component{
-		components.NewGrafana(db, vi.GetVersion("grafana")),
 		components.NewCaddy(db, vi.GetVersion("caddy")),
 	}
 	if isDev {
-		comps = append(comps, components.NewGoreleaser(db, vi.GetVersion("goreleaser")))
-		rootCmd.AddCommand(cmd.ReleaseCommand(logger, comps))
+		comps = append(comps, 
+			components.NewGoreleaser(db, vi.GetVersion("goreleaser")),
+			components.NewProtoc(db, vi.GetVersion("protoc")),
+			components.NewGrafana(db, vi.GetVersion("grafana")),
+		)
+		rootCmd.AddCommand(
+			cmd.ReleaseCommand(logger, comps),
+			cmd.ProtoCommand(logger, comps),
+		)
 	}
 	rootCmd.AddCommand(cmd.InstallCommand(logger, comps))
 
