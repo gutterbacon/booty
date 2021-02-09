@@ -29,7 +29,7 @@ func TestBinaries(t *testing.T) {
 	t.Run("testGoreleaser", testGoreleaser)
 	t.Run("testCaddy", testCaddy)
 	t.Run("testProtocGenGo", testProtocGenGo)
-	//t.Run("testProtocGenGrpc", testProtocGenGrpc)
+	t.Run("testProtocGenGrpc", testProtocGenGrpc)
 	t.Run("testProtocGenCobra", testProtocGenCobra)
 	t.Run("testProto", testProto)
 }
@@ -157,17 +157,17 @@ func testProtocGenGrpc(t *testing.T) {
 	require.NoError(t, err)
 
 	// install
-	//err = p.Install()
-	//require.NoError(t, err)
-	//
-	//exists := osutil.ExeExists("protoc-gen-go-grpc")
-	//require.Equal(t, true, exists)
-	//
-	//// update
-	//err = p.Update("1.1.0")
-	//require.NoError(t, err)
-	//
-	//// uninstall
-	//err = p.Uninstall()
-	//require.NoError(t, err)
+	err = p.Install()
+	require.NoError(t, err)
+
+	exists := osutil.ExeExists("protoc-gen-go-grpc")
+	require.Equal(t, true, exists)
+
+	// update
+	err = p.Update("1.1.0")
+	require.NoError(t, err)
+
+	// uninstall
+	err = p.Uninstall()
+	require.NoError(t, err)
 }

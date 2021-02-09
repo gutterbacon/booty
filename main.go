@@ -60,7 +60,7 @@ func main() {
 		comps = append(comps,
 			components.NewGoreleaser(db, vi.GetVersion("goreleaser")),
 			components.NewProtocGenGo(db, vi.GetVersion("protoc-gen-go")),
-			//components.NewProtocGenGoGrpc(db, vi.GetVersion("protoc-gen-go-grpc")),
+			components.NewProtocGenGoGrpc(db, vi.GetVersion("protoc-gen-go-grpc")),
 			components.NewProtocGenCobra(db, vi.GetVersion("protoc-gen-cobra")),
 			components.NewProtoc(db, vi.GetVersion("protoc")),
 			components.NewGrafana(db, vi.GetVersion("grafana")),
