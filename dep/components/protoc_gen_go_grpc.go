@@ -36,7 +36,6 @@ func (p *ProtocGenGoGrpc) Download(targetDir string) error {
 	}
 	osName := fmt.Sprintf("%s.%s", osutil.GetOS(), osutil.GetArch())
 	fetchUrl := fmt.Sprintf(genGrpcUrlFormat, p.version, p.version, osName)
-	fmt.Println("DOWNLOADING FROM: ", fetchUrl)
 	target := filepath.Join(targetDir, p.Name()+"-"+p.version)
 	err := downloader.Download(fetchUrl, target)
 	if err != nil {
@@ -130,8 +129,8 @@ func (p *ProtocGenGoGrpc) Backup() error {
 	return nil
 }
 
-func NewProtocGenGoGrpc(db *store.DB, version string) *ProtocGenGo {
-	return &ProtocGenGo{
+func NewProtocGenGoGrpc(db *store.DB, version string) *ProtocGenGoGrpc {
+	return &ProtocGenGoGrpc{
 		version: version,
 		dlPath:  "",
 		db:      db,
