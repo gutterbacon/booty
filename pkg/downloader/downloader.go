@@ -1,6 +1,7 @@
 package downloader
 
 import (
+	"go.amplifyedge.org/booty-v2/pkg/osutil"
 	"io"
 	"net/url"
 	"path/filepath"
@@ -15,6 +16,9 @@ func Download(dlUrl string, targetDir string) error {
 	_, err := url.Parse(dlUrl)
 	if err != nil {
 		return err
+	}
+	if osutil.GetOS() == "windows" {
+		return getter.Get(targetDir, dlUrl)
 	}
 	return getter.Get(targetDir, dlUrl, getter.WithProgress(defaultProgressBar))
 }
