@@ -131,7 +131,11 @@ func Exec(cmd string, args ...string) error {
 // DetectPreq detect prequisite dependencies (golang and flutter)
 // if it doesn't exists in the system, then return error
 func DetectPreq() error {
-	golangExists := ExeExists("go")
+	var executableName = "go"
+	if GetOS() == "windows" {
+		executableName += ".exe"
+	}
+	golangExists := ExeExists(executableName)
 	gopathExists := checkEnv("GOPATH")
 	if golangExists && gopathExists {
 		return nil

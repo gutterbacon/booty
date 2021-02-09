@@ -51,9 +51,6 @@ func (p *ProtocGenGo) Install() error {
 	_ = os.MkdirAll(goBinDir, 0755)
 
 	executableName := p.Name()
-	if osutil.GetOS() == "windows" {
-		executableName += ".exe"
-	}
 
 	// all files that are going to be installed
 	filesMap := map[string][]interface{}{

@@ -17,7 +17,7 @@ import (
 
 const (
 	// version -- os-arch
-	goreleaserUrlFormat = "https://github.com/goreleaser/goreleaser/releases/download/v%s/goreleaser_%s.tar.gz"
+	goreleaserUrlFormat = "https://github.com/goreleaser/goreleaser/releases/download/v%s/goreleaser_%s.%s"
 )
 
 type Goreleaser struct {
@@ -46,7 +46,14 @@ func (g *Goreleaser) Download(targetDir string) error {
 	downloadDir := filepath.Join(targetDir, g.Name()+"-"+g.version)
 	_ = os.MkdirAll(downloadDir, 0755)
 	osname := fmt.Sprintf("%s_%s", osutil.GetOS(), osutil.GetAltArch())
-	fetchUrl := fmt.Sprintf(goreleaserUrlFormat, g.version, osname)
+	var ext string
+	switch osutil.GetOS() {
+	case "linux", "darwin":
+		ext = "tar.gz"
+	case "windows":
+		ext = "zip"
+	}
+	fetchUrl := fmt.Sprintf(goreleaserUrlFormat, g.version, osname, ext)
 	err := downloader.Download(fetchUrl, downloadDir)
 	if err != nil {
 		return err

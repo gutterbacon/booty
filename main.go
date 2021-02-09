@@ -19,43 +19,6 @@ import (
 //golang 1.16 should be able to do this natively
 //go:embed config.json
 
-
-const defaultConfig = `
-{
-  "dev": true,
-  "binaries": [
-    {
-      "name": "grafana",
-      "version": "7.4.0"
-    },
-    {
-      "name": "goreleaser",
-      "version": "0.155.1"
-    },
-    {
-      "name": "caddy",
-      "version": "2.3.0"
-    },
-    {
-      "name": "protoc",
-      "version": "3.14.0"
-    },
-    {
-      "name": "protoc-gen-go",
-      "version": "1.25.0"
-    },
-    {
-      "name": "protoc-gen-cobra",
-      "version": "0.4.0"
-    },
-    {
-      "name": "protoc-gen-go-grpc",
-      "version": "master"
-    }
-  ]
-}
-`
-
 var (
 	rootCmd = &cobra.Command{
 		Use: "booty [commands]",
@@ -79,7 +42,7 @@ func main() {
 	fileContent, err := ioutil.ReadFile(filepath.Join(etc, "config.json"))
 	if err != nil {
 		// use default config
-		r = strings.NewReader(defaultConfig)
+		r = strings.NewReader(config.DefaultConfig)
 	} else {
 		r = bytes.NewBuffer(fileContent)
 	}
