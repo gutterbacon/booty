@@ -1,4 +1,4 @@
-![CI](https://github.com/alexadhy/booty/workflows/CI/badge.svg)
+![CI](https://github.com/amplify-edge/booty/workflows/CI/badge.svg)
 
 # (WIP) Booty
 
