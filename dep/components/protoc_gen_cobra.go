@@ -48,6 +48,7 @@ func (p *ProtocGenCobra) Download() error {
 	}
 	osName := fmt.Sprintf("%s_%s", osutil.GetOS(), osutil.GetArch())
 	fetchUrl := fmt.Sprintf(protoCobraUrlFormat, p.version, p.version, osName, ext)
+	fmt.Printf("Downloading: %s Version: %s From: %s", p.Name(), p.Version(), fetchUrl)
 	err := downloader.Download(fetchUrl, target)
 	if err != nil {
 		return err

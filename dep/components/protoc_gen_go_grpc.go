@@ -37,6 +37,8 @@ func (p *ProtocGenGoGrpc) Download() error {
 	osName := fmt.Sprintf("%s.%s", osutil.GetOS(), osutil.GetArch())
 	fetchUrl := fmt.Sprintf(genGrpcUrlFormat, p.version, p.version, osName)
 	target := getDlPath(p.Name(), p.version)
+
+	fmt.Printf("Downloading: %s Version: %s From: %s", p.Name(), p.Version(), fetchUrl)
 	err := downloader.Download(fetchUrl, target)
 	if err != nil {
 		return err

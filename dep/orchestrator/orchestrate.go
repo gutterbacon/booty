@@ -32,7 +32,7 @@ func NewOrchestrator(app string) *Orchestrator {
 		Use: app,
 	}
 	// setup logger
-	logger := zaplog.NewZapLogger(zaplog.WARN, app, true)
+	logger := zaplog.NewZapLogger(zaplog.DEBUG, app, true)
 	logger.InitLogger(nil)
 	// config, loads default config if it doesn't exists
 	etc := osutil.GetEtcDir()
@@ -51,19 +51,25 @@ func NewOrchestrator(app string) *Orchestrator {
 		}
 	}
 	ac = config.NewAppConfig(logger, fileContent)
+	cdyVer := ac.GetVersion("caddy")
+	gorVer := ac.GetVersion("goreleaser")
+	grafVer := ac.GetVersion("grafana")
+	protoGoVer := ac.GetVersion("protoc-gen-go")
+	protoGrpcVer := ac.GetVersion("protoc-gen-go-grpc")
+	protoCobraVer := ac.GetVersion("protoc-gen-cobra")
 
 	// setup badger database for package tracking
 	db := store.NewDB(logger, osutil.GetDataDir())
-	comps["caddy"] = components.NewCaddy(db, ac.GetVersion("caddy"))
+	comps["caddy"] = components.NewCaddy(db, cdyVer)
 	if ac.DevMode {
 		if err = osutil.DetectPreq(); err != nil {
 			logger.Fatalf(err.Error())
 		}
-		comps["goreleaser"] = components.NewGoreleaser(db, ac.GetVersion("goreleaser"))
-		comps["grafana"] = components.NewGrafana(db, ac.GetVersion("grafana"))
-		protoGenGo := components.NewProtocGenGo(db, ac.GetVersion("protoc-gen-go"))
-		protoGenGrpc := components.NewProtocGenGoGrpc(db, ac.GetVersion("protoc-gen-go-grpc"))
-		protoCobra := components.NewProtocGenCobra(db, ac.GetVersion("protoc-gen-cobra"))
+		comps["goreleaser"] = components.NewGoreleaser(db, gorVer)
+		comps["grafana"] = components.NewGrafana(db, grafVer)
+		protoGenGo := components.NewProtocGenGo(db, protoGoVer)
+		protoGenGrpc := components.NewProtocGenGoGrpc(db, protoGrpcVer)
+		protoCobra := components.NewProtocGenCobra(db, protoCobraVer)
 		comps["protoc"] = components.NewProtoc(
 			db, ac.GetVersion("protoc"),
 			[]dep.Component{

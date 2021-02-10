@@ -50,6 +50,7 @@ func (c *Caddy) Download() error {
 		ext = "zip"
 	}
 	fetchUrl := fmt.Sprintf(caddyUrlFormat, c.version, c.version, osname, ext)
+	fmt.Printf("Downloading: %s Version: %s From: %s", c.Name(), c.Version(), fetchUrl)
 	err := downloader.Download(fetchUrl, downloadDir)
 	if err != nil {
 		return err

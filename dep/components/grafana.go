@@ -47,6 +47,7 @@ func (g *Grafana) Download() error {
 	case "windows":
 		fetchUrl = fmt.Sprintf(fetchUrlFormat, g.version, osname, "zip")
 	}
+	fmt.Printf("Downloading: %s Version: %s From: %s", g.Name(), g.Version(), fetchUrl)
 	targetDir := osutil.GetDownloadDir()
 	err := downloader.Download(fetchUrl, targetDir)
 	if err != nil {
