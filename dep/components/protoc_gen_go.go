@@ -37,7 +37,6 @@ func (p *ProtocGenGo) Download() error {
 	fetchUrl := fmt.Sprintf(protocGenGoUrlFormat, p.version, p.version, osName)
 	target := getDlPath(p.Name(), p.version)
 
-	fmt.Printf("Downloading: %s Version: %s From: %s", p.Name(), p.Version(), fetchUrl)
 	err := downloader.Download(fetchUrl, target)
 	if err != nil {
 		return err

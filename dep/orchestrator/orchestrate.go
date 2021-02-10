@@ -32,7 +32,7 @@ func NewOrchestrator(app string) *Orchestrator {
 		Use: app,
 	}
 	// setup logger
-	logger := zaplog.NewZapLogger(zaplog.DEBUG, app, true)
+	logger := zaplog.NewZapLogger(zaplog.WARN, app, true)
 	logger.InitLogger(nil)
 	// config, loads default config if it doesn't exists
 	etc := osutil.GetEtcDir()

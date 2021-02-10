@@ -53,7 +53,6 @@ func (g *Goreleaser) Download() error {
 		ext = "zip"
 	}
 	fetchUrl := fmt.Sprintf(goreleaserUrlFormat, g.version, osname, ext)
-	fmt.Printf("Downloading: %s Version: %s From: %s", g.Name(), g.Version(), fetchUrl)
 	err := downloader.Download(fetchUrl, downloadDir)
 	if err != nil {
 		return err

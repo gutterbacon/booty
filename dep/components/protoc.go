@@ -73,7 +73,6 @@ func (p *Protoc) Download() error {
 		osName = "win64"
 	}
 	fetchUrl := fmt.Sprintf(protocUrlFormat, p.version, p.version, osName)
-	fmt.Printf("Downloading: %s Version: %s From: %s", p.Name(), p.Version(), fetchUrl)
 	targetDir := getDlPath("protobuf", p.version)
 	err := downloader.Download(fetchUrl, targetDir)
 	if err != nil {
