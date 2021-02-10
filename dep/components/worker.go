@@ -34,5 +34,5 @@ func (w *workerType) do(i int) {
 }
 
 func getDlPath(name, version string) string {
-	return filepath.Join(osutil.GetDownloadDir(), name, version)
+	return filepath.Join(osutil.GetDownloadDir(), name+"-"+version)
 }
