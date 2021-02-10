@@ -1,7 +1,6 @@
 package orchestrator
 
 import (
-	"embed"
 	"github.com/spf13/cobra"
 	"io/ioutil"
 	"path/filepath"
@@ -15,10 +14,6 @@ import (
 	"go.amplifyedge.org/booty-v2/internal/osutil"
 	"go.amplifyedge.org/booty-v2/internal/store"
 )
-
-//go:embed config.reference.json
-
-var staticConfig embed.FS
 
 // Orchestrator implements Agent
 type Orchestrator struct {
@@ -44,7 +39,7 @@ func NewOrchestrator(app string) *Orchestrator {
 	fileContent, err := ioutil.ReadFile(configPath)
 	if err != nil {
 		// use default config
-		fileContent, err = staticConfig.ReadFile("config.reference.json")
+		fileContent, err = config.DefaultConfig.ReadFile("config.reference.json")
 		if err != nil {
 			logger.Fatalf("error encoding default json config")
 		}
