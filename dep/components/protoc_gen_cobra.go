@@ -19,14 +19,12 @@ const (
 
 type ProtocGenCobra struct {
 	version string
-	dlPath  string
 	db      *store.DB
 }
 
 func NewProtocGenCobra(db *store.DB, version string) *ProtocGenCobra {
 	return &ProtocGenCobra{
 		version: version,
-		dlPath:  "",
 		db:      db,
 	}
 }
@@ -39,8 +37,8 @@ func (p *ProtocGenCobra) Version() string {
 	return p.version
 }
 
-func (p *ProtocGenCobra) Download(targetDir string) error {
-	target := filepath.Join(targetDir, p.Name()+"-"+p.version)
+func (p *ProtocGenCobra) Download() error {
+	target := getDlPath(p.Name(), p.version)
 	var ext string
 	switch osutil.GetOS() {
 	case "linux", "darwin":
@@ -54,7 +52,6 @@ func (p *ProtocGenCobra) Download(targetDir string) error {
 	if err != nil {
 		return err
 	}
-	p.dlPath = target
 	return nil
 }
 
@@ -68,8 +65,9 @@ func (p *ProtocGenCobra) Install() error {
 		executableName += ".exe"
 	}
 	// all files that are going to be installed
+	dlPath := getDlPath(p.Name(), p.version)
 	filesMap := map[string][]interface{}{
-		filepath.Join(p.dlPath, executableName): {filepath.Join(goBinDir, executableName), 0755},
+		filepath.Join(dlPath, executableName): {filepath.Join(goBinDir, executableName), 0755},
 	}
 
 	ip := store.InstalledPackage{
@@ -94,7 +92,7 @@ func (p *ProtocGenCobra) Install() error {
 	if err = p.db.New(&ip); err != nil {
 		return err
 	}
-	return os.RemoveAll(p.dlPath)
+	return os.RemoveAll(dlPath)
 }
 
 func (p *ProtocGenCobra) Uninstall() error {
@@ -122,11 +120,10 @@ func (p *ProtocGenCobra) Run(args ...string) error {
 
 func (p *ProtocGenCobra) Update(version string) error {
 	p.version = version
-	targetDir := filepath.Dir(p.dlPath)
 	if err := p.Uninstall(); err != nil {
 		return err
 	}
-	if err := p.Download(targetDir); err != nil {
+	if err := p.Download(); err != nil {
 		return err
 	}
 	return p.Install()

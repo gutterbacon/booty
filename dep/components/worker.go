@@ -2,6 +2,8 @@ package components
 
 import (
 	"go.amplifyedge.org/booty-v2/dep"
+	"go.amplifyedge.org/booty-v2/internal/osutil"
+	"path/filepath"
 )
 
 type workerType struct {
@@ -23,10 +25,14 @@ func newWorkerType(jobType string, targetDir string, deps []dep.Component, errCh
 func (w *workerType) do(i int) {
 	switch w.jobType {
 	case "download":
-		w.errChan <- w.dependencies[i].Download(w.targetDir)
+		w.errChan <- w.dependencies[i].Download()
 	case "install":
 		w.errChan <- w.dependencies[i].Install()
 	case "uninstall":
 		w.errChan <- w.dependencies[i].Uninstall()
 	}
+}
+
+func getDlPath(name, version string) string {
+	return filepath.Join(osutil.GetDownloadDir(), name, version)
 }

@@ -23,14 +23,12 @@ const (
 
 type Goreleaser struct {
 	version string
-	dlPath  string
 	db      *store.DB
 }
 
 func NewGoreleaser(db *store.DB, version string) *Goreleaser {
 	return &Goreleaser{
 		version: version,
-		dlPath:  "",
 		db:      db,
 	}
 }
@@ -43,8 +41,8 @@ func (g *Goreleaser) Name() string {
 	return "goreleaser"
 }
 
-func (g *Goreleaser) Download(targetDir string) error {
-	downloadDir := filepath.Join(targetDir, g.Name()+"-"+g.version)
+func (g *Goreleaser) Download() error {
+	downloadDir := getDlPath(g.Name(), g.version)
 	_ = os.MkdirAll(downloadDir, 0755)
 	osname := fmt.Sprintf("%s_%s", osutil.GetOS(), osutil.GetAltArch())
 	var ext string
@@ -59,7 +57,6 @@ func (g *Goreleaser) Download(targetDir string) error {
 	if err != nil {
 		return err
 	}
-	g.dlPath = downloadDir
 	return nil
 }
 
@@ -68,6 +65,7 @@ func (g *Goreleaser) Install() error {
 	// install to global path
 	// create bin directory under $PREFIX
 	binDir := osutil.GetBinDir()
+	dlPath := getDlPath(g.Name(), g.version)
 	// all files that are going to be installed
 	executableName := g.Name()
 	switch osutil.GetOS() {
@@ -75,7 +73,7 @@ func (g *Goreleaser) Install() error {
 		executableName += ".exe"
 	}
 	filesMap := map[string][]interface{}{
-		filepath.Join(g.dlPath, executableName): {filepath.Join(binDir, executableName), 0755},
+		filepath.Join(dlPath, executableName): {filepath.Join(binDir, executableName), 0755},
 	}
 	ip := store.InstalledPackage{
 		Name:     g.Name(),
@@ -97,13 +95,14 @@ func (g *Goreleaser) Install() error {
 	if err = g.db.New(&ip); err != nil {
 		return err
 	}
-	return os.RemoveAll(g.dlPath)
+	return os.RemoveAll(dlPath)
 }
 
 func (g *Goreleaser) Uninstall() error {
 	var err error
 	// install to global path
 	// all files that are going to be installed
+	dlPath := getDlPath(g.Name(), g.version)
 	var pkg *store.InstalledPackage
 	pkg, err = g.db.Get(g.Name())
 	if err != nil {
@@ -120,16 +119,15 @@ func (g *Goreleaser) Uninstall() error {
 		}
 	}
 	// remove downloaded files
-	return os.RemoveAll(g.dlPath)
+	return os.RemoveAll(dlPath)
 }
 
 func (g *Goreleaser) Update(version string) error {
 	g.version = version
-	targetDir := filepath.Dir(g.dlPath)
 	if err := g.Uninstall(); err != nil {
 		return err
 	}
-	if err := g.Download(targetDir); err != nil {
+	if err := g.Download(); err != nil {
 		return err
 	}
 	return g.Install()

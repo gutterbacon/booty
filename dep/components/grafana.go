@@ -22,12 +22,11 @@ const (
 // Grafana implements Component interface
 type Grafana struct {
 	version string
-	dlPath  string
 	db      *store.DB
 }
 
 func NewGrafana(db *store.DB, version string) *Grafana {
-	return &Grafana{version, "", db}
+	return &Grafana{version, db}
 }
 
 // Gets grafana's version
@@ -39,7 +38,7 @@ func (g *Grafana) Name() string {
 	return "grafana"
 }
 
-func (g *Grafana) Download(targetDir string) error {
+func (g *Grafana) Download() error {
 	osname := fmt.Sprintf("%s-%s", strings.ToLower(osutil.GetOS()), osutil.GetArch())
 	var fetchUrl string
 	switch osutil.GetOS() {
@@ -48,11 +47,11 @@ func (g *Grafana) Download(targetDir string) error {
 	case "windows":
 		fetchUrl = fmt.Sprintf(fetchUrlFormat, g.version, osname, "zip")
 	}
+	targetDir := osutil.GetDownloadDir()
 	err := downloader.Download(fetchUrl, targetDir)
 	if err != nil {
 		return err
 	}
-	g.dlPath = filepath.Join(targetDir, g.Name()+"-"+g.version)
 	return nil
 }
 
@@ -70,13 +69,14 @@ func (g *Grafana) Install() error {
 		serverExecutable += ".exe"
 		clientExecutable += ".exe"
 	}
+	dlPath := getDlPath(g.Name(), g.version)
 
 	// all files that are going to be installed
 	filesMap := map[string][]interface{}{
-		filepath.Join(g.dlPath, "bin", serverExecutable): {filepath.Join(binDir, serverExecutable), 0755},
-		filepath.Join(g.dlPath, "bin", clientExecutable): {filepath.Join(binDir, clientExecutable), 0755},
-		filepath.Join(g.dlPath, "conf", "defaults.ini"):  {filepath.Join(etcDir, "grafana.ini"), 0644},
-		filepath.Join(g.dlPath, "conf", "sample.ini"):    {filepath.Join(etcDir, "grafana.sample.ini"), 0644},
+		filepath.Join(dlPath, "bin", serverExecutable): {filepath.Join(binDir, serverExecutable), 0755},
+		filepath.Join(dlPath, "bin", clientExecutable): {filepath.Join(binDir, clientExecutable), 0755},
+		filepath.Join(dlPath, "conf", "defaults.ini"):  {filepath.Join(etcDir, "grafana.ini"), 0644},
+		filepath.Join(dlPath, "conf", "sample.ini"):    {filepath.Join(etcDir, "grafana.sample.ini"), 0644},
 	}
 
 	ip := store.InstalledPackage{
@@ -100,7 +100,7 @@ func (g *Grafana) Install() error {
 	if err = g.db.New(&ip); err != nil {
 		return err
 	}
-	return os.RemoveAll(g.dlPath)
+	return os.RemoveAll(dlPath)
 }
 
 func (g *Grafana) Uninstall() error {
@@ -123,16 +123,16 @@ func (g *Grafana) Uninstall() error {
 		}
 	}
 	// remove downloaded files
-	return os.RemoveAll(g.dlPath)
+	dlPath := getDlPath(g.Name(), g.version)
+	return os.RemoveAll(dlPath)
 }
 
 func (g *Grafana) Update(version string) error {
 	g.version = version
-	targetDir := filepath.Dir(g.dlPath)
 	if err := g.Uninstall(); err != nil {
 		return err
 	}
-	if err := g.Download(targetDir); err != nil {
+	if err := g.Download(); err != nil {
 		return err
 	}
 	return g.Install()

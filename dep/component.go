@@ -27,7 +27,7 @@ type Agent interface {
 type Component interface {
 	Name() string
 	Version() string
-	Download(targetDir string) error // download to dir
+	Download() error // download to dir
 	Dependencies() []Component
 	Install() error
 	Uninstall() error

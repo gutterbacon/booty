@@ -20,14 +20,12 @@ const (
 
 type Caddy struct {
 	version string
-	dlPath  string
 	db      *store.DB
 }
 
 func NewCaddy(db *store.DB, version string) *Caddy {
 	return &Caddy{
 		version: version,
-		dlPath:  "",
 		db:      db,
 	}
 }
@@ -40,8 +38,8 @@ func (c *Caddy) Name() string {
 	return "caddy"
 }
 
-func (c *Caddy) Download(targetDir string) error {
-	downloadDir := filepath.Join(targetDir, c.Name()+"-"+c.version)
+func (c *Caddy) Download() error {
+	downloadDir := getDlPath(c.Name(), c.version)
 	_ = os.MkdirAll(downloadDir, 0755)
 	osname := fmt.Sprintf("%s_%s", osutil.GetAltOs(), osutil.GetArch())
 	var ext string
@@ -52,12 +50,10 @@ func (c *Caddy) Download(targetDir string) error {
 		ext = "zip"
 	}
 	fetchUrl := fmt.Sprintf(caddyUrlFormat, c.version, c.version, osname, ext)
-	fmt.Printf("Fetch URL: %s", fetchUrl)
 	err := downloader.Download(fetchUrl, downloadDir)
 	if err != nil {
 		return err
 	}
-	c.dlPath = downloadDir
 	return nil
 }
 
@@ -65,6 +61,7 @@ func (c *Caddy) Install() error {
 	var err error
 	// install to global path
 	binDir := osutil.GetBinDir()
+	dlPath := getDlPath(c.Name(), c.version)
 
 	// all files that are going to be installed
 	executableName := c.Name()
@@ -73,7 +70,7 @@ func (c *Caddy) Install() error {
 		executableName += ".exe"
 	}
 	filesMap := map[string][]interface{}{
-		filepath.Join(c.dlPath, executableName): {filepath.Join(binDir, executableName), 0755},
+		filepath.Join(dlPath, executableName): {filepath.Join(binDir, executableName), 0755},
 	}
 	ip := store.InstalledPackage{
 		Name:     c.Name(),
@@ -95,11 +92,12 @@ func (c *Caddy) Install() error {
 	if err = c.db.New(&ip); err != nil {
 		return err
 	}
-	return os.RemoveAll(c.dlPath)
+	return os.RemoveAll(dlPath)
 }
 
 func (c *Caddy) Uninstall() error {
 	var err error
+	dlPath := getDlPath(c.Name(), c.version)
 	// install to global path
 
 	// all files that are going to be installed
@@ -119,16 +117,15 @@ func (c *Caddy) Uninstall() error {
 		}
 	}
 	// remove downloaded files
-	return os.RemoveAll(c.dlPath)
+	return os.RemoveAll(dlPath)
 }
 
 func (c *Caddy) Update(version string) error {
 	c.version = version
-	targetDir := filepath.Dir(c.dlPath)
 	if err := c.Uninstall(); err != nil {
 		return err
 	}
-	if err := c.Download(targetDir); err != nil {
+	if err := c.Download(); err != nil {
 		return err
 	}
 	return c.Install()

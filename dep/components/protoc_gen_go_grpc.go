@@ -19,7 +19,6 @@ const (
 
 type ProtocGenGoGrpc struct {
 	version string
-	dlPath  string
 	db      *store.DB
 }
 
@@ -31,18 +30,17 @@ func (p *ProtocGenGoGrpc) Version() string {
 	return p.version
 }
 
-func (p *ProtocGenGoGrpc) Download(targetDir string) error {
+func (p *ProtocGenGoGrpc) Download() error {
 	if osutil.GetArch() != "amd64" {
 		return fmt.Errorf("error: unsupported arch: %v", osutil.GetArch())
 	}
 	osName := fmt.Sprintf("%s.%s", osutil.GetOS(), osutil.GetArch())
 	fetchUrl := fmt.Sprintf(genGrpcUrlFormat, p.version, p.version, osName)
-	target := filepath.Join(targetDir, p.Name()+"-"+p.version)
+	target := getDlPath(p.Name(), p.version)
 	err := downloader.Download(fetchUrl, target)
 	if err != nil {
 		return err
 	}
-	p.dlPath = target
 	return nil
 }
 
@@ -58,8 +56,9 @@ func (p *ProtocGenGoGrpc) Install() error {
 	}
 
 	// all files that are going to be installed
+	dlPath := getDlPath(p.Name(), p.version)
 	filesMap := map[string][]interface{}{
-		filepath.Join(p.dlPath, executableName): {filepath.Join(goBinDir, executableName), 0755},
+		filepath.Join(dlPath, executableName): {filepath.Join(goBinDir, executableName), 0755},
 	}
 
 	ip := store.InstalledPackage{
@@ -83,7 +82,7 @@ func (p *ProtocGenGoGrpc) Install() error {
 	if err = p.db.New(&ip); err != nil {
 		return err
 	}
-	return os.RemoveAll(p.dlPath)
+	return os.RemoveAll(dlPath)
 }
 
 func (p *ProtocGenGoGrpc) Uninstall() error {
@@ -112,11 +111,10 @@ func (p *ProtocGenGoGrpc) Run(args ...string) error {
 
 func (p *ProtocGenGoGrpc) Update(version string) error {
 	p.version = version
-	targetDir := filepath.Dir(p.dlPath)
 	if err := p.Uninstall(); err != nil {
 		return err
 	}
-	if err := p.Download(targetDir); err != nil {
+	if err := p.Download(); err != nil {
 		return err
 	}
 	return p.Install()
@@ -137,7 +135,6 @@ func (p *ProtocGenGoGrpc) Dependencies() []dep.Component {
 func NewProtocGenGoGrpc(db *store.DB, version string) *ProtocGenGoGrpc {
 	return &ProtocGenGoGrpc{
 		version: version,
-		dlPath:  "",
 		db:      db,
 	}
 }

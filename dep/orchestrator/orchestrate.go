@@ -61,15 +61,15 @@ func NewOrchestrator(app string) *Orchestrator {
 		}
 		comps["goreleaser"] = components.NewGoreleaser(db, ac.GetVersion("goreleaser"))
 		comps["grafana"] = components.NewGrafana(db, ac.GetVersion("grafana"))
-		comps["protoc-gen-go"] = components.NewProtocGenGo(db, ac.GetVersion("protoc-gen-go"))
-		comps["protoc-gen-go-grpc"] = components.NewProtocGenGoGrpc(db, ac.GetVersion("protoc-gen-go-grpc"))
-		comps["protoc-gen-cobra"] = components.NewProtocGenCobra(db, ac.GetVersion("protoc-gen-cobra"))
+		protoGenGo := components.NewProtocGenGo(db, ac.GetVersion("protoc-gen-go"))
+		protoGenGrpc := components.NewProtocGenGoGrpc(db, ac.GetVersion("protoc-gen-go-grpc"))
+		protoCobra := components.NewProtocGenCobra(db, ac.GetVersion("protoc-gen-cobra"))
 		comps["protoc"] = components.NewProtoc(
 			db, ac.GetVersion("protoc"),
 			[]dep.Component{
-				components.NewProtocGenGo(db, ac.GetVersion("proto-gen-go")),
-				components.NewProtocGenGoGrpc(db, ac.GetVersion("protoc-gen-go-grpc")),
-				components.NewProtocGenGoGrpc(db, ac.GetVersion("protoc-gen-cobra")),
+				protoGenGo,
+				protoGenGrpc,
+				protoCobra,
 			},
 		)
 	}
@@ -119,9 +119,16 @@ func (o *Orchestrator) Components() []dep.Component {
 
 func (o *Orchestrator) DownloadAll() error {
 	o.logger.Info("downloading all components")
+	var tasks []*task
 	for _, c := range o.components {
-		if err := c.Download(osutil.GetDownloadDir()); err != nil {
-			return err
+		k := c
+		tasks = append(tasks, newTask(k.Download))
+	}
+	pool := newTaskPool(tasks)
+	pool.runAll()
+	for _, t := range pool.tasks {
+		if t.err != nil {
+			return t.err
 		}
 	}
 	return nil
@@ -133,9 +140,11 @@ func (o *Orchestrator) Install(name, version string) error {
 }
 
 func (o *Orchestrator) InstallAll() error {
+	// we don't run concurrently here.
 	o.logger.Info("installing all components")
 	for _, c := range o.components {
-		if err := c.Install(); err != nil {
+		k := c
+		if err := k.Install(); err != nil {
 			return err
 		}
 	}
@@ -155,4 +164,14 @@ func (o *Orchestrator) BackupAll() error {
 func (o *Orchestrator) Run(name string, args ...string) error {
 	comp := o.Component(name)
 	return comp.Run(args...)
+}
+
+func (o *Orchestrator) UninstallAll() error {
+	o.logger.Info("uninstall all components")
+	for _, c := range o.components {
+		if err := c.Uninstall(); err != nil {
+			return err
+		}
+	}
+	return nil
 }
