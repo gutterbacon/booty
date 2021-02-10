@@ -13,7 +13,7 @@ jobs:
       fail-fast: false # saves ci time, won't be worth it if it even runs other platform
       matrix:
         os: [ ubuntu-latest, macos-latest, windows-latest ]
-        go-version: [ 1.15.8 ]
+        go-version: [ 1.16.0-rc1 ]
         target: [ "all-ci" ]
 
     runs-on: ${{ matrix.os }}
@@ -22,6 +22,7 @@ jobs:
       - name: Set up Go
         uses: actions/setup-go@v2
         with:
+          stable: 'false'
           go-version: ${{ matrix.go-version }}
         id: go
 
