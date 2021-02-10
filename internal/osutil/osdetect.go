@@ -76,11 +76,11 @@ func setupRuntimeInfo() runtimeInfo {
 	var altArch string
 	switch osName {
 	case "linux":
-		altOs = "Linux"
+		altOs = "linux"
 	case "darwin":
-		altOs = "Mac"
+		altOs = "mac"
 	case "windows":
-		altOs = "Win"
+		altOs = "win"
 	default:
 		altOs = ""
 	}

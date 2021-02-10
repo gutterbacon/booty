@@ -16,6 +16,7 @@ import (
 const (
 	// version -- version -- os_arch
 	caddyUrlFormat = "https://github.com/caddyserver/caddy/releases/download/v%s/caddy_%s_%s.%s"
+	// https://github.com/caddyserver/caddy/releases/download/v2.3.0/caddy_2.3.0_windows_amd64.zip
 )
 
 type Caddy struct {
@@ -41,13 +42,15 @@ func (c *Caddy) Name() string {
 func (c *Caddy) Download() error {
 	downloadDir := getDlPath(c.Name(), c.version)
 	_ = os.MkdirAll(downloadDir, 0755)
-	osname := fmt.Sprintf("%s_%s", osutil.GetAltOs(), osutil.GetArch())
+	var osname string
 	var ext string
 	switch osutil.GetOS() {
 	case "linux", "darwin":
 		ext = "tar.gz"
+		osname = fmt.Sprintf("%s_%s", osutil.GetAltOs(), osutil.GetArch())
 	case "windows":
 		ext = "zip"
+		osname = fmt.Sprintf("%s_%s", osutil.GetOS(), osutil.GetArch())
 	}
 	fetchUrl := fmt.Sprintf(caddyUrlFormat, c.version, c.version, osname, ext)
 	fmt.Printf("Downloading: %s Version: %s From: %s", c.Name(), c.Version(), fetchUrl)
