@@ -22,7 +22,6 @@ const (
 
 type Protoc struct {
 	version      string
-	dlPath       string
 	db           *store.DB
 	dependencies []dep.Component
 }
@@ -30,7 +29,6 @@ type Protoc struct {
 func NewProtoc(db *store.DB, version string, deps []dep.Component) *Protoc {
 	return &Protoc{
 		version:      version,
-		dlPath:       "",
 		db:           db,
 		dependencies: deps,
 	}
@@ -49,11 +47,6 @@ func (p *Protoc) Download() error {
 		return fmt.Errorf("error: unsupported arch: %v", osutil.GetArch())
 	}
 	// download all dependencies
-	//for _, d := range p.dependencies {
-	//	if err := d.Download(targetDir); err != nil {
-	//		return err
-	//	}
-	//}
 	errChan := make(chan error, len(p.dependencies))
 	var wg sync.WaitGroup
 	for i := 0; i < len(p.dependencies); i++ {
@@ -83,12 +76,11 @@ func (p *Protoc) Download() error {
 		osName = "win64"
 		fetchUrl = fmt.Sprintf(protocUrlFormat, p.version, p.version, osName)
 	}
-	targetDir := filepath.Join(osutil.GetDownloadDir(), "protobuf-"+p.version)
+	targetDir := getDlPath("protobuf", p.version)
 	err := downloader.Download(fetchUrl, targetDir)
 	if err != nil {
 		return err
 	}
-	p.dlPath = targetDir
 	return nil
 }
 
@@ -111,9 +103,10 @@ func (p *Protoc) Install() error {
 	}
 
 	// all files that are going to be installed
+	dlPath := getDlPath("protobuf", p.version)
 	filesMap := map[string][]interface{}{
-		filepath.Join(p.dlPath, "bin", executableName): {filepath.Join(binDir, executableName), 0755},
-		filepath.Join(p.dlPath, "include", "google"):   {filepath.Join(includeDir, "google"), 0755},
+		filepath.Join(dlPath, "bin", executableName): {filepath.Join(binDir, executableName), 0755},
+		filepath.Join(dlPath, "include", "google"):   {filepath.Join(includeDir, "google"), 0755},
 	}
 
 	ip := store.InstalledPackage{
@@ -137,7 +130,7 @@ func (p *Protoc) Install() error {
 	if err = p.db.New(&ip); err != nil {
 		return err
 	}
-	return os.RemoveAll(p.dlPath)
+	return os.RemoveAll(dlPath)
 }
 
 func (p *Protoc) Update(version string) error {

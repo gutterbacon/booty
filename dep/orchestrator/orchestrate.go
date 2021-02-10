@@ -140,9 +140,11 @@ func (o *Orchestrator) Install(name, version string) error {
 }
 
 func (o *Orchestrator) InstallAll() error {
+	// we don't run concurrently here.
 	o.logger.Info("installing all components")
 	for _, c := range o.components {
-		if err := c.Install(); err != nil {
+		k := c
+		if err := k.Install(); err != nil {
 			return err
 		}
 	}

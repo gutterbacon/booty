@@ -22,12 +22,11 @@ const (
 // Grafana implements Component interface
 type Grafana struct {
 	version string
-	dlPath  string
 	db      *store.DB
 }
 
 func NewGrafana(db *store.DB, version string) *Grafana {
-	return &Grafana{version, "", db}
+	return &Grafana{version, db}
 }
 
 // Gets grafana's version
@@ -53,7 +52,6 @@ func (g *Grafana) Download() error {
 	if err != nil {
 		return err
 	}
-	g.dlPath = filepath.Join(targetDir, g.Name()+"-"+g.version)
 	return nil
 }
 
@@ -71,13 +69,14 @@ func (g *Grafana) Install() error {
 		serverExecutable += ".exe"
 		clientExecutable += ".exe"
 	}
+	dlPath := getDlPath(g.Name(), g.version)
 
 	// all files that are going to be installed
 	filesMap := map[string][]interface{}{
-		filepath.Join(g.dlPath, "bin", serverExecutable): {filepath.Join(binDir, serverExecutable), 0755},
-		filepath.Join(g.dlPath, "bin", clientExecutable): {filepath.Join(binDir, clientExecutable), 0755},
-		filepath.Join(g.dlPath, "conf", "defaults.ini"):  {filepath.Join(etcDir, "grafana.ini"), 0644},
-		filepath.Join(g.dlPath, "conf", "sample.ini"):    {filepath.Join(etcDir, "grafana.sample.ini"), 0644},
+		filepath.Join(dlPath, "bin", serverExecutable): {filepath.Join(binDir, serverExecutable), 0755},
+		filepath.Join(dlPath, "bin", clientExecutable): {filepath.Join(binDir, clientExecutable), 0755},
+		filepath.Join(dlPath, "conf", "defaults.ini"):  {filepath.Join(etcDir, "grafana.ini"), 0644},
+		filepath.Join(dlPath, "conf", "sample.ini"):    {filepath.Join(etcDir, "grafana.sample.ini"), 0644},
 	}
 
 	ip := store.InstalledPackage{
@@ -101,7 +100,7 @@ func (g *Grafana) Install() error {
 	if err = g.db.New(&ip); err != nil {
 		return err
 	}
-	return os.RemoveAll(g.dlPath)
+	return os.RemoveAll(dlPath)
 }
 
 func (g *Grafana) Uninstall() error {
@@ -124,7 +123,8 @@ func (g *Grafana) Uninstall() error {
 		}
 	}
 	// remove downloaded files
-	return os.RemoveAll(g.dlPath)
+	dlPath := getDlPath(g.Name(), g.version)
+	return os.RemoveAll(dlPath)
 }
 
 func (g *Grafana) Update(version string) error {
