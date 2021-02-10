@@ -3,10 +3,15 @@
 package config
 
 import (
+	"embed"
 	"encoding/json"
 
 	"go.amplifyedge.org/booty-v2/internal/logging"
 )
+
+//go:embed config.reference.json
+
+var DefaultConfig embed.FS
 
 type BinaryInfo struct {
 	Name    string `json:"name"`
@@ -33,38 +38,4 @@ func (ac *AppConfig) GetVersion(pkgName string) string {
 		}
 	}
 	return ""
-}
-
-var DefaultConfig = AppConfig{
-	DevMode: true,
-	Binaries: []BinaryInfo{
-		{
-			Name:    "grafana",
-			Version: "7.4.0",
-		},
-		{
-			Name:    "goreleaser",
-			Version: "0.155.1",
-		},
-		{
-			Name:    "caddy",
-			Version: "2.3.0",
-		},
-		{
-			Name:    "protoc",
-			Version: "3.14.0",
-		},
-		{
-			Name:    "protoc-gen-go",
-			Version: "1.25.0",
-		},
-		{
-			Name:    "protoc-gen-cobra",
-			Version: "0.4.1",
-		},
-		{
-			Name:    "protoc-gen-go-grpc",
-			Version: "1.1.0",
-		},
-	},
 }

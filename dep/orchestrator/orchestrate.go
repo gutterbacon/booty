@@ -1,7 +1,6 @@
 package orchestrator
 
 import (
-	"encoding/json"
 	"github.com/spf13/cobra"
 	"io/ioutil"
 	"path/filepath"
@@ -40,7 +39,7 @@ func NewOrchestrator(app string) *Orchestrator {
 	fileContent, err := ioutil.ReadFile(configPath)
 	if err != nil {
 		// use default config
-		fileContent, err = json.Marshal(&config.DefaultConfig)
+		fileContent, err = config.DefaultConfig.ReadFile("config.reference.json")
 		if err != nil {
 			logger.Fatalf("error encoding default json config")
 		}
