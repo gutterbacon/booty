@@ -1,6 +1,6 @@
 module go.amplifyedge.org/booty-v2
 
-go 1.15
+go 1.16
 
 require (
 	github.com/cheggaaa/pb v1.0.27
