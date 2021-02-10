@@ -5,6 +5,7 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"sync"
 
 	"go.amplifyedge.org/booty-v2/dep"
 
@@ -43,25 +44,31 @@ func (p *Protoc) Version() string {
 	return p.version
 }
 
-func (p *Protoc) Download(targetDir string) error {
+func (p *Protoc) Download() error {
 	if osutil.GetArch() != "amd64" {
 		return fmt.Errorf("error: unsupported arch: %v", osutil.GetArch())
 	}
 	// download all dependencies
-	// for _, d := range p.dependencies {
-	// 	if err := d.Download(targetDir); err != nil {
-	// 		return err
-	// 	}
-	// }
-	// errChan := make(chan error, 1)
-	// for i := 0; i < len(p.dependencies); i++ {
-	// 	j := i
-	// 	w := newWorkerType("download", targetDir, p.dependencies, errChan)
-	// 	go w.do(j)
-	// }
-	// if err := <-errChan; err != nil {
-	// 	return err
-	// }
+	//for _, d := range p.dependencies {
+	//	if err := d.Download(targetDir); err != nil {
+	//		return err
+	//	}
+	//}
+	errChan := make(chan error, len(p.dependencies))
+	var wg sync.WaitGroup
+	for i := 0; i < len(p.dependencies); i++ {
+		wg.Add(1)
+		j := i
+		w := newWorkerType("download", osutil.GetDownloadDir(), p.dependencies, errChan)
+		go func() {
+			defer wg.Done()
+			w.do(j)
+		}()
+	}
+	wg.Wait()
+	if err := <-errChan; err != nil {
+		return err
+	}
 
 	var osName string
 	var fetchUrl string
@@ -76,7 +83,7 @@ func (p *Protoc) Download(targetDir string) error {
 		osName = "win64"
 		fetchUrl = fmt.Sprintf(protocUrlFormat, p.version, p.version, osName)
 	}
-	targetDir = filepath.Join(targetDir, "protobuf-"+p.version)
+	targetDir := filepath.Join(osutil.GetDownloadDir(), "protobuf-"+p.version)
 	err := downloader.Download(fetchUrl, targetDir)
 	if err != nil {
 		return err
@@ -97,11 +104,11 @@ func (p *Protoc) Install() error {
 	}
 
 	// install all dependencies
-	// for _, d := range p.dependencies {
-	// 	if err = d.Install(); err != nil {
-	// 		return err
-	// 	}
-	// }
+	for _, d := range p.dependencies {
+		if err = d.Install(); err != nil {
+			return err
+		}
+	}
 
 	// all files that are going to be installed
 	filesMap := map[string][]interface{}{
@@ -135,11 +142,10 @@ func (p *Protoc) Install() error {
 
 func (p *Protoc) Update(version string) error {
 	p.version = version
-	targetDir := filepath.Dir(p.dlPath)
 	if err := p.Uninstall(); err != nil {
 		return err
 	}
-	if err := p.Download(targetDir); err != nil {
+	if err := p.Download(); err != nil {
 		return err
 	}
 	return p.Install()
@@ -149,16 +155,21 @@ func (p *Protoc) Uninstall() error {
 	var err error
 
 	// uninstall all dependencies
-	// errChan := make(chan error, 1)
-	// for i := 0; i < len(p.dependencies); i++ {
-	// 	j := i
-	// 	w := newWorkerType("uninstall", "", p.dependencies, errChan)
-	// 	go w.do(j)
-	// }
-	// if err = <-errChan; err != nil {
-	// 	return err
-	// }
-
+	errChan := make(chan error, len(p.dependencies))
+	var wg sync.WaitGroup
+	for i := 0; i < len(p.dependencies); i++ {
+		wg.Add(1)
+		j := i
+		w := newWorkerType("uninstall", "", p.dependencies, errChan)
+		go func() {
+			defer wg.Done()
+			w.do(j)
+		}()
+	}
+	wg.Wait()
+	if err := <-errChan; err != nil {
+		return err
+	}
 	var pkg *store.InstalledPackage
 	pkg, err = p.db.Get(p.Name())
 	if err != nil {

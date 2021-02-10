@@ -31,13 +31,13 @@ func (p *ProtocGenGoGrpc) Version() string {
 	return p.version
 }
 
-func (p *ProtocGenGoGrpc) Download(targetDir string) error {
+func (p *ProtocGenGoGrpc) Download() error {
 	if osutil.GetArch() != "amd64" {
 		return fmt.Errorf("error: unsupported arch: %v", osutil.GetArch())
 	}
 	osName := fmt.Sprintf("%s.%s", osutil.GetOS(), osutil.GetArch())
 	fetchUrl := fmt.Sprintf(genGrpcUrlFormat, p.version, p.version, osName)
-	target := filepath.Join(targetDir, p.Name()+"-"+p.version)
+	target := filepath.Join(osutil.GetDownloadDir(), p.Name()+"-"+p.version)
 	err := downloader.Download(fetchUrl, target)
 	if err != nil {
 		return err
@@ -112,11 +112,10 @@ func (p *ProtocGenGoGrpc) Run(args ...string) error {
 
 func (p *ProtocGenGoGrpc) Update(version string) error {
 	p.version = version
-	targetDir := filepath.Dir(p.dlPath)
 	if err := p.Uninstall(); err != nil {
 		return err
 	}
-	if err := p.Download(targetDir); err != nil {
+	if err := p.Download(); err != nil {
 		return err
 	}
 	return p.Install()

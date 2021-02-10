@@ -38,7 +38,7 @@ func TestBinaries(t *testing.T) {
 
 func testGrafana(t *testing.T) {
 	gf := components.NewGrafana(db, "7.3.7")
-	err := gf.Download("./testdata/downloads")
+	err := gf.Download()
 	require.NoError(t, err)
 
 	err = gf.Install()
@@ -53,7 +53,7 @@ func testGrafana(t *testing.T) {
 
 func testGoreleaser(t *testing.T) {
 	gor := components.NewGoreleaser(db, "0.149.0")
-	err := gor.Download("./testdata/downloads")
+	err := gor.Download()
 	require.NoError(t, err)
 
 	// install
@@ -71,7 +71,7 @@ func testGoreleaser(t *testing.T) {
 
 func testCaddy(t *testing.T) {
 	cdy := components.NewCaddy(db, "2.2.0")
-	err := cdy.Download("./testdata/downloads")
+	err := cdy.Download()
 	require.NoError(t, err)
 
 	// install
@@ -93,7 +93,7 @@ func testProto(t *testing.T) {
 		components.NewProtocGenGo(db, "1.25.0"),
 		components.NewProtocGenGoGrpc(db, "1.1.0"),
 	})
-	err := p.Download("./testdata/downloads")
+	err := p.Download()
 	require.NoError(t, err)
 
 	// install
@@ -117,7 +117,7 @@ func testProto(t *testing.T) {
 
 func testProtocGenGo(t *testing.T) {
 	p := components.NewProtocGenGo(db, "1.25.0")
-	err := p.Download("./testdata/downloads")
+	err := p.Download()
 	require.NoError(t, err)
 
 	// install
@@ -138,7 +138,7 @@ func testProtocGenGo(t *testing.T) {
 
 func testProtocGenCobra(t *testing.T) {
 	p := components.NewProtocGenCobra(db, "0.4.1")
-	err := p.Download("./testdata/downloads")
+	err := p.Download()
 	require.NoError(t, err)
 
 	// install
@@ -159,7 +159,7 @@ func testProtocGenCobra(t *testing.T) {
 
 func testProtocGenGrpc(t *testing.T) {
 	p := components.NewProtocGenGoGrpc(db, "1.1.0")
-	err := p.Download("./testdata/downloads")
+	err := p.Download()
 	require.NoError(t, err)
 
 	// install

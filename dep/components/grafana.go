@@ -39,7 +39,7 @@ func (g *Grafana) Name() string {
 	return "grafana"
 }
 
-func (g *Grafana) Download(targetDir string) error {
+func (g *Grafana) Download() error {
 	osname := fmt.Sprintf("%s-%s", strings.ToLower(osutil.GetOS()), osutil.GetArch())
 	var fetchUrl string
 	switch osutil.GetOS() {
@@ -48,6 +48,7 @@ func (g *Grafana) Download(targetDir string) error {
 	case "windows":
 		fetchUrl = fmt.Sprintf(fetchUrlFormat, g.version, osname, "zip")
 	}
+	targetDir := osutil.GetDownloadDir()
 	err := downloader.Download(fetchUrl, targetDir)
 	if err != nil {
 		return err
@@ -128,11 +129,10 @@ func (g *Grafana) Uninstall() error {
 
 func (g *Grafana) Update(version string) error {
 	g.version = version
-	targetDir := filepath.Dir(g.dlPath)
 	if err := g.Uninstall(); err != nil {
 		return err
 	}
-	if err := g.Download(targetDir); err != nil {
+	if err := g.Download(); err != nil {
 		return err
 	}
 	return g.Install()

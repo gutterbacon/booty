@@ -23,7 +23,7 @@ func newWorkerType(jobType string, targetDir string, deps []dep.Component, errCh
 func (w *workerType) do(i int) {
 	switch w.jobType {
 	case "download":
-		w.errChan <- w.dependencies[i].Download(w.targetDir)
+		w.errChan <- w.dependencies[i].Download()
 	case "install":
 		w.errChan <- w.dependencies[i].Install()
 	case "uninstall":

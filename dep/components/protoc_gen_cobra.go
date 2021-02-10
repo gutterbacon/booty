@@ -39,8 +39,8 @@ func (p *ProtocGenCobra) Version() string {
 	return p.version
 }
 
-func (p *ProtocGenCobra) Download(targetDir string) error {
-	target := filepath.Join(targetDir, p.Name()+"-"+p.version)
+func (p *ProtocGenCobra) Download() error {
+	target := filepath.Join(osutil.GetDownloadDir(), p.Name()+"-"+p.version)
 	var ext string
 	switch osutil.GetOS() {
 	case "linux", "darwin":
@@ -122,11 +122,10 @@ func (p *ProtocGenCobra) Run(args ...string) error {
 
 func (p *ProtocGenCobra) Update(version string) error {
 	p.version = version
-	targetDir := filepath.Dir(p.dlPath)
 	if err := p.Uninstall(); err != nil {
 		return err
 	}
-	if err := p.Download(targetDir); err != nil {
+	if err := p.Download(); err != nil {
 		return err
 	}
 	return p.Install()

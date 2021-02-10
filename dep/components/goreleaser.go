@@ -43,8 +43,8 @@ func (g *Goreleaser) Name() string {
 	return "goreleaser"
 }
 
-func (g *Goreleaser) Download(targetDir string) error {
-	downloadDir := filepath.Join(targetDir, g.Name()+"-"+g.version)
+func (g *Goreleaser) Download() error {
+	downloadDir := filepath.Join(osutil.GetDownloadDir(), g.Name()+"-"+g.version)
 	_ = os.MkdirAll(downloadDir, 0755)
 	osname := fmt.Sprintf("%s_%s", osutil.GetOS(), osutil.GetAltArch())
 	var ext string
@@ -125,11 +125,10 @@ func (g *Goreleaser) Uninstall() error {
 
 func (g *Goreleaser) Update(version string) error {
 	g.version = version
-	targetDir := filepath.Dir(g.dlPath)
 	if err := g.Uninstall(); err != nil {
 		return err
 	}
-	if err := g.Download(targetDir); err != nil {
+	if err := g.Download(); err != nil {
 		return err
 	}
 	return g.Install()

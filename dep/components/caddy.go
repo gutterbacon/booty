@@ -40,8 +40,8 @@ func (c *Caddy) Name() string {
 	return "caddy"
 }
 
-func (c *Caddy) Download(targetDir string) error {
-	downloadDir := filepath.Join(targetDir, c.Name()+"-"+c.version)
+func (c *Caddy) Download() error {
+	downloadDir := filepath.Join(osutil.GetDownloadDir(), c.Name()+"-"+c.version)
 	_ = os.MkdirAll(downloadDir, 0755)
 	osname := fmt.Sprintf("%s_%s", osutil.GetAltOs(), osutil.GetArch())
 	var ext string
@@ -124,11 +124,10 @@ func (c *Caddy) Uninstall() error {
 
 func (c *Caddy) Update(version string) error {
 	c.version = version
-	targetDir := filepath.Dir(c.dlPath)
 	if err := c.Uninstall(); err != nil {
 		return err
 	}
-	if err := c.Download(targetDir); err != nil {
+	if err := c.Download(); err != nil {
 		return err
 	}
 	return c.Install()
