@@ -13,6 +13,20 @@
 3. Copy the binary in `bin` directory to your `PATH`
 4. Run `booty`
 
+## Tinker Tanker
+
+To add a component, implement the `Component` 
+interface in [here](https://github.com/alexadhy/booty/blob/master/dep/component.go)
+
+This program installs config under:
+
+- Linux: `$HOME/.local/booty/etc`
+- Mac: `$HOME/Library/Application\ Support/booty/etc`
+- Windows: `C:\\ProgramData\booty\etc`
+
+The file `config.reference.json` is provided as a reference should you want to change the program behaviour.
+
+
 ## Implemented
 
 1. Download 3rd party binaries and libraries our project needs
