@@ -64,18 +64,15 @@ func (p *Protoc) Download() error {
 	}
 
 	var osName string
-	var fetchUrl string
 	switch osutil.GetOS() {
 	case "linux":
 		osName = fmt.Sprintf("%s-%s", osutil.GetOS(), osutil.GetAltArch())
-		fetchUrl = fmt.Sprintf(protocUrlFormat, p.version, p.version, osName)
 	case "darwin":
 		osName = fmt.Sprintf("%s-%s", "osx", osutil.GetAltArch())
-		fetchUrl = fmt.Sprintf(protocUrlFormat, p.version, p.version, osName)
 	case "windows":
 		osName = "win64"
-		fetchUrl = fmt.Sprintf(protocUrlFormat, p.version, p.version, osName)
 	}
+	fetchUrl := fmt.Sprintf(protocUrlFormat, p.version, p.version, osName)
 	targetDir := getDlPath("protobuf", p.version)
 	err := downloader.Download(fetchUrl, targetDir)
 	if err != nil {
