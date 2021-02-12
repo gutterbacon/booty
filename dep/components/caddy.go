@@ -107,6 +107,7 @@ func (c *Caddy) Install() error {
 	}
 	// copy file to the global bin directory
 	caddyConfigPath := filepath.Join(osutil.GetEtcDir(), "caddy", "Caddyfile")
+	_ = os.MkdirAll(filepath.Dir(caddyConfigPath), 0755)
 	for k, v := range filesMap {
 		if err = fileutil.Copy(k, v[0].(string)); err != nil {
 			return err
