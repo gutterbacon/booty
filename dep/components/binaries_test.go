@@ -34,6 +34,7 @@ func TestBinaries(t *testing.T) {
 	t.Run("testProtocGenGrpc", testProtocGenGrpc)
 	t.Run("testProtocGenCobra", testProtocGenCobra)
 	t.Run("testProto", testProto)
+	t.Run("testGoJsonnet", testGoJsonnet)
 }
 
 func testGrafana(t *testing.T) {
@@ -175,5 +176,23 @@ func testProtocGenGrpc(t *testing.T) {
 
 	// uninstall
 	err = p.Uninstall()
+	require.NoError(t, err)
+}
+
+func testGoJsonnet(t *testing.T) {
+	g := components.NewGoJsonnet(db, "0.17.0")
+	err := g.Download()
+	require.NoError(t, err)
+
+	// install
+	err = g.Install()
+	require.NoError(t, err)
+
+	// update
+	err = g.Update("0.17.0")
+	require.NoError(t, err)
+
+	// uninstall
+	err = g.Uninstall()
 	require.NoError(t, err)
 }

@@ -28,6 +28,10 @@
     {
       "name": "protoc-gen-go-grpc",
       "version": "1.1.0"
+    },
+    {
+      "name": "jsonnet",
+      "version": "0.17.0"
     }
   ]
 }

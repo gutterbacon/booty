@@ -3,7 +3,6 @@ package components
 import (
 	"embed"
 	"fmt"
-	"go.amplifyedge.org/booty-v2/internal/service"
 	"io/ioutil"
 	"os"
 	"path/filepath"
@@ -12,8 +11,10 @@ import (
 	"go.amplifyedge.org/booty-v2/internal/fileutil"
 
 	ks "github.com/kardianos/service"
+
 	"go.amplifyedge.org/booty-v2/internal/downloader"
 	"go.amplifyedge.org/booty-v2/internal/osutil"
+	"go.amplifyedge.org/booty-v2/internal/service"
 	"go.amplifyedge.org/booty-v2/internal/store"
 )
 
