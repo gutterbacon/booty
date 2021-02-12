@@ -20,7 +20,7 @@ const (
 
 type GoJsonnet struct {
 	version string
-	db *store.DB
+	db      *store.DB
 }
 
 func (g *GoJsonnet) Name() string {
@@ -36,7 +36,7 @@ func (g *GoJsonnet) Download() error {
 	if osutil.GetOS() == "darwin" {
 		_ = os.Setenv("GOPATH", targetDir)
 		_ = os.Setenv("GO111MODULES", "off")
-		return osutil.Exec("go", "get", "-u", "-v", "github.com/google/go-jsonnet/cmd/jsonnet@v" + g.version)
+		return osutil.Exec("go", "get", "-u", "-v", "github.com/google/go-jsonnet/cmd/jsonnet@v"+g.version)
 	}
 	var osVer string
 	if osutil.GetOS() == "linux" && osutil.GetArch() == "arm64" {
@@ -56,8 +56,16 @@ func (g *GoJsonnet) Install() error {
 	var err error
 	binDir := osutil.GetBinDir()
 	dlPath := getDlPath(g.Name(), g.version)
-	filesMap := map[string][]interface{}{
-		filepath.Join(dlPath, "bin", g.Name()): {filepath.Join(binDir, g.Name()), 0755},
+	filesMap := map[string][]interface{}{}
+	if osutil.GetOS() == "darwin" {
+		filesMap[filepath.Join(dlPath, "bin", g.Name())] = []interface{}{
+			filepath.Join(binDir, g.Name()), 0755,
+		}
+	} else {
+		filesMap[filepath.Join(dlPath, g.Name())] = []interface{}{filepath.Join(binDir, g.Name()), 0755}
+		filesMap[filepath.Join(dlPath, g.Name()+"fmt")] = []interface{}{
+			filepath.Join(binDir, g.Name()+"fmt"), 0755,
+		}
 	}
 	ip := store.InstalledPackage{
 		Name:     g.Name(),
@@ -130,4 +138,3 @@ func NewGoJsonnet(db *store.DB, version string) *GoJsonnet {
 		db:      db,
 	}
 }
-
