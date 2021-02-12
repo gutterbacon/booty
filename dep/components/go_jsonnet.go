@@ -32,8 +32,9 @@ func (g *GoJsonnet) Version() string {
 }
 
 func (g *GoJsonnet) Download() error {
+	targetDir := getDlPath(g.Name(), g.version)
 	if osutil.GetOS() == "darwin" {
-		_ = os.Setenv("GOPATH", getDlPath(g.Name(), g.version))
+		_ = os.Setenv("GOPATH", targetDir)
 		_ = os.Setenv("GO111MODULES", "off")
 		return osutil.Exec("go", "get", "-u", "-v", "github.com/google/go-jsonnet/cmd/jsonnet@v" + g.version)
 	}
@@ -44,7 +45,6 @@ func (g *GoJsonnet) Download() error {
 		osVer = fmt.Sprintf("%s_%s", strings.ToUpper(osutil.GetOS()), osutil.GetAltArch())
 	}
 	fetchUrl := fmt.Sprintf(jsonnetUrlFmt, g.version, g.version, osVer)
-	targetDir := osutil.GetDownloadDir()
 	return downloader.Download(fetchUrl, targetDir)
 }
 
