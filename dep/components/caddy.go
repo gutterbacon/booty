@@ -191,7 +191,7 @@ func (c *Caddy) Backup() error {
 }
 
 func (c *Caddy) RunStop() error {
-	return nil
+	return c.svc.Stop()
 }
 
 func (c *Caddy) Dependencies() []dep.Component {
