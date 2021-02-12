@@ -118,6 +118,10 @@ func GetAltArch() string {
 }
 
 func getInstallPrefix() string {
+	bh := os.Getenv("BOOTY_HOME")
+	if bh != "" {
+		return bh
+	}
 	u, _ := user.Current()
 	switch strings.ToLower(GetOS()) {
 	case "windows":

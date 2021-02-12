@@ -20,6 +20,7 @@ var (
 )
 
 func init() {
+	_ = os.Setenv("BOOTY_HOME", "./testdata")
 	l := zaplog.NewZapLogger(zaplog.WARN, "store-test", true)
 	l.InitLogger(nil)
 	_ = os.MkdirAll("./testdata/db", 0755)
@@ -38,14 +39,18 @@ func TestBinaries(t *testing.T) {
 }
 
 func testGrafana(t *testing.T) {
-	gf := components.NewGrafana(db, "7.3.7")
-	err := gf.Download()
+	var err error
+	gf := components.NewGrafana(db, "7.4.0")
+	err = gf.Download()
 	require.NoError(t, err)
 
 	err = gf.Install()
 	require.NoError(t, err)
 
-	err = gf.Update("7.4.0")
+	err = gf.Run()
+	require.NoError(t, err)
+
+	err = gf.RunStop()
 	require.NoError(t, err)
 
 	err = gf.Uninstall()
