@@ -40,14 +40,18 @@ func TestBinaries(t *testing.T) {
 }
 
 func testGrafana(t *testing.T) {
-	gf := components.NewGrafana(db, "7.3.7")
-	err := gf.Download()
+	var err error
+	gf := components.NewGrafana(db, "7.4.0")
+	err = gf.Download()
 	require.NoError(t, err)
 
 	err = gf.Install()
 	require.NoError(t, err)
 
-	err = gf.Update("7.4.0")
+	err = gf.Run()
+	require.NoError(t, err)
+
+	err = gf.RunStop()
 	require.NoError(t, err)
 
 	err = gf.Uninstall()
@@ -82,8 +86,13 @@ func testCaddy(t *testing.T) {
 	require.NoError(t, err)
 
 	// update
+<<<<<<< HEAD
 	// err = cdy.Update("2.3.0")
 	// require.NoError(t, err)
+=======
+	//err = cdy.Update("2.3.0")
+	//require.NoError(t, err)
+>>>>>>> 08174070b6829924f335b9659be6376944116518
 
 	// run
 	err = cdy.Run()
@@ -206,6 +215,7 @@ func testGoJsonnet(t *testing.T) {
 	err = g.Uninstall()
 	require.NoError(t, err)
 }
+<<<<<<< HEAD
 
 func testVictoriaMetrics(t *testing.T) {
 	g := components.NewVicMet(db, "1.53.0")
@@ -232,3 +242,5 @@ func testVictoriaMetrics(t *testing.T) {
 	// err = g.Uninstall()
 	// require.NoError(t, err)
 }
+=======
+>>>>>>> 08174070b6829924f335b9659be6376944116518

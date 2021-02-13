@@ -2,6 +2,8 @@ package components
 
 import (
 	"fmt"
+	ks "github.com/kardianos/service"
+	"go.amplifyedge.org/booty-v2/internal/service"
 	"os"
 	"path/filepath"
 	"strings"
@@ -23,10 +25,11 @@ const (
 type Grafana struct {
 	version string
 	db      *store.DB
+	svc     *service.Svc
 }
 
 func NewGrafana(db *store.DB, version string) *Grafana {
-	return &Grafana{version, db}
+	return &Grafana{version: version, db: db}
 }
 
 // Gets grafana's version
@@ -55,11 +58,28 @@ func (g *Grafana) Download() error {
 	return nil
 }
 
+func (g *Grafana) service() (*service.Svc, error) {
+	nameVer := fmt.Sprintf("%s-%s", g.Name(), g.version)
+	config := &ks.Config{
+		Name:             nameVer,
+		DisplayName:      nameVer,
+		Description:      "Extensible platform that uses TLS by default",
+		WorkingDirectory: filepath.Join(osutil.GetEtcDir(), "grafana"),
+		Arguments: []string{
+			"--config",
+			filepath.Join(osutil.GetEtcDir(), "grafana", "grafana.ini"),
+		},
+		Executable: filepath.Join(osutil.GetBinDir(), g.Name()+"-server"),
+		Option:     map[string]interface{}{},
+	}
+	return service.NewService(config)
+}
+
 func (g *Grafana) Install() error {
 	var err error
 	// install to path
 	binDir := osutil.GetBinDir()
-	etcDir := osutil.GetEtcDir()
+	grafanaEtcDir := filepath.Join(osutil.GetEtcDir(), "grafana")
 
 	serverExecutable := g.Name() + "-server"
 	clientExecutable := g.Name() + "-cli"
@@ -71,12 +91,18 @@ func (g *Grafana) Install() error {
 	}
 	dlPath := getDlPath(g.Name(), g.version)
 
+	err = os.MkdirAll(grafanaEtcDir, 0755)
+
 	// all files that are going to be installed
 	filesMap := map[string][]interface{}{
 		filepath.Join(dlPath, "bin", serverExecutable): {filepath.Join(binDir, serverExecutable), 0755},
 		filepath.Join(dlPath, "bin", clientExecutable): {filepath.Join(binDir, clientExecutable), 0755},
-		filepath.Join(dlPath, "conf", "defaults.ini"):  {filepath.Join(etcDir, "grafana.ini"), 0644},
-		filepath.Join(dlPath, "conf", "sample.ini"):    {filepath.Join(etcDir, "grafana.sample.ini"), 0644},
+		filepath.Join(dlPath, "conf", "defaults.ini"):  {filepath.Join(grafanaEtcDir, "grafana.ini"), 0644},
+		filepath.Join(dlPath, "conf", "sample.ini"):    {filepath.Join(grafanaEtcDir, "grafana.sample.ini"), 0644},
+		filepath.Join(dlPath, "conf"):                  {filepath.Join(grafanaEtcDir, "conf"), 0755},
+		filepath.Join(dlPath, "plugins-bundled"):       {filepath.Join(grafanaEtcDir, "plugins-bundled"), 0755},
+		filepath.Join(dlPath, "public"):                {filepath.Join(grafanaEtcDir, "public"), 0755},
+		filepath.Join(dlPath, "scripts"):               {filepath.Join(grafanaEtcDir, "scripts"), 0755},
 	}
 
 	ip := store.InstalledPackage{
@@ -97,6 +123,17 @@ func (g *Grafana) Install() error {
 		}
 		ip.FilesMap[installedName] = installedMode
 	}
+
+	// install service
+	s, err := g.service()
+	if err != nil {
+		return err
+	}
+	g.svc = s
+	if err = g.svc.Install(); err != nil {
+		return err
+	}
+	// store version, installed paths to db
 	if err = g.db.New(&ip); err != nil {
 		return err
 	}
@@ -123,6 +160,10 @@ func (g *Grafana) Uninstall() error {
 		}
 	}
 	// remove downloaded files
+	err = g.svc.Uninstall()
+	if err != nil {
+		return err
+	}
 	dlPath := getDlPath(g.Name(), g.version)
 	return os.RemoveAll(dlPath)
 }
@@ -139,7 +180,7 @@ func (g *Grafana) Update(version string) error {
 }
 
 func (g *Grafana) Run(args ...string) error {
-	return nil
+	return g.svc.Start()
 }
 
 func (g *Grafana) Backup() error {
@@ -147,7 +188,7 @@ func (g *Grafana) Backup() error {
 }
 
 func (g *Grafana) RunStop() error {
-	return nil
+	return g.svc.Stop()
 }
 
 func (g *Grafana) Dependencies() []dep.Component {
