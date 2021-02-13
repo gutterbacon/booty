@@ -42,7 +42,7 @@ func (v *VicMet) service(promCfgPath, vmStoragePath string) ([]*service.Svc, err
 		DisplayName: v.Name(),
 		Description: "fast, cost-effective monitoring solution and time series database",
 		Arguments: []string{
-			"--promscape.config=" + promCfgPath,
+			"--promscrape.config=" + promCfgPath,
 			"--opentsdbListenAddr=:4242",
 			"--httpListenAddr=:8428",
 			"--storageDataPath=" + vmStoragePath,
