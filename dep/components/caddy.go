@@ -184,7 +184,7 @@ func (c *Caddy) Update(version string) error {
 }
 
 func (c *Caddy) Run(args ...string) error {
-	return c.svc.Run()
+	return c.svc.Start()
 }
 
 func (c *Caddy) Backup() error {

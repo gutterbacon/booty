@@ -76,7 +76,7 @@ func testGoreleaser(t *testing.T) {
 }
 
 func testCaddy(t *testing.T) {
-	cdy := components.NewCaddy(db, "2.2.0")
+	cdy := components.NewCaddy(db, "2.3.0")
 	err := cdy.Download()
 	require.NoError(t, err)
 
@@ -85,7 +85,15 @@ func testCaddy(t *testing.T) {
 	require.NoError(t, err)
 
 	// update
-	err = cdy.Update("2.3.0")
+	//err = cdy.Update("2.3.0")
+	//require.NoError(t, err)
+
+	// run
+	err = cdy.Run()
+	require.NoError(t, err)
+
+	// stop
+	err = cdy.RunStop()
 	require.NoError(t, err)
 
 	// uninstall
