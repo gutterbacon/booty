@@ -1,21 +1,18 @@
 package components
 
 import (
-	"fmt"
-	"os"
-	"path/filepath"
-	"strings"
-
 	"go.amplifyedge.org/booty-v2/dep"
 	"go.amplifyedge.org/booty-v2/internal/downloader"
 	"go.amplifyedge.org/booty-v2/internal/fileutil"
 	"go.amplifyedge.org/booty-v2/internal/osutil"
 	"go.amplifyedge.org/booty-v2/internal/store"
+	"os"
+	"path/filepath"
 )
 
 const (
 	// version -- version -- os_alt_arch
-	jsonnetUrlFmt = "https://github.com/google/go-jsonnet/releases/download/v%s/go-jsonnet_%s_%s.tar.gz"
+	jsonnetUrl = "git@github.com:google/go-jsonnet.git"
 )
 
 type GoJsonnet struct {
@@ -33,19 +30,7 @@ func (g *GoJsonnet) Version() string {
 
 func (g *GoJsonnet) Download() error {
 	targetDir := getDlPath(g.Name(), g.version)
-	if osutil.GetOS() == "darwin" {
-		_ = os.Setenv("GOPATH", targetDir)
-		_ = os.Setenv("GO111MODULES", "off")
-		return osutil.Exec("go", "get", "-u", "-v", "github.com/google/go-jsonnet/cmd/jsonnet@v"+g.version)
-	}
-	var osVer string
-	if osutil.GetOS() == "linux" && osutil.GetArch() == "arm64" {
-		osVer = "Linux_arm64"
-	} else {
-		osVer = fmt.Sprintf("%s_%s", strings.ToTitle(osutil.GetOS()), osutil.GetAltArch())
-	}
-	fetchUrl := fmt.Sprintf(jsonnetUrlFmt, g.version, g.version, osVer)
-	return downloader.Download(fetchUrl, targetDir)
+	return downloader.GitClone(jsonnetUrl, targetDir, "v"+g.version)
 }
 
 func (g *GoJsonnet) Dependencies() []dep.Component {
@@ -56,16 +41,21 @@ func (g *GoJsonnet) Install() error {
 	var err error
 	binDir := osutil.GetBinDir()
 	dlPath := getDlPath(g.Name(), g.version)
-	filesMap := map[string][]interface{}{}
-	if osutil.GetOS() == "darwin" {
-		filesMap[filepath.Join(dlPath, "bin", g.Name())] = []interface{}{
-			filepath.Join(binDir, g.Name()), 0755,
+	// change dir to download path
+	if err = os.Chdir(dlPath); err != nil {
+		return err
+	}
+	// build binaries
+	recipes := []string{g.Name(), g.Name() + "fmt"}
+	for _, r := range recipes {
+		if err = osutil.Exec("go", "build", "-o", r, filepath.Join(dlPath, "cmd", r)); err != nil {
+			return err
 		}
-	} else {
-		filesMap[filepath.Join(dlPath, g.Name())] = []interface{}{filepath.Join(binDir, g.Name()), 0755}
-		filesMap[filepath.Join(dlPath, g.Name()+"fmt")] = []interface{}{
-			filepath.Join(binDir, g.Name()+"fmt"), 0755,
-		}
+	}
+
+	filesMap := map[string][]interface{}{
+		filepath.Join(dlPath, g.Name()):       {filepath.Join(binDir, g.Name()), 0755},
+		filepath.Join(dlPath, g.Name()+"fmt"): {filepath.Join(binDir, g.Name()+"fmt"), 0755},
 	}
 	ip := store.InstalledPackage{
 		Name:     g.Name(),

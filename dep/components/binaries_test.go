@@ -20,7 +20,6 @@ var (
 )
 
 func init() {
-	_ = os.Setenv("BOOTY_HOME", "./testdata")
 	l := zaplog.NewZapLogger(zaplog.WARN, "store-test", true)
 	l.InitLogger(nil)
 	_ = os.MkdirAll("./testdata/db", 0755)
@@ -202,11 +201,11 @@ func testGoJsonnet(t *testing.T) {
 	err = g.Install()
 	require.NoError(t, err)
 
-	// update
+	//// update
 	err = g.Update("0.17.0")
 	require.NoError(t, err)
 
-	// uninstall
+	//// uninstall
 	err = g.Uninstall()
 	require.NoError(t, err)
 }
@@ -214,16 +213,16 @@ func testGoJsonnet(t *testing.T) {
 func testVictoriaMetrics(t *testing.T) {
 	var err error
 	g := components.NewVicMet(db, "1.53.0")
-	//err = g.Download()
-	//require.NoError(t, err)
+	err = g.Download()
+	require.NoError(t, err)
 
 	// install
 	err = g.Install()
 	require.NoError(t, err)
 
 	// update
-	// err = g.Update("1.53.0")
-	// require.NoError(t, err)
+	err = g.Update("1.53.0")
+	require.NoError(t, err)
 
 	// run
 	err = g.Run()
@@ -234,6 +233,6 @@ func testVictoriaMetrics(t *testing.T) {
 	require.NoError(t, err)
 
 	// uninstall
-	//err = g.Uninstall()
-	//require.NoError(t, err)
+	err = g.Uninstall()
+	require.NoError(t, err)
 }
