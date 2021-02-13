@@ -180,7 +180,7 @@ func (g *Grafana) Update(version string) error {
 }
 
 func (g *Grafana) Run(args ...string) error {
-	return g.svc.Run()
+	return g.svc.Start()
 }
 
 func (g *Grafana) Backup() error {
