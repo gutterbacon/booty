@@ -20,6 +20,7 @@ var (
 )
 
 func init() {
+	_ = os.Setenv("BOOTY_HOME", "./testdata")
 	l := zaplog.NewZapLogger(zaplog.WARN, "store-test", true)
 	l.InitLogger(nil)
 	_ = os.MkdirAll("./testdata/db", 0755)
@@ -35,6 +36,7 @@ func TestBinaries(t *testing.T) {
 	t.Run("testProtocGenCobra", testProtocGenCobra)
 	t.Run("testProto", testProto)
 	t.Run("testGoJsonnet", testGoJsonnet)
+	t.Run("testVictoriaMetrics", testVictoriaMetrics)
 }
 
 func testGrafana(t *testing.T) {
@@ -71,7 +73,7 @@ func testGoreleaser(t *testing.T) {
 }
 
 func testCaddy(t *testing.T) {
-	cdy := components.NewCaddy(db, "2.2.0")
+	cdy := components.NewCaddy(db, "2.3.0")
 	err := cdy.Download()
 	require.NoError(t, err)
 
@@ -80,7 +82,15 @@ func testCaddy(t *testing.T) {
 	require.NoError(t, err)
 
 	// update
-	err = cdy.Update("2.3.0")
+	// err = cdy.Update("2.3.0")
+	// require.NoError(t, err)
+
+	// run
+	err = cdy.Run()
+	require.NoError(t, err)
+
+	// stop
+	err = cdy.RunStop()
 	require.NoError(t, err)
 
 	// uninstall
@@ -195,4 +205,30 @@ func testGoJsonnet(t *testing.T) {
 	// uninstall
 	err = g.Uninstall()
 	require.NoError(t, err)
+}
+
+func testVictoriaMetrics(t *testing.T) {
+	g := components.NewVicMet(db, "1.53.0")
+	err := g.Download()
+	require.NoError(t, err)
+
+	// install
+	// err = g.Install()
+	// require.NoError(t, err)
+
+	// update
+	// err = g.Update("1.53.0")
+	// require.NoError(t, err)
+
+	// run
+	// err = g.Run()
+	// require.NoError(t, err)
+	//
+	// // stop
+	// err = g.RunStop()
+	// require.NoError(t, err)
+
+	// uninstall
+	// err = g.Uninstall()
+	// require.NoError(t, err)
 }

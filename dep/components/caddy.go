@@ -120,14 +120,16 @@ func (c *Caddy) Install() error {
 		}
 		ip.FilesMap[installedName] = installedMode
 	}
-	ip.FilesMap[caddyConfigPath] = 0644
-	// install default config
-	caddyData, err := caddyFileSample.ReadFile("files/Caddyfile")
-	if err != nil {
-		return err
-	}
-	if err = ioutil.WriteFile(caddyConfigPath, caddyData, 0600); err != nil {
-		return err
+	// install default config, only if the config doesn't exists
+	// TODO: prompt user?
+	if exists := osutil.Exists(caddyConfigPath); !exists {
+		caddyData, err := caddyFileSample.ReadFile("files/Caddyfile")
+		if err != nil {
+			return err
+		}
+		if err = ioutil.WriteFile(caddyConfigPath, caddyData, 0600); err != nil {
+			return err
+		}
 	}
 	// install service
 	s, err := c.service()
@@ -184,10 +186,11 @@ func (c *Caddy) Update(version string) error {
 }
 
 func (c *Caddy) Run(args ...string) error {
-	return c.svc.Run()
+	return c.svc.Start()
 }
 
 func (c *Caddy) Backup() error {
+	// TODO
 	return nil
 }
 

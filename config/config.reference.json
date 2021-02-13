@@ -32,6 +32,10 @@
     {
       "name": "jsonnet",
       "version": "0.17.0"
+    },
+    {
+      "name":  "victoriametrics",
+      "version": "1.53.1"
     }
   ]
 }

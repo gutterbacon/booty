@@ -1,14 +1,18 @@
 package downloader
 
 import (
-	"go.amplifyedge.org/booty-v2/internal/osutil"
+	"github.com/go-git/go-git/v5/plumbing"
 	"io"
 	"net/url"
+	"os"
 	"path/filepath"
 	"sync"
 
 	"github.com/cheggaaa/pb"
+	"github.com/go-git/go-git/v5"
 	"github.com/hashicorp/go-getter"
+
+	"go.amplifyedge.org/booty-v2/internal/osutil"
 )
 
 func Download(dlUrl string, targetDir string) error {
@@ -89,3 +93,12 @@ type readCloser struct {
 }
 
 func (c *readCloser) Close() error { return c.close() }
+
+func GitClone(fetchUrl string, targetDir string, tag string) error {
+	_, err := git.PlainClone(targetDir, false, &git.CloneOptions{
+		URL:           fetchUrl,
+		Progress:      os.Stdout,
+		ReferenceName: plumbing.NewTagReferenceName(tag),
+	})
+	return err
+}

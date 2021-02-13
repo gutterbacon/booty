@@ -102,7 +102,7 @@ func (g *GoJsonnet) Uninstall() error {
 }
 
 func (g *GoJsonnet) Run(args ...string) error {
-	panic("implement me")
+	return osutil.Exec(filepath.Join(osutil.GetBinDir(), g.Name()), args...)
 }
 
 func (g *GoJsonnet) Update(version string) error {
