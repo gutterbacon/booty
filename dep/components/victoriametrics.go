@@ -99,8 +99,12 @@ func (v *VicMet) Install() error {
 	if err = os.Chdir(dlPath); err != nil {
 		return err
 	}
-	if err = osutil.Exec("make", "all"); err != nil {
-		return err
+	recipes := []string{"victoria-metrics", "vmagent", "vmalert", "vmauth", "vmbackup", "vmctl", "vminsert", "vmrestore", "vmselect", "vmstorage"}
+	// make pure local binaries
+	for _, r := range recipes {
+		if err = osutil.Exec("make", "app-local-pure", "APP_NAME="+r); err != nil {
+			return err
+		}
 	}
 	vmStoragePath := filepath.Join(osutil.GetDataDir(), v.Name(), "storage")
 	if err = os.MkdirAll(vmStoragePath, 0755); err != nil {
@@ -118,12 +122,16 @@ func (v *VicMet) Install() error {
 		},
 	}
 	filesMap := map[string][]interface{}{
-		filepath.Join(dlPath, "bin", v.Name()):    {filepath.Join(binDir, v.Name()), 0755},
-		filepath.Join(dlPath, "bin", "vmagent"):   {filepath.Join(binDir, "vmagent"), 0755},
-		filepath.Join(dlPath, "bin", "vmalert"):   {filepath.Join(binDir, "vmalert"), 0755},
-		filepath.Join(dlPath, "bin", "vmauth"):    {filepath.Join(binDir, "vmauth"), 0755},
-		filepath.Join(dlPath, "bin", "vmbackup"):  {filepath.Join(binDir, "vmbackup"), 0755},
-		filepath.Join(dlPath, "bin", "vmrestore"): {filepath.Join(binDir, "vmrestore"), 0755},
+		filepath.Join(dlPath, "bin", v.Name()+"-pure"): {filepath.Join(binDir, v.Name()), 0755},
+		filepath.Join(dlPath, "bin", "vmagent-pure"):   {filepath.Join(binDir, "vmagent"), 0755},
+		filepath.Join(dlPath, "bin", "vmalert-pure"):   {filepath.Join(binDir, "vmalert"), 0755},
+		filepath.Join(dlPath, "bin", "vmauth-pure"):    {filepath.Join(binDir, "vmauth"), 0755},
+		filepath.Join(dlPath, "bin", "vmbackup-pure"):  {filepath.Join(binDir, "vmbackup"), 0755},
+		filepath.Join(dlPath, "bin", "vmctl-pure"):     {filepath.Join(binDir, "vmctl"), 0755},
+		filepath.Join(dlPath, "bin", "vminsert-pure"):  {filepath.Join(binDir, "vminsert"), 0755},
+		filepath.Join(dlPath, "bin", "vmrestore-pure"): {filepath.Join(binDir, "vmrestore"), 0755},
+		filepath.Join(dlPath, "bin", "vmselect-pure"):  {filepath.Join(binDir, "vmselect"), 0755},
+		filepath.Join(dlPath, "bin", "vmstorage-pure"): {filepath.Join(binDir, "vmstorage"), 0755},
 	}
 	// copy file to the bin directory
 	for k, v := range filesMap {

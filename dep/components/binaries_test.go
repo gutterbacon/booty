@@ -86,13 +86,8 @@ func testCaddy(t *testing.T) {
 	require.NoError(t, err)
 
 	// update
-<<<<<<< HEAD
 	// err = cdy.Update("2.3.0")
 	// require.NoError(t, err)
-=======
-	//err = cdy.Update("2.3.0")
-	//require.NoError(t, err)
->>>>>>> 08174070b6829924f335b9659be6376944116518
 
 	// run
 	err = cdy.Run()
@@ -215,32 +210,30 @@ func testGoJsonnet(t *testing.T) {
 	err = g.Uninstall()
 	require.NoError(t, err)
 }
-<<<<<<< HEAD
 
 func testVictoriaMetrics(t *testing.T) {
+	var err error
 	g := components.NewVicMet(db, "1.53.0")
-	err := g.Download()
-	require.NoError(t, err)
+	//err = g.Download()
+	//require.NoError(t, err)
 
 	// install
-	// err = g.Install()
-	// require.NoError(t, err)
+	err = g.Install()
+	require.NoError(t, err)
 
 	// update
 	// err = g.Update("1.53.0")
 	// require.NoError(t, err)
 
 	// run
-	// err = g.Run()
-	// require.NoError(t, err)
-	//
+	err = g.Run()
+	require.NoError(t, err)
+
 	// // stop
-	// err = g.RunStop()
-	// require.NoError(t, err)
+	err = g.RunStop()
+	require.NoError(t, err)
 
 	// uninstall
-	// err = g.Uninstall()
-	// require.NoError(t, err)
+	//err = g.Uninstall()
+	//require.NoError(t, err)
 }
-=======
->>>>>>> 08174070b6829924f335b9659be6376944116518
