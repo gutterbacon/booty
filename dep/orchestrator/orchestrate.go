@@ -184,3 +184,7 @@ func (o *Orchestrator) UninstallAll() error {
 	}
 	return nil
 }
+
+func (o *Orchestrator) Serve() error {
+	return nil
+}

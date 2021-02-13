@@ -12,7 +12,7 @@ import (
 
 const (
 	// version -- version -- os_alt_arch
-	jsonnetUrl = "git@github.com:google/go-jsonnet.git"
+	jsonnetUrl = "https://github.com/google/go-jsonnet.git"
 )
 
 type GoJsonnet struct {
@@ -52,7 +52,6 @@ func (g *GoJsonnet) Install() error {
 			return err
 		}
 	}
-
 	filesMap := map[string][]interface{}{
 		filepath.Join(dlPath, g.Name()):       {filepath.Join(binDir, g.Name()), 0755},
 		filepath.Join(dlPath, g.Name()+"fmt"): {filepath.Join(binDir, g.Name()+"fmt"), 0755},
@@ -77,7 +76,7 @@ func (g *GoJsonnet) Install() error {
 	if err = g.db.New(&ip); err != nil {
 		return err
 	}
-	return os.RemoveAll(dlPath)
+	return nil
 }
 
 func (g *GoJsonnet) Uninstall() error {
