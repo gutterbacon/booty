@@ -84,6 +84,9 @@ func (v *VicMet) Version() string {
 }
 
 func (v *VicMet) Download() error {
+	if osutil.GetOS() == "windows" {
+		return nil
+	}
 	targetDir := getDlPath(v.Name(), v.version)
 	return downloader.GitClone(vicmetUrlFmt, targetDir, "v"+v.version)
 }
@@ -93,6 +96,9 @@ func (v *VicMet) Dependencies() []dep.Component {
 }
 
 func (v *VicMet) Install() error {
+	if osutil.GetOS() == "windows" {
+		return nil
+	}
 	dlPath := getDlPath(v.Name(), v.version)
 	var err error
 	binDir := osutil.GetBinDir()
@@ -173,6 +179,9 @@ func (v *VicMet) Install() error {
 }
 
 func (v *VicMet) Uninstall() error {
+	if osutil.GetOS() == "windows" {
+		return nil
+	}
 	var err error
 	var pkg *store.InstalledPackage
 	pkg, err = v.db.Get(v.Name())
@@ -192,6 +201,9 @@ func (v *VicMet) Uninstall() error {
 }
 
 func (v *VicMet) Run(args ...string) error {
+	if osutil.GetOS() == "windows" {
+		return nil
+	}
 	for _, s := range v.svcs {
 		if err := s.Start(); err != nil {
 			return err
@@ -201,6 +213,9 @@ func (v *VicMet) Run(args ...string) error {
 }
 
 func (v *VicMet) Update(version string) error {
+	if osutil.GetOS() == "windows" {
+		return nil
+	}
 	v.version = version
 	if err := v.Uninstall(); err != nil {
 		return err
@@ -212,6 +227,9 @@ func (v *VicMet) Update(version string) error {
 }
 
 func (v *VicMet) RunStop() error {
+	if osutil.GetOS() == "windows" {
+		return nil
+	}
 	for _, s := range v.svcs {
 		if err := s.Stop(); err != nil {
 			return err
