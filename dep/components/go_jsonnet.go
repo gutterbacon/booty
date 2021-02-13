@@ -42,7 +42,7 @@ func (g *GoJsonnet) Download() error {
 	if osutil.GetOS() == "linux" && osutil.GetArch() == "arm64" {
 		osVer = "Linux_arm64"
 	} else {
-		osVer = fmt.Sprintf("%s_%s", strings.ToUpper(osutil.GetOS()), osutil.GetAltArch())
+		osVer = fmt.Sprintf("%s_%s", strings.ToTitle(osutil.GetOS()), osutil.GetAltArch())
 	}
 	fetchUrl := fmt.Sprintf(jsonnetUrlFmt, g.version, g.version, osVer)
 	return downloader.Download(fetchUrl, targetDir)
