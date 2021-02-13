@@ -2,7 +2,6 @@ package components
 
 import (
 	"embed"
-	"fmt"
 	"io/ioutil"
 	"os"
 	"path/filepath"
@@ -38,13 +37,12 @@ func NewVicMet(db *store.DB, version string) *VicMet {
 }
 
 func (v *VicMet) service(promCfgPath, vmStoragePath string) ([]*service.Svc, error) {
-	nameVer := fmt.Sprintf("%s-%s", v.Name(), v.version)
 	vmConfig := &ks.Config{
-		Name:        nameVer,
-		DisplayName: nameVer,
+		Name:        v.Name(),
+		DisplayName: v.Name(),
 		Description: "fast, cost-effective monitoring solution and time series database",
 		Arguments: []string{
-			"--promscape.config=" + promCfgPath,
+			"--promscrape.config=" + promCfgPath,
 			"--opentsdbListenAddr=:4242",
 			"--httpListenAddr=:8428",
 			"--storageDataPath=" + vmStoragePath,
@@ -53,8 +51,8 @@ func (v *VicMet) service(promCfgPath, vmStoragePath string) ([]*service.Svc, err
 		Option:     map[string]interface{}{},
 	}
 	vmAgentConfig := &ks.Config{
-		Name:        "vmagent-" + v.version,
-		DisplayName: "vmagent" + v.version,
+		Name:        "vmagent",
+		DisplayName: "vmagent",
 		Description: "victoria metrics agent",
 		Arguments: []string{
 			"--remoteWrite.url=http://localhost:8428/api/v1/write",
@@ -84,7 +82,13 @@ func (v *VicMet) Version() string {
 }
 
 func (v *VicMet) Download() error {
+	if osutil.GetOS() == "windows" {
+		return nil
+	}
 	targetDir := getDlPath(v.Name(), v.version)
+	if osutil.DirExists(targetDir) {
+		return nil
+	}
 	return downloader.GitClone(vicmetUrlFmt, targetDir, "v"+v.version)
 }
 
@@ -93,6 +97,9 @@ func (v *VicMet) Dependencies() []dep.Component {
 }
 
 func (v *VicMet) Install() error {
+	if osutil.GetOS() == "windows" {
+		return nil
+	}
 	dlPath := getDlPath(v.Name(), v.version)
 	var err error
 	binDir := osutil.GetBinDir()
@@ -173,6 +180,9 @@ func (v *VicMet) Install() error {
 }
 
 func (v *VicMet) Uninstall() error {
+	if osutil.GetOS() == "windows" {
+		return nil
+	}
 	var err error
 	var pkg *store.InstalledPackage
 	pkg, err = v.db.Get(v.Name())
@@ -188,10 +198,27 @@ func (v *VicMet) Uninstall() error {
 			return err
 		}
 	}
+	for _, s := range v.svcs {
+		if err = s.Uninstall(); err != nil {
+			return err
+		}
+	}
 	return nil
 }
 
 func (v *VicMet) Run(args ...string) error {
+	if osutil.GetOS() == "windows" {
+		return nil
+	}
+	vmStoragePath := filepath.Join(osutil.GetDataDir(), v.Name(), "storage")
+	vmConfigPath := filepath.Join(osutil.GetEtcDir(), v.Name(), "prometheus.yml")
+	if v.svcs == nil {
+		svcs, err := v.service(vmConfigPath, vmStoragePath)
+		if err != nil {
+			return err
+		}
+		v.svcs = svcs
+	}
 	for _, s := range v.svcs {
 		if err := s.Start(); err != nil {
 			return err
@@ -201,6 +228,9 @@ func (v *VicMet) Run(args ...string) error {
 }
 
 func (v *VicMet) Update(version string) error {
+	if osutil.GetOS() == "windows" {
+		return nil
+	}
 	v.version = version
 	if err := v.Uninstall(); err != nil {
 		return err
@@ -212,6 +242,18 @@ func (v *VicMet) Update(version string) error {
 }
 
 func (v *VicMet) RunStop() error {
+	if osutil.GetOS() == "windows" {
+		return nil
+	}
+	vmStoragePath := filepath.Join(osutil.GetDataDir(), v.Name(), "storage")
+	vmConfigPath := filepath.Join(osutil.GetEtcDir(), v.Name(), "prometheus.yml")
+	if v.svcs == nil {
+		svcs, err := v.service(vmConfigPath, vmStoragePath)
+		if err != nil {
+			return err
+		}
+		v.svcs = svcs
+	}
 	for _, s := range v.svcs {
 		if err := s.Stop(); err != nil {
 			return err

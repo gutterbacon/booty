@@ -30,6 +30,9 @@ func (g *GoJsonnet) Version() string {
 
 func (g *GoJsonnet) Download() error {
 	targetDir := getDlPath(g.Name(), g.version)
+	if osutil.DirExists(targetDir) {
+		return nil
+	}
 	return downloader.GitClone(jsonnetUrl, targetDir, "v"+g.version)
 }
 
@@ -81,6 +84,10 @@ func (g *GoJsonnet) Install() error {
 
 func (g *GoJsonnet) Uninstall() error {
 	var err error
+	err = os.RemoveAll(getDlPath(g.Name(), g.version))
+	if err != nil {
+		return err
+	}
 	var pkg *store.InstalledPackage
 	pkg, err = g.db.Get(g.Name())
 	if err != nil {

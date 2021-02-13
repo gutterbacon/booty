@@ -59,10 +59,9 @@ func (g *Grafana) Download() error {
 }
 
 func (g *Grafana) service() (*service.Svc, error) {
-	nameVer := fmt.Sprintf("%s-%s", g.Name(), g.version)
 	config := &ks.Config{
-		Name:             nameVer,
-		DisplayName:      nameVer,
+		Name:             g.Name(),
+		DisplayName:      g.Name(),
 		Description:      "Extensible platform that uses TLS by default",
 		WorkingDirectory: filepath.Join(osutil.GetEtcDir(), "grafana"),
 		Arguments: []string{
@@ -180,10 +179,16 @@ func (g *Grafana) Update(version string) error {
 }
 
 func (g *Grafana) Run(args ...string) error {
+	if g.svc == nil {
+		g.svc, _  = g.service()
+	}
 	return g.svc.Start()
 }
 
 func (g *Grafana) Backup() error {
+	if g.svc == nil {
+		g.svc, _  = g.service()
+	}
 	return nil
 }
 

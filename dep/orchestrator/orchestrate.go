@@ -186,5 +186,6 @@ func (o *Orchestrator) UninstallAll() error {
 }
 
 func (o *Orchestrator) Serve() error {
+	// Declare REST style handlers here
 	return nil
 }

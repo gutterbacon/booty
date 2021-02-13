@@ -222,6 +222,14 @@ func Exists(fpath string) bool {
 	return true
 }
 
+func DirExists(dpath string) bool {
+	d, err := os.Stat(dpath)
+	if err != nil || !d.IsDir() {
+		return false
+	}
+	return true
+}
+
 func checkEnv(key string) bool {
 	env := os.Getenv(key)
 	return env != ""
