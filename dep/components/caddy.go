@@ -1,27 +1,35 @@
 package components
 
 import (
+	"embed"
 	"fmt"
+	"io/ioutil"
 	"os"
 	"path/filepath"
 
 	"go.amplifyedge.org/booty-v2/dep"
 	"go.amplifyedge.org/booty-v2/internal/fileutil"
 
+	ks "github.com/kardianos/service"
+
 	"go.amplifyedge.org/booty-v2/internal/downloader"
 	"go.amplifyedge.org/booty-v2/internal/osutil"
+	"go.amplifyedge.org/booty-v2/internal/service"
 	"go.amplifyedge.org/booty-v2/internal/store"
 )
+
+//go:embed files/Caddyfile
+var caddyFileSample embed.FS
 
 const (
 	// version -- version -- os_arch
 	caddyUrlFormat = "https://github.com/caddyserver/caddy/releases/download/v%s/caddy_%s_%s.%s"
-	// https://github.com/caddyserver/caddy/releases/download/v2.3.0/caddy_2.3.0_windows_amd64.zip
 )
 
 type Caddy struct {
 	version string
 	db      *store.DB
+	svc     *service.Svc
 }
 
 func NewCaddy(db *store.DB, version string) *Caddy {
@@ -37,6 +45,24 @@ func (c *Caddy) Version() string {
 
 func (c *Caddy) Name() string {
 	return "caddy"
+}
+
+func (c *Caddy) service() (*service.Svc, error) {
+	nameVer := fmt.Sprintf("%s-%s", c.Name(), c.version)
+	config := &ks.Config{
+		Name:        nameVer,
+		DisplayName: nameVer,
+		Description: "Extensible platform that uses TLS by default",
+		Arguments: []string{
+			"run",
+			"--environ",
+			"--config",
+			filepath.Join(osutil.GetEtcDir(), "caddy", "Caddyfile"),
+		},
+		Executable: filepath.Join(osutil.GetBinDir(), c.Name()),
+		Option:     map[string]interface{}{},
+	}
+	return service.NewService(config)
 }
 
 func (c *Caddy) Download() error {
@@ -81,6 +107,8 @@ func (c *Caddy) Install() error {
 		FilesMap: map[string]int{},
 	}
 	// copy file to the global bin directory
+	caddyConfigPath := filepath.Join(osutil.GetEtcDir(), "caddy", "Caddyfile")
+	_ = os.MkdirAll(filepath.Dir(caddyConfigPath), 0755)
 	for k, v := range filesMap {
 		if err = fileutil.Copy(k, v[0].(string)); err != nil {
 			return err
@@ -91,6 +119,26 @@ func (c *Caddy) Install() error {
 			return err
 		}
 		ip.FilesMap[installedName] = installedMode
+	}
+	// install default config, only if the config doesn't exists
+	// TODO: prompt user?
+	if exists := osutil.Exists(caddyConfigPath); !exists {
+		caddyData, err := caddyFileSample.ReadFile("files/Caddyfile")
+		if err != nil {
+			return err
+		}
+		if err = ioutil.WriteFile(caddyConfigPath, caddyData, 0600); err != nil {
+			return err
+		}
+	}
+	// install service
+	s, err := c.service()
+	if err != nil {
+		return err
+	}
+	c.svc = s
+	if err = c.svc.Install(); err != nil {
+		return err
 	}
 	if err = c.db.New(&ip); err != nil {
 		return err
@@ -119,6 +167,9 @@ func (c *Caddy) Uninstall() error {
 			return err
 		}
 	}
+	if err = c.svc.Uninstall(); err != nil {
+		return err
+	}
 	// remove downloaded files
 	return os.RemoveAll(dlPath)
 }
@@ -135,15 +186,16 @@ func (c *Caddy) Update(version string) error {
 }
 
 func (c *Caddy) Run(args ...string) error {
-	return nil
+	return c.svc.Start()
 }
 
 func (c *Caddy) Backup() error {
+	// TODO
 	return nil
 }
 
 func (c *Caddy) RunStop() error {
-	return nil
+	return c.svc.Stop()
 }
 
 func (c *Caddy) Dependencies() []dep.Component {

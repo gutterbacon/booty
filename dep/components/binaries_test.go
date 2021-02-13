@@ -34,17 +34,23 @@ func TestBinaries(t *testing.T) {
 	t.Run("testProtocGenGrpc", testProtocGenGrpc)
 	t.Run("testProtocGenCobra", testProtocGenCobra)
 	t.Run("testProto", testProto)
+	t.Run("testGoJsonnet", testGoJsonnet)
+	t.Run("testVictoriaMetrics", testVictoriaMetrics)
 }
 
 func testGrafana(t *testing.T) {
-	gf := components.NewGrafana(db, "7.3.7")
-	err := gf.Download()
+	var err error
+	gf := components.NewGrafana(db, "7.4.0")
+	err = gf.Download()
 	require.NoError(t, err)
 
 	err = gf.Install()
 	require.NoError(t, err)
 
-	err = gf.Update("7.4.0")
+	err = gf.Run()
+	require.NoError(t, err)
+
+	err = gf.RunStop()
 	require.NoError(t, err)
 
 	err = gf.Uninstall()
@@ -70,7 +76,7 @@ func testGoreleaser(t *testing.T) {
 }
 
 func testCaddy(t *testing.T) {
-	cdy := components.NewCaddy(db, "2.2.0")
+	cdy := components.NewCaddy(db, "2.3.0")
 	err := cdy.Download()
 	require.NoError(t, err)
 
@@ -79,7 +85,15 @@ func testCaddy(t *testing.T) {
 	require.NoError(t, err)
 
 	// update
-	err = cdy.Update("2.3.0")
+	// err = cdy.Update("2.3.0")
+	// require.NoError(t, err)
+
+	// run
+	err = cdy.Run()
+	require.NoError(t, err)
+
+	// stop
+	err = cdy.RunStop()
 	require.NoError(t, err)
 
 	// uninstall
@@ -175,5 +189,50 @@ func testProtocGenGrpc(t *testing.T) {
 
 	// uninstall
 	err = p.Uninstall()
+	require.NoError(t, err)
+}
+
+func testGoJsonnet(t *testing.T) {
+	g := components.NewGoJsonnet(db, "0.17.0")
+	err := g.Download()
+	require.NoError(t, err)
+
+	// install
+	err = g.Install()
+	require.NoError(t, err)
+
+	//// update
+	err = g.Update("0.17.0")
+	require.NoError(t, err)
+
+	//// uninstall
+	err = g.Uninstall()
+	require.NoError(t, err)
+}
+
+func testVictoriaMetrics(t *testing.T) {
+	var err error
+	g := components.NewVicMet(db, "1.53.0")
+	err = g.Download()
+	require.NoError(t, err)
+
+	// install
+	err = g.Install()
+	require.NoError(t, err)
+
+	// update
+	err = g.Update("1.53.0")
+	require.NoError(t, err)
+
+	// run
+	err = g.Run()
+	require.NoError(t, err)
+
+	// // stop
+	err = g.RunStop()
+	require.NoError(t, err)
+
+	// uninstall
+	err = g.Uninstall()
 	require.NoError(t, err)
 }

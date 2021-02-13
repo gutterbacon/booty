@@ -118,6 +118,10 @@ func GetAltArch() string {
 }
 
 func getInstallPrefix() string {
+	bh := os.Getenv("BOOTY_HOME")
+	if bh != "" {
+		return bh
+	}
 	u, _ := user.Current()
 	switch strings.ToLower(GetOS()) {
 	case "windows":
@@ -208,6 +212,14 @@ func DetectPreq() error {
 func ExeExists(cmd string) bool {
 	_, err := exec.LookPath(cmd)
 	return err == nil
+}
+
+func Exists(fpath string) bool {
+	_, err = os.Stat(fpath)
+	if err != nil {
+		return false
+	}
+	return true
 }
 
 func checkEnv(key string) bool {

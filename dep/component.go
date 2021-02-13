@@ -4,13 +4,14 @@ package dep
 
 // Agent is responsible for
 type Agent interface {
-	Components() []Component            // get all components for an env (dev or user for example)
-	DownloadAll() error                 // fetch all components
+	Components() []Component // get all components for an env (dev or user for example)
+	DownloadAll() error      // fetch all components
 	Run(name string, args ...string) error
 	Install(name, version string) error // install single component by its name
 	InstallAll() error                  // install all components
 	Backup(name string) error           // backup single component by its name
 	BackupAll() error                   // backup all components
+	Serve() error                       // run as server
 }
 
 // Component is an interface

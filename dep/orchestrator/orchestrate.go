@@ -56,6 +56,8 @@ func NewOrchestrator(app string) *Orchestrator {
 	protoGoVer := ac.GetVersion("protoc-gen-go")
 	protoGrpcVer := ac.GetVersion("protoc-gen-go-grpc")
 	protoCobraVer := ac.GetVersion("protoc-gen-cobra")
+	jsonnetVer := ac.GetVersion("jsonnet")
+	vicmetVer := ac.GetVersion("victoria-metrics")
 
 	// setup badger database for package tracking
 	db := store.NewDB(logger, osutil.GetDataDir())
@@ -77,6 +79,8 @@ func NewOrchestrator(app string) *Orchestrator {
 				protoCobra,
 			},
 		)
+		comps["jsonnet"] = components.NewGoJsonnet(db, jsonnetVer)
+		comps["victoria-metrics"] = components.NewVicMet(db, vicmetVer)
 	}
 	return &Orchestrator{
 		cfg:        ac,
@@ -178,5 +182,9 @@ func (o *Orchestrator) UninstallAll() error {
 			return err
 		}
 	}
+	return nil
+}
+
+func (o *Orchestrator) Serve() error {
 	return nil
 }
