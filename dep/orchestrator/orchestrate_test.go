@@ -17,6 +17,7 @@ func init() {
 }
 
 func TestOrchestrator(t *testing.T) {
+	//t.Run("testCleanAll", testUninstallAll)
 	t.Run("testDownloadAll", testDownloadAll)
 	t.Run("testInstallSingle", testInstallSingle)
 	t.Run("testInstallAll", testInstallAll)

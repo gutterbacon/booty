@@ -48,10 +48,9 @@ func (c *Caddy) Name() string {
 }
 
 func (c *Caddy) service() (*service.Svc, error) {
-	nameVer := fmt.Sprintf("%s-%s", c.Name(), c.version)
 	config := &ks.Config{
-		Name:        nameVer,
-		DisplayName: nameVer,
+		Name:        c.Name(),
+		DisplayName: c.Name(),
 		Description: "Extensible platform that uses TLS by default",
 		Arguments: []string{
 			"run",
@@ -185,7 +184,10 @@ func (c *Caddy) Update(version string) error {
 	return c.Install()
 }
 
-func (c *Caddy) Run(args ...string) error {
+func (c *Caddy) Run(_ ...string) error {
+	if c.svc == nil {
+		c.svc, _  = c.service()
+	}
 	return c.svc.Start()
 }
 
@@ -195,6 +197,9 @@ func (c *Caddy) Backup() error {
 }
 
 func (c *Caddy) RunStop() error {
+	if c.svc == nil {
+		c.svc, _  = c.service()
+	}
 	return c.svc.Stop()
 }
 
