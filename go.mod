@@ -6,6 +6,8 @@ require (
 	github.com/cheggaaa/pb v1.0.27
 	github.com/fatih/color v1.10.0 // indirect
 	github.com/go-git/go-git/v5 v5.2.0
+	github.com/google/go-github v17.0.0+incompatible
+	github.com/google/go-querystring v1.0.0 // indirect
 	github.com/hashicorp/go-getter v1.5.2
 	github.com/kardianos/service v1.2.0
 	github.com/otiai10/copy v1.4.2

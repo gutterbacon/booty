@@ -26,3 +26,4 @@ dist
 /bin/
 /dep/components/testdata/db/
 /dep/components/prototest/prototest/
+/internal/update/testdata/db/

@@ -172,7 +172,7 @@ func (o *Orchestrator) Install(name, version string) error {
 	}
 	// try installing it
 	if err = c.Install(); err != nil {
-		return errutil.New(errutil.ErrInstallComponent, fmt.Errorf("name: %s, version: %s"))
+		return errutil.New(errutil.ErrInstallComponent, fmt.Errorf("name: %s, version: %s, err: %v", name, version, err))
 	}
 	return nil
 }
@@ -184,7 +184,7 @@ func (o *Orchestrator) InstallAll() error {
 		k := c
 		o.logger.Info("installing %s, version: %s", k.Name(), k.Version())
 		if err := k.Install(); err != nil {
-			return errutil.New(errutil.ErrInstallComponent, fmt.Errorf("name: %s, version: %s", k.Name(), k.Version()))
+			return errutil.New(errutil.ErrInstallComponent, fmt.Errorf("name: %s, version: %s, err: %v", k.Name(), k.Version(), err))
 		}
 	}
 	return nil
@@ -230,7 +230,7 @@ func (o *Orchestrator) BackupAll() error {
 
 func (o *Orchestrator) Serve() error {
 	// TODO run as agent in a separate database to check for updates
-	// or to collect metrics
+	// or to collect metrics for that matter
 	var err error
 	agentDbDir := filepath.Join(osutil.GetDataDir(), "agent-store")
 	err = os.MkdirAll(agentDbDir, 0755)
