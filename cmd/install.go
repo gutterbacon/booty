@@ -7,13 +7,13 @@ import (
 )
 
 // InstallAll installs the component's binary to prefix
-func InstallAllCommand(a dep.Agent) *cobra.Command {
+func InstallAllCommand(e dep.Executor) *cobra.Command {
 	installAllCmd := &cobra.Command{Use: "install-all"}
 	installAllCmd.RunE = func(cmd *cobra.Command, args []string) error {
-		if err := a.DownloadAll(); err != nil {
+		if err := e.DownloadAll(); err != nil {
 			return err
 		}
-		return a.InstallAll()
+		return e.InstallAll()
 	}
 	return installAllCmd
 }

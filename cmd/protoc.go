@@ -8,12 +8,12 @@ import (
 
 // wrapper around protoc
 // runs protoc under the hood with the necessary include
-func ProtoCommand(a dep.Agent) *cobra.Command {
+func ProtoCommand(e dep.Executor) *cobra.Command {
 	runCmd := &cobra.Command{Use: "protoc", DisableFlagParsing: true}
 	runCmd.DisableFlagParsing = true
 	runCmd.Flags().SetInterspersed(true)
 	runCmd.RunE = func(cmd *cobra.Command, args []string) error {
-		return a.Run("protoc", args...)
+		return e.Run("protoc", args...)
 	}
 	return runCmd
 }

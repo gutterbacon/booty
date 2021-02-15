@@ -2,16 +2,34 @@
 // specified environment (i.e. dev or user)
 package dep
 
-// Agent is responsible for
-type Agent interface {
-	Components() []Component // get all components for an env (dev or user for example)
-	DownloadAll() error      // fetch all components
+import (
+	"github.com/spf13/cobra"
+	"go.amplifyedge.org/booty-v2/internal/logging"
+)
+
+// Executor is responsible for
+type Executor interface {
+	Component(name string) Component
+	AllComponents() []Component // get all components for an env (dev or user for example)
+	DownloadAll() error         // fetch all components
 	Run(name string, args ...string) error
-	Install(name, version string) error // install single component by its name
+	Install(name, version string) error // installs a single component by its name
 	InstallAll() error                  // install all components
+	Uninstall(name string) error        // uninstalls a component
+	UninstallAll() error                // uninstall all components
 	Backup(name string) error           // backup single component by its name
 	BackupAll() error                   // backup all components
-	Serve() error                       // run as server
+}
+
+// Agent is responsible for
+type Agent interface {
+	Serve() error // do work as agent (view updates, collect metrics if any etc)
+}
+
+// Commander has to be able to output a cobra.Command and logging.Logger
+type Commander interface {
+	Logger() logging.Logger
+	Command() *cobra.Command
 }
 
 // Component is an interface

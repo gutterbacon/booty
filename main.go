@@ -1,12 +1,13 @@
 package main
 
 import (
+	"go.amplifyedge.org/booty-v2/dep"
 	"go.amplifyedge.org/booty-v2/dep/orchestrator"
 )
 
 var (
 	// best variable name
-	conductor *orchestrator.Orchestrator
+	conductor dep.Commander
 )
 
 func init() {
