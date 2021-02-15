@@ -1,7 +1,9 @@
 package orchestrator
 
 import (
+	"fmt"
 	"github.com/spf13/cobra"
+	"go.amplifyedge.org/booty-v2/internal/errutil"
 	"io/ioutil"
 	"os"
 	"path/filepath"
@@ -98,6 +100,9 @@ func NewOrchestrator(app string) *Orchestrator {
 func (o *Orchestrator) Command() *cobra.Command {
 	extraCmds := []*cobra.Command{
 		cmd.InstallAllCommand(o),
+		cmd.InstallCommand(o),
+		cmd.UninstallAllCommand(o),
+		cmd.UninstallCommand(o),
 	}
 	if o.cfg.DevMode {
 		extraCmds = append(
@@ -159,7 +164,16 @@ func (o *Orchestrator) Run(name string, args ...string) error {
 }
 
 func (o *Orchestrator) Install(name, version string) error {
-	// TODO
+	var err error
+	c := o.Component(name)
+	if c == nil {
+		err = errutil.New(errutil.ErrInvalidComponent, fmt.Errorf("name: %s, version: %s", name, version))
+		return err
+	}
+	// try installing it
+	if err = c.Install(); err != nil {
+		return errutil.New(errutil.ErrInstallComponent, fmt.Errorf("name: %s, version: %s"))
+	}
 	return nil
 }
 
@@ -168,8 +182,9 @@ func (o *Orchestrator) InstallAll() error {
 	o.logger.Info("installing all components")
 	for _, c := range o.components {
 		k := c
+		o.logger.Info("installing %s, version: %s", k.Name(), k.Version())
 		if err := k.Install(); err != nil {
-			return err
+			return errutil.New(errutil.ErrInstallComponent, fmt.Errorf("name: %s, version: %s", k.Name(), k.Version()))
 		}
 	}
 	return nil
@@ -182,7 +197,7 @@ func (o *Orchestrator) Uninstall(name string) error {
 		k := c
 		if k.Name() == name {
 			if err = k.Uninstall(); err != nil {
-				return err
+				return errutil.New(errutil.ErrUninstallComponent, fmt.Errorf("name: %s, version: %s"))
 			}
 		}
 	}
@@ -193,7 +208,7 @@ func (o *Orchestrator) UninstallAll() error {
 	o.logger.Info("uninstall all components")
 	for _, c := range o.components {
 		if err := c.Uninstall(); err != nil {
-			return err
+			return errutil.New(errutil.ErrUninstallComponent, fmt.Errorf("name: %s, version: %s"))
 		}
 	}
 	return nil
