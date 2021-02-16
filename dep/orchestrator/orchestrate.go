@@ -3,6 +3,7 @@ package orchestrator
 import (
 	"fmt"
 	"github.com/spf13/cobra"
+	registry2 "go.amplifyedge.org/booty-v2/dep/registry"
 	"go.amplifyedge.org/booty-v2/internal/errutil"
 	"io/ioutil"
 	"os"
@@ -57,7 +58,7 @@ func NewOrchestrator(app string) *Orchestrator {
 	db := store.NewDB(logger, filepath.Join(osutil.GetDataDir(), "packages"))
 
 	// setup registry
-	registry, err := dep.NewRegistry(db, ac)
+	registry, err := registry2.NewRegistry(db, ac)
 	if err != nil {
 		logger.Fatalf("error creating components: %v", err)
 	}

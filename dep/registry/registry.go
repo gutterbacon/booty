@@ -1,15 +1,16 @@
-package dep
+package registry
 
 import (
 	"go.amplifyedge.org/booty-v2/config"
+	"go.amplifyedge.org/booty-v2/dep"
 	"go.amplifyedge.org/booty-v2/dep/components"
 	"go.amplifyedge.org/booty-v2/internal/store"
 	"go.amplifyedge.org/booty-v2/internal/update"
 )
 
 type Registry struct {
-	DevComponents map[string]Component
-	Components    map[string]Component
+	DevComponents map[string]dep.Component
+	Components    map[string]dep.Component
 }
 
 func NewRegistry(db *store.DB, ac *config.AppConfig) (*Registry, error) {
@@ -19,13 +20,13 @@ func NewRegistry(db *store.DB, ac *config.AppConfig) (*Registry, error) {
 	protoGenGrpc := components.NewProtocGenGoGrpc(db)
 	protoCobra := components.NewProtocGenCobra(db)
 
-	comps := []Component{
+	comps := []dep.Component{
 		components.NewGoreleaser(db),
 		components.NewCaddy(db),
 		components.NewGrafana(db),
 		components.NewProtoc(
 			db,
-			[]Component{
+			[]dep.Component{
 				protoGenGo,
 				protoGenGrpc,
 				protoCobra,
@@ -37,8 +38,8 @@ func NewRegistry(db *store.DB, ac *config.AppConfig) (*Registry, error) {
 	}
 
 	// register it
-	devComponents := map[string]Component{} // dev components
-	regComponents := map[string]Component{} // regular components
+	devComponents := map[string]dep.Component{} // dev components
+	regComponents := map[string]dep.Component{} // regular components
 	for _, c := range comps {
 		if c.IsDev() {
 			v := ac.GetVersion(c.Name())
