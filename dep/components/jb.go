@@ -87,7 +87,7 @@ func (j *Jb) Install() error {
 	if err = j.db.New(&ip); err != nil {
 		return err
 	}
-	return os.RemoveAll(targetDir)
+	return nil
 }
 
 func (j *Jb) Uninstall() error {
@@ -106,7 +106,7 @@ func (j *Jb) Uninstall() error {
 			return err
 		}
 	}
-	return nil
+	return os.RemoveAll(getDlPath(j.Name(), j.version.String()))
 }
 
 func (j *Jb) Run(args ...string) error {
