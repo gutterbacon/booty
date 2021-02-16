@@ -2,6 +2,7 @@ package components
 
 import (
 	"embed"
+	"go.amplifyedge.org/booty-v2/internal/update"
 	"io/ioutil"
 	"os"
 	"path/filepath"
@@ -16,7 +17,7 @@ import (
 	"go.amplifyedge.org/booty-v2/internal/store"
 )
 
-//go:emabed files/prometheus.yml
+//go:embed files/prometheus.yml
 var prometheusCfgSample embed.FS
 
 const (
@@ -24,16 +25,19 @@ const (
 )
 
 type VicMet struct {
-	version string
+	version update.Version
 	db      *store.DB
 	svcs    []*service.Svc
 }
 
-func NewVicMet(db *store.DB, version string) *VicMet {
+func NewVicMet(db *store.DB) *VicMet {
 	return &VicMet{
-		version: version,
-		db:      db,
+		db: db,
 	}
+}
+
+func (v *VicMet) SetVersion(ver update.Version) {
+	v.version = ver
 }
 
 func (v *VicMet) service(promCfgPath, vmStoragePath string) ([]*service.Svc, error) {
@@ -77,19 +81,20 @@ func (v *VicMet) Name() string {
 	return "victoria-metrics"
 }
 
-func (v *VicMet) Version() string {
+func (v *VicMet) Version() update.Version {
 	return v.version
 }
 
 func (v *VicMet) Download() error {
+	// victoriametrics doesn't support windows yet
 	if osutil.GetOS() == "windows" {
 		return nil
 	}
-	targetDir := getDlPath(v.Name(), v.version)
+	targetDir := getDlPath(v.Name(), v.version.String())
 	if osutil.DirExists(targetDir) {
-		return nil
+		return downloader.GitCheckout("v"+v.version.String(), targetDir)
 	}
-	return downloader.GitClone(vicmetUrlFmt, targetDir, "v"+v.version)
+	return downloader.GitClone(vicmetUrlFmt, targetDir, "v"+v.version.String())
 }
 
 func (v *VicMet) Dependencies() []dep.Component {
@@ -100,7 +105,7 @@ func (v *VicMet) Install() error {
 	if osutil.GetOS() == "windows" {
 		return nil
 	}
-	dlPath := getDlPath(v.Name(), v.version)
+	dlPath := getDlPath(v.Name(), v.version.String())
 	var err error
 	binDir := osutil.GetBinDir()
 	if err = os.Chdir(dlPath); err != nil {
@@ -108,9 +113,13 @@ func (v *VicMet) Install() error {
 	}
 	recipes := []string{"victoria-metrics", "vmagent", "vmalert", "vmauth", "vmbackup", "vmctl", "vminsert", "vmrestore", "vmselect", "vmstorage"}
 	// make pure local binaries
+	filesMap := map[string][]interface{}{}
 	for _, r := range recipes {
 		if err = osutil.Exec("make", "app-local-pure", "APP_NAME="+r); err != nil {
 			return err
+		}
+		filesMap[filepath.Join(dlPath, "bin", r+"-pure")] = []interface{}{
+			filepath.Join(binDir, r), 0755,
 		}
 	}
 	vmStoragePath := filepath.Join(osutil.GetDataDir(), v.Name(), "storage")
@@ -123,22 +132,10 @@ func (v *VicMet) Install() error {
 	}
 	ip := store.InstalledPackage{
 		Name:    v.Name(),
-		Version: v.version,
+		Version: v.version.String(),
 		FilesMap: map[string]int{
 			filepath.Join(osutil.GetDataDir(), v.Name(), "storage"): 0755,
 		},
-	}
-	filesMap := map[string][]interface{}{
-		filepath.Join(dlPath, "bin", v.Name()+"-pure"): {filepath.Join(binDir, v.Name()), 0755},
-		filepath.Join(dlPath, "bin", "vmagent-pure"):   {filepath.Join(binDir, "vmagent"), 0755},
-		filepath.Join(dlPath, "bin", "vmalert-pure"):   {filepath.Join(binDir, "vmalert"), 0755},
-		filepath.Join(dlPath, "bin", "vmauth-pure"):    {filepath.Join(binDir, "vmauth"), 0755},
-		filepath.Join(dlPath, "bin", "vmbackup-pure"):  {filepath.Join(binDir, "vmbackup"), 0755},
-		filepath.Join(dlPath, "bin", "vmctl-pure"):     {filepath.Join(binDir, "vmctl"), 0755},
-		filepath.Join(dlPath, "bin", "vminsert-pure"):  {filepath.Join(binDir, "vminsert"), 0755},
-		filepath.Join(dlPath, "bin", "vmrestore-pure"): {filepath.Join(binDir, "vmrestore"), 0755},
-		filepath.Join(dlPath, "bin", "vmselect-pure"):  {filepath.Join(binDir, "vmselect"), 0755},
-		filepath.Join(dlPath, "bin", "vmstorage-pure"): {filepath.Join(binDir, "vmstorage"), 0755},
 	}
 	// copy file to the bin directory
 	for k, v := range filesMap {
@@ -227,7 +224,7 @@ func (v *VicMet) Run(args ...string) error {
 	return nil
 }
 
-func (v *VicMet) Update(version string) error {
+func (v *VicMet) Update(version update.Version) error {
 	if osutil.GetOS() == "windows" {
 		return nil
 	}
@@ -265,4 +262,12 @@ func (v *VicMet) RunStop() error {
 func (v *VicMet) Backup() error {
 	// TODO
 	return nil
+}
+
+func (v *VicMet) IsDev() bool {
+	return true
+}
+
+func (v *VicMet) RepoUrl() update.RepositoryURL {
+	return vicmetUrlFmt
 }

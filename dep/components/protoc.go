@@ -2,6 +2,7 @@ package components
 
 import (
 	"fmt"
+	"go.amplifyedge.org/booty-v2/internal/update"
 	"os"
 	"path/filepath"
 	"strings"
@@ -17,18 +18,18 @@ import (
 
 const (
 	// version -- version -- os-arch except windows
-	protocUrlFormat = "https://github.com/protocolbuffers/protobuf/releases/download/v%s/protoc-%s-%s.zip"
+	protocRepo      = "https://github.com/protocolbuffers/protobuf"
+	protocUrlFormat = protocRepo + "/releases/download/v%s/protoc-%s-%s.zip"
 )
 
 type Protoc struct {
-	version      string
+	version      update.Version
 	db           *store.DB
 	dependencies []dep.Component
 }
 
-func NewProtoc(db *store.DB, version string, deps []dep.Component) *Protoc {
+func NewProtoc(db *store.DB, deps []dep.Component) *Protoc {
 	return &Protoc{
-		version:      version,
 		db:           db,
 		dependencies: deps,
 	}
@@ -38,8 +39,12 @@ func (p *Protoc) Name() string {
 	return "protoc"
 }
 
-func (p *Protoc) Version() string {
+func (p *Protoc) Version() update.Version {
 	return p.version
+}
+
+func (p *Protoc) SetVersion(v update.Version) {
+	p.version = v
 }
 
 func (p *Protoc) Download() error {
@@ -73,7 +78,7 @@ func (p *Protoc) Download() error {
 		osName = "win64"
 	}
 	fetchUrl := fmt.Sprintf(protocUrlFormat, p.version, p.version, osName)
-	targetDir := getDlPath("protobuf", p.version)
+	targetDir := getDlPath("protobuf", p.version.String())
 	err := downloader.Download(fetchUrl, targetDir)
 	if err != nil {
 		return err
@@ -100,7 +105,7 @@ func (p *Protoc) Install() error {
 	}
 
 	// all files that are going to be installed
-	dlPath := getDlPath("protobuf", p.version)
+	dlPath := getDlPath("protobuf", p.version.String())
 	filesMap := map[string][]interface{}{
 		filepath.Join(dlPath, "bin", executableName): {filepath.Join(binDir, executableName), 0755},
 		filepath.Join(dlPath, "include", "google"):   {filepath.Join(includeDir, "google"), 0755},
@@ -108,7 +113,7 @@ func (p *Protoc) Install() error {
 
 	ip := store.InstalledPackage{
 		Name:     p.Name(),
-		Version:  p.version,
+		Version:  p.version.String(),
 		FilesMap: map[string]int{},
 	}
 
@@ -130,7 +135,7 @@ func (p *Protoc) Install() error {
 	return os.RemoveAll(dlPath)
 }
 
-func (p *Protoc) Update(version string) error {
+func (p *Protoc) Update(version update.Version) error {
 	p.version = version
 	if err := p.Uninstall(); err != nil {
 		return err
@@ -206,4 +211,12 @@ func (p *Protoc) Backup() error {
 
 func (p *Protoc) Dependencies() []dep.Component {
 	return p.dependencies
+}
+
+func (p *Protoc) IsDev() bool {
+	return true
+}
+
+func (p *Protoc) RepoUrl() update.RepositoryURL {
+	return protocRepo
 }

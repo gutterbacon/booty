@@ -3,7 +3,7 @@
   "binaries": [
     {
       "name": "grafana",
-      "version": "7.4.0"
+      "version": "7.4.1"
     },
     {
       "name": "goreleaser",
@@ -34,8 +34,12 @@
       "version": "0.17.0"
     },
     {
-      "name":  "victoria-metrics",
+      "name": "victoria-metrics",
       "version": "1.53.1"
+    },
+    {
+      "name": "jb",
+      "version": "0.4.0"
     }
   ]
 }

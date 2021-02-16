@@ -14,7 +14,7 @@ import (
 )
 
 const (
-	defaultTimeout = 7 * time.Second
+	defaultTimeout = 5 * time.Second
 )
 
 // RepositoryURL is the github repository url we will monitor
@@ -22,6 +22,10 @@ type RepositoryURL string
 
 // Version is the version information for the releases.
 type Version string
+
+func (v Version) String() string {
+	return string(v)
+}
 
 type Checker struct {
 	logger     logging.Logger
@@ -40,9 +44,7 @@ func NewChecker(logger logging.Logger, db *store.DB, repos map[RepositoryURL]Ver
 }
 
 func (c *Checker) getRepoInfos() (chan *repoInfo, error) {
-	//func (c *Checker) getRepoInfos() []*repoInfo {
 	rchan := make(chan *repoInfo, len(c.repos))
-	//var rchan []*repoInfo
 	for r, v := range c.repos {
 		rinfo, err := parseGithubUrl(r, v)
 		if err != nil {
@@ -50,7 +52,6 @@ func (c *Checker) getRepoInfos() (chan *repoInfo, error) {
 			return nil, err
 		}
 		rchan <- rinfo
-		//rchan = append(rchan, rinfo)
 	}
 	close(rchan)
 	return rchan, nil
@@ -89,4 +90,19 @@ func (c *Checker) fetchLatest(r *repoInfo, ghc *github.Client) error {
 		}
 	}
 	return nil
+}
+
+func GetLatestVersion(repoUrl RepositoryURL) (string, error) {
+	ghc := github.NewClient(nil)
+	ctx, cancel := context.WithTimeout(context.Background(), defaultTimeout)
+	defer cancel()
+	info, err := parseGithubUrl(repoUrl, "")
+	if err != nil {
+		return "", err
+	}
+	release, _, err := ghc.Repositories.GetLatestRelease(ctx, info.repoUser, info.repoName)
+	if err != nil {
+		return "", err
+	}
+	return *release.TagName, nil
 }

@@ -102,3 +102,20 @@ func GitClone(fetchUrl string, targetDir string, tag string) error {
 	})
 	return err
 }
+
+func GitCheckout(tag string, targetDir string) error {
+	r, err := git.PlainOpen(targetDir)
+	if err != nil {
+		return err
+	}
+	w, err := r.Worktree()
+	if err != nil {
+		return err
+	}
+	if err = w.Pull(&git.PullOptions{RemoteName: "origin"}); err != nil {
+		return err
+	}
+	return w.Checkout(&git.CheckoutOptions{
+		Branch: plumbing.NewTagReferenceName(tag),
+	})
+}

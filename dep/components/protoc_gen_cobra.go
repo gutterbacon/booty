@@ -2,6 +2,7 @@ package components
 
 import (
 	"fmt"
+	"go.amplifyedge.org/booty-v2/internal/update"
 	"os"
 	"path/filepath"
 
@@ -14,18 +15,18 @@ import (
 
 const (
 	// version -- version -- os_arch -- ext
-	protoCobraUrlFormat = "https://github.com/amplify-edge/protoc-gen-cobra/releases/download/v%s/protoc-gen-cobra-%s-%s.%s"
+	protoCobraRepo      = "https://github.com/amplify-edge/protoc-gen-cobra"
+	protoCobraUrlFormat = protoCobraRepo + "/releases/download/v%s/protoc-gen-cobra-%s-%s.%s"
 )
 
 type ProtocGenCobra struct {
-	version string
+	version update.Version
 	db      *store.DB
 }
 
-func NewProtocGenCobra(db *store.DB, version string) *ProtocGenCobra {
+func NewProtocGenCobra(db *store.DB) *ProtocGenCobra {
 	return &ProtocGenCobra{
-		version: version,
-		db:      db,
+		db: db,
 	}
 }
 
@@ -33,12 +34,16 @@ func (p *ProtocGenCobra) Name() string {
 	return "protoc-gen-cobra"
 }
 
-func (p *ProtocGenCobra) Version() string {
+func (p *ProtocGenCobra) Version() update.Version {
 	return p.version
 }
 
+func (p *ProtocGenCobra) SetVersion(v update.Version) {
+	p.version = v
+}
+
 func (p *ProtocGenCobra) Download() error {
-	target := getDlPath(p.Name(), p.version)
+	target := getDlPath(p.Name(), p.version.String())
 	var ext string
 	switch osutil.GetOS() {
 	case "linux", "darwin":
@@ -65,14 +70,14 @@ func (p *ProtocGenCobra) Install() error {
 		executableName += ".exe"
 	}
 	// all files that are going to be installed
-	dlPath := getDlPath(p.Name(), p.version)
+	dlPath := getDlPath(p.Name(), p.version.String())
 	filesMap := map[string][]interface{}{
 		filepath.Join(dlPath, executableName): {filepath.Join(goBinDir, executableName), 0755},
 	}
 
 	ip := store.InstalledPackage{
 		Name:    p.Name(),
-		Version: p.version,
+		Version: p.version.String(),
 		FilesMap: map[string]int{
 			filepath.Join(goBinDir, executableName): 0755,
 		},
@@ -118,7 +123,7 @@ func (p *ProtocGenCobra) Run(args ...string) error {
 	return nil
 }
 
-func (p *ProtocGenCobra) Update(version string) error {
+func (p *ProtocGenCobra) Update(version update.Version) error {
 	p.version = version
 	if err := p.Uninstall(); err != nil {
 		return err
@@ -139,4 +144,12 @@ func (p *ProtocGenCobra) Backup() error {
 
 func (p *ProtocGenCobra) Dependencies() []dep.Component {
 	return nil
+}
+
+func (p *ProtocGenCobra) IsDev() bool {
+	return true
+}
+
+func (p *ProtocGenCobra) RepoUrl() update.RepositoryURL {
+	return protoCobraRepo
 }

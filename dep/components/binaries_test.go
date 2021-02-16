@@ -35,6 +35,7 @@ func TestBinaries(t *testing.T) {
 	t.Run("testProtocGenCobra", testProtocGenCobra)
 	t.Run("testProto", testProto)
 	t.Run("testGoJsonnet", testGoJsonnet)
+	t.Run("testJb", testJb)
 	t.Run("testVictoriaMetrics", testVictoriaMetrics)
 }
 
@@ -233,6 +234,24 @@ func testVictoriaMetrics(t *testing.T) {
 	require.NoError(t, err)
 
 	// uninstall
+	err = g.Uninstall()
+	require.NoError(t, err)
+}
+
+func testJb(t *testing.T) {
+	g := components.NewJb(db, "0.4.0")
+	err := g.Download()
+	require.NoError(t, err)
+
+	// install
+	err = g.Install()
+	require.NoError(t, err)
+
+	// update
+	err = g.Update("0.4.0")
+	require.NoError(t, err)
+
+	//// uninstall
 	err = g.Uninstall()
 	require.NoError(t, err)
 }

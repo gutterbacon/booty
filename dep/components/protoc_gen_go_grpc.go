@@ -6,6 +6,7 @@ import (
 	"go.amplifyedge.org/booty-v2/internal/fileutil"
 	"go.amplifyedge.org/booty-v2/internal/osutil"
 	"go.amplifyedge.org/booty-v2/internal/store"
+	"go.amplifyedge.org/booty-v2/internal/update"
 
 	"fmt"
 	"os"
@@ -14,11 +15,12 @@ import (
 
 const (
 	// version -- version -- os.arch
-	genGrpcUrlFormat = "https://github.com/grpc/grpc-go/releases/download/cmd/protoc-gen-go-grpc/v%s/protoc-gen-go-grpc.v%s.%s.tar.gz"
+	genRpcRepo       = "https://github.com/grpc/grpc-go"
+	genGrpcUrlFormat = genRpcRepo + "/releases/download/cmd/protoc-gen-go-grpc/v%s/protoc-gen-go-grpc.v%s.%s.tar.gz"
 )
 
 type ProtocGenGoGrpc struct {
-	version string
+	version update.Version
 	db      *store.DB
 }
 
@@ -26,8 +28,12 @@ func (p *ProtocGenGoGrpc) Name() string {
 	return "protoc-gen-go-grpc"
 }
 
-func (p *ProtocGenGoGrpc) Version() string {
+func (p *ProtocGenGoGrpc) Version() update.Version {
 	return p.version
+}
+
+func (p *ProtocGenGoGrpc) SetVersion(v update.Version) {
+	p.version = v
 }
 
 func (p *ProtocGenGoGrpc) Download() error {
@@ -36,7 +42,7 @@ func (p *ProtocGenGoGrpc) Download() error {
 	}
 	osName := fmt.Sprintf("%s.%s", osutil.GetOS(), osutil.GetArch())
 	fetchUrl := fmt.Sprintf(genGrpcUrlFormat, p.version, p.version, osName)
-	target := getDlPath(p.Name(), p.version)
+	target := getDlPath(p.Name(), p.version.String())
 
 	err := downloader.Download(fetchUrl, target)
 	if err != nil {
@@ -57,14 +63,14 @@ func (p *ProtocGenGoGrpc) Install() error {
 	}
 
 	// all files that are going to be installed
-	dlPath := getDlPath(p.Name(), p.version)
+	dlPath := getDlPath(p.Name(), p.version.String())
 	filesMap := map[string][]interface{}{
 		filepath.Join(dlPath, executableName): {filepath.Join(goBinDir, executableName), 0755},
 	}
 
 	ip := store.InstalledPackage{
 		Name:     p.Name(),
-		Version:  p.version,
+		Version:  p.version.String(),
 		FilesMap: map[string]int{},
 	}
 
@@ -110,7 +116,7 @@ func (p *ProtocGenGoGrpc) Run(args ...string) error {
 	return nil
 }
 
-func (p *ProtocGenGoGrpc) Update(version string) error {
+func (p *ProtocGenGoGrpc) Update(version update.Version) error {
 	p.version = version
 	if err := p.Uninstall(); err != nil {
 		return err
@@ -133,9 +139,16 @@ func (p *ProtocGenGoGrpc) Dependencies() []dep.Component {
 	return nil
 }
 
-func NewProtocGenGoGrpc(db *store.DB, version string) *ProtocGenGoGrpc {
+func (p *ProtocGenGoGrpc) IsDev() bool {
+	return true
+}
+
+func (p *ProtocGenGoGrpc) RepoUrl() update.RepositoryURL {
+	return genRpcRepo
+}
+
+func NewProtocGenGoGrpc(db *store.DB) *ProtocGenGoGrpc {
 	return &ProtocGenGoGrpc{
-		version: version,
-		db:      db,
+		db: db,
 	}
 }

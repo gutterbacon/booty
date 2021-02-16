@@ -4,6 +4,7 @@ import (
 	"fmt"
 	ks "github.com/kardianos/service"
 	"go.amplifyedge.org/booty-v2/internal/service"
+	"go.amplifyedge.org/booty-v2/internal/update"
 	"os"
 	"path/filepath"
 	"strings"
@@ -18,23 +19,28 @@ import (
 
 const (
 	// version -- os-arch
-	fetchUrlFormat = "https://dl.grafana.com/oss/release/grafana-%s.%s.%s"
+	grafanaBaseRepo = "https://github.com/grafana/grafana"
+	fetchUrlFormat  = "https://dl.grafana.com/oss/release/grafana-%s.%s.%s"
 )
 
 // Grafana implements Component interface
 type Grafana struct {
-	version string
+	version update.Version
 	db      *store.DB
 	svc     *service.Svc
 }
 
-func NewGrafana(db *store.DB, version string) *Grafana {
-	return &Grafana{version: version, db: db}
+func NewGrafana(db *store.DB) *Grafana {
+	return &Grafana{db: db}
 }
 
 // Gets grafana's version
-func (g *Grafana) Version() string {
-	return g.version
+func (g *Grafana) Version() update.Version {
+	return update.Version(g.version)
+}
+
+func (g *Grafana) SetVersion(v update.Version) {
+	g.version = v
 }
 
 func (g *Grafana) Name() string {
@@ -88,7 +94,7 @@ func (g *Grafana) Install() error {
 		serverExecutable += ".exe"
 		clientExecutable += ".exe"
 	}
-	dlPath := getDlPath(g.Name(), g.version)
+	dlPath := getDlPath(g.Name(), g.version.String())
 
 	err = os.MkdirAll(grafanaEtcDir, 0755)
 
@@ -106,7 +112,7 @@ func (g *Grafana) Install() error {
 
 	ip := store.InstalledPackage{
 		Name:     g.Name(),
-		Version:  g.version,
+		Version:  g.version.String(),
 		FilesMap: map[string]int{},
 	}
 
@@ -163,11 +169,11 @@ func (g *Grafana) Uninstall() error {
 	if err != nil {
 		return err
 	}
-	dlPath := getDlPath(g.Name(), g.version)
+	dlPath := getDlPath(g.Name(), g.version.String())
 	return os.RemoveAll(dlPath)
 }
 
-func (g *Grafana) Update(version string) error {
+func (g *Grafana) Update(version update.Version) error {
 	g.version = version
 	if err := g.Uninstall(); err != nil {
 		return err
@@ -180,14 +186,14 @@ func (g *Grafana) Update(version string) error {
 
 func (g *Grafana) Run(args ...string) error {
 	if g.svc == nil {
-		g.svc, _  = g.service()
+		g.svc, _ = g.service()
 	}
 	return g.svc.Start()
 }
 
 func (g *Grafana) Backup() error {
 	if g.svc == nil {
-		g.svc, _  = g.service()
+		g.svc, _ = g.service()
 	}
 	return nil
 }
@@ -198,4 +204,12 @@ func (g *Grafana) RunStop() error {
 
 func (g *Grafana) Dependencies() []dep.Component {
 	return nil
+}
+
+func (g *Grafana) IsDev() bool {
+	return true
+}
+
+func (g *Grafana) RepoUrl() update.RepositoryURL {
+	return grafanaBaseRepo
 }

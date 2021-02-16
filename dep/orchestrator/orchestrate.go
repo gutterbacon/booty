@@ -11,7 +11,6 @@ import (
 	"go.amplifyedge.org/booty-v2/cmd"
 	"go.amplifyedge.org/booty-v2/config"
 	"go.amplifyedge.org/booty-v2/dep"
-	"go.amplifyedge.org/booty-v2/dep/components"
 	"go.amplifyedge.org/booty-v2/internal/logging"
 	"go.amplifyedge.org/booty-v2/internal/logging/zaplog"
 	"go.amplifyedge.org/booty-v2/internal/osutil"
@@ -29,7 +28,7 @@ type Orchestrator struct {
 // constructor
 func NewOrchestrator(app string) *Orchestrator {
 	var ac *config.AppConfig
-	comps := map[string]dep.Component{}
+	var comps map[string]dep.Component
 	var rootCmd = &cobra.Command{
 		Use: app,
 	}
@@ -53,39 +52,21 @@ func NewOrchestrator(app string) *Orchestrator {
 		}
 	}
 	ac = config.NewAppConfig(logger, fileContent)
-	cdyVer := ac.GetVersion("caddy")
-	gorVer := ac.GetVersion("goreleaser")
-	grafVer := ac.GetVersion("grafana")
-	protoGoVer := ac.GetVersion("protoc-gen-go")
-	protoGrpcVer := ac.GetVersion("protoc-gen-go-grpc")
-	protoCobraVer := ac.GetVersion("protoc-gen-cobra")
-	jsonnetVer := ac.GetVersion("jsonnet")
-	vicmetVer := ac.GetVersion("victoria-metrics")
 
 	// setup badger database for package tracking
-	pkgManagerDir := filepath.Join(osutil.GetDataDir(), "packages")
-	db := store.NewDB(logger, pkgManagerDir)
-	comps["caddy"] = components.NewCaddy(db, cdyVer)
-	if ac.DevMode {
-		if err = osutil.DetectPreq(); err != nil {
-			logger.Fatalf(err.Error())
-		}
-		comps["goreleaser"] = components.NewGoreleaser(db, gorVer)
-		comps["grafana"] = components.NewGrafana(db, grafVer)
-		protoGenGo := components.NewProtocGenGo(db, protoGoVer)
-		protoGenGrpc := components.NewProtocGenGoGrpc(db, protoGrpcVer)
-		protoCobra := components.NewProtocGenCobra(db, protoCobraVer)
-		comps["protoc"] = components.NewProtoc(
-			db, ac.GetVersion("protoc"),
-			[]dep.Component{
-				protoGenGo,
-				protoGenGrpc,
-				protoCobra,
-			},
-		)
-		comps["jsonnet"] = components.NewGoJsonnet(db, jsonnetVer)
-		comps["victoria-metrics"] = components.NewVicMet(db, vicmetVer)
+	db := store.NewDB(logger, filepath.Join(osutil.GetDataDir(), "packages"))
+
+	// setup registry
+	registry, err := dep.NewRegistry(db, ac)
+	if err != nil {
+		logger.Fatalf("error creating components: %v", err)
 	}
+	if ac.DevMode {
+		comps = registry.DevComponents
+	} else {
+		comps = registry.Components
+	}
+
 	return &Orchestrator{
 		cfg:        ac,
 		components: comps,
@@ -125,10 +106,8 @@ func (o *Orchestrator) Logger() logging.Logger {
 
 func (o *Orchestrator) Component(name string) dep.Component {
 	o.logger.Debugf("querying component of name: %s", name)
-	for _, comp := range o.components {
-		if comp.Name() == name {
-			return comp
-		}
+	if o.components[name] != nil {
+		return o.components[name]
 	}
 	return nil
 }
@@ -220,6 +199,11 @@ func (o *Orchestrator) Backup(name string) error {
 }
 
 func (o *Orchestrator) BackupAll() error {
+	// TODO
+	return nil
+}
+
+func (o *Orchestrator) AllInstalledComponents() []dep.Component {
 	// TODO
 	return nil
 }

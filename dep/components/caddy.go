@@ -3,6 +3,7 @@ package components
 import (
 	"embed"
 	"fmt"
+	"go.amplifyedge.org/booty-v2/internal/update"
 	"io/ioutil"
 	"os"
 	"path/filepath"
@@ -23,23 +24,27 @@ var caddyFileSample embed.FS
 
 const (
 	// version -- version -- os_arch
-	caddyUrlFormat = "https://github.com/caddyserver/caddy/releases/download/v%s/caddy_%s_%s.%s"
+	caddyRepo      = "https://github.com/caddyserver/caddy"
+	caddyUrlFormat = caddyRepo + "/releases/download/v%s/caddy_%s_%s.%s"
 )
 
 type Caddy struct {
-	version string
+	version update.Version
 	db      *store.DB
 	svc     *service.Svc
 }
 
-func NewCaddy(db *store.DB, version string) *Caddy {
+func NewCaddy(db *store.DB) *Caddy {
 	return &Caddy{
-		version: version,
 		db:      db,
 	}
 }
 
-func (c *Caddy) Version() string {
+func (c *Caddy) SetVersion(v update.Version) {
+	c.version = v
+}
+
+func (c *Caddy) Version() update.Version {
 	return c.version
 }
 
@@ -65,7 +70,7 @@ func (c *Caddy) service() (*service.Svc, error) {
 }
 
 func (c *Caddy) Download() error {
-	downloadDir := getDlPath(c.Name(), c.version)
+	downloadDir := getDlPath(c.Name(), c.version.String())
 	_ = os.MkdirAll(downloadDir, 0755)
 	var osname string
 	var ext string
@@ -89,7 +94,7 @@ func (c *Caddy) Install() error {
 	var err error
 	// install to global path
 	binDir := osutil.GetBinDir()
-	dlPath := getDlPath(c.Name(), c.version)
+	dlPath := getDlPath(c.Name(), c.version.String())
 
 	// all files that are going to be installed
 	executableName := c.Name()
@@ -102,7 +107,7 @@ func (c *Caddy) Install() error {
 	}
 	ip := store.InstalledPackage{
 		Name:     c.Name(),
-		Version:  c.version,
+		Version:  c.version.String(),
 		FilesMap: map[string]int{},
 	}
 	// copy file to the global bin directory
@@ -147,7 +152,7 @@ func (c *Caddy) Install() error {
 
 func (c *Caddy) Uninstall() error {
 	var err error
-	dlPath := getDlPath(c.Name(), c.version)
+	dlPath := getDlPath(c.Name(), c.version.String())
 	// install to global path
 
 	// all files that are going to be installed
@@ -173,8 +178,8 @@ func (c *Caddy) Uninstall() error {
 	return os.RemoveAll(dlPath)
 }
 
-func (c *Caddy) Update(version string) error {
-	c.version = version
+func (c *Caddy) Update(version update.Version) error {
+	c.SetVersion(version)
 	if err := c.Uninstall(); err != nil {
 		return err
 	}
@@ -186,7 +191,7 @@ func (c *Caddy) Update(version string) error {
 
 func (c *Caddy) Run(_ ...string) error {
 	if c.svc == nil {
-		c.svc, _  = c.service()
+		c.svc, _ = c.service()
 	}
 	return c.svc.Start()
 }
@@ -198,11 +203,19 @@ func (c *Caddy) Backup() error {
 
 func (c *Caddy) RunStop() error {
 	if c.svc == nil {
-		c.svc, _  = c.service()
+		c.svc, _ = c.service()
 	}
 	return c.svc.Stop()
 }
 
 func (c *Caddy) Dependencies() []dep.Component {
 	return nil
+}
+
+func (c *Caddy) IsDev() bool {
+	return false
+}
+
+func (c *Caddy) RepoUrl() update.RepositoryURL {
+	return caddyRepo
 }

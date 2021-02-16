@@ -6,17 +6,18 @@ import (
 	"go.amplifyedge.org/booty-v2/internal/fileutil"
 	"go.amplifyedge.org/booty-v2/internal/osutil"
 	"go.amplifyedge.org/booty-v2/internal/store"
+	"go.amplifyedge.org/booty-v2/internal/update"
 	"os"
 	"path/filepath"
 )
 
 const (
 	// version -- version -- os_alt_arch
-	jsonnetUrl = "https://github.com/google/go-jsonnet.git"
+	jsonnetUrl = "https://github.com/google/go-jsonnet"
 )
 
 type GoJsonnet struct {
-	version string
+	version update.Version
 	db      *store.DB
 }
 
@@ -24,16 +25,16 @@ func (g *GoJsonnet) Name() string {
 	return "jsonnet"
 }
 
-func (g *GoJsonnet) Version() string {
-	return g.version
+func (g *GoJsonnet) Version() update.Version {
+	return update.Version(g.version)
 }
 
 func (g *GoJsonnet) Download() error {
-	targetDir := getDlPath(g.Name(), g.version)
+	targetDir := getDlPath(g.Name(), g.version.String())
 	if osutil.DirExists(targetDir) {
-		return nil
+		return downloader.GitCheckout("v"+g.version.String(), targetDir)
 	}
-	return downloader.GitClone(jsonnetUrl, targetDir, "v"+g.version)
+	return downloader.GitClone(jsonnetUrl, targetDir, "v"+g.version.String())
 }
 
 func (g *GoJsonnet) Dependencies() []dep.Component {
@@ -43,7 +44,7 @@ func (g *GoJsonnet) Dependencies() []dep.Component {
 func (g *GoJsonnet) Install() error {
 	var err error
 	binDir := osutil.GetBinDir()
-	dlPath := getDlPath(g.Name(), g.version)
+	dlPath := getDlPath(g.Name(), g.version.String())
 	// change dir to download path
 	if err = os.Chdir(dlPath); err != nil {
 		return err
@@ -61,7 +62,7 @@ func (g *GoJsonnet) Install() error {
 	}
 	ip := store.InstalledPackage{
 		Name:     g.Name(),
-		Version:  g.version,
+		Version:  g.version.String(),
 		FilesMap: map[string]int{},
 	}
 	// copy file to the bin directory
@@ -84,7 +85,7 @@ func (g *GoJsonnet) Install() error {
 
 func (g *GoJsonnet) Uninstall() error {
 	var err error
-	err = os.RemoveAll(getDlPath(g.Name(), g.version))
+	err = os.RemoveAll(getDlPath(g.Name(), g.version.String()))
 	if err != nil {
 		return err
 	}
@@ -109,8 +110,12 @@ func (g *GoJsonnet) Run(args ...string) error {
 	return osutil.Exec(filepath.Join(osutil.GetBinDir(), g.Name()), args...)
 }
 
-func (g *GoJsonnet) Update(version string) error {
-	g.version = version
+func (g *GoJsonnet) SetVersion(v update.Version) {
+	g.version = v
+}
+
+func (g *GoJsonnet) Update(version update.Version) error {
+	g.SetVersion(version)
 	if err := g.Uninstall(); err != nil {
 		return err
 	}
@@ -128,9 +133,16 @@ func (g *GoJsonnet) Backup() error {
 	return nil
 }
 
-func NewGoJsonnet(db *store.DB, version string) *GoJsonnet {
+func NewGoJsonnet(db *store.DB) *GoJsonnet {
 	return &GoJsonnet{
-		version: version,
-		db:      db,
+		db: db,
 	}
+}
+
+func (g *GoJsonnet) IsDev() bool {
+	return true
+}
+
+func (g *GoJsonnet) RepoUrl() update.RepositoryURL {
+	return jsonnetUrl
 }

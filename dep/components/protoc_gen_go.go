@@ -7,17 +7,19 @@ import (
 	"go.amplifyedge.org/booty-v2/internal/fileutil"
 	"go.amplifyedge.org/booty-v2/internal/osutil"
 	"go.amplifyedge.org/booty-v2/internal/store"
+	"go.amplifyedge.org/booty-v2/internal/update"
 	"os"
 	"path/filepath"
 )
 
 const (
+	protocGenGoRepo = "https://github.com/protocolbuffers/protobuf-go"
 	// version -- version -- os.arch
-	protocGenGoUrlFormat = "https://github.com/protocolbuffers/protobuf-go/releases/download/v%s/protoc-gen-go.v%s.%s.tar.gz"
+	protocGenGoUrlFormat = protocGenGoRepo + "/releases/download/v%s/protoc-gen-go.v%s.%s.tar.gz"
 )
 
 type ProtocGenGo struct {
-	version string
+	version update.Version
 	db      *store.DB
 }
 
@@ -25,8 +27,12 @@ func (p *ProtocGenGo) Name() string {
 	return "protoc-gen-go"
 }
 
-func (p *ProtocGenGo) Version() string {
+func (p *ProtocGenGo) Version() update.Version {
 	return p.version
+}
+
+func (p *ProtocGenGo) SetVersion(v update.Version) {
+	p.version = v
 }
 
 func (p *ProtocGenGo) Download() error {
@@ -35,7 +41,7 @@ func (p *ProtocGenGo) Download() error {
 	}
 	osName := fmt.Sprintf("%s.%s", osutil.GetOS(), osutil.GetArch())
 	fetchUrl := fmt.Sprintf(protocGenGoUrlFormat, p.version, p.version, osName)
-	target := getDlPath(p.Name(), p.version)
+	target := getDlPath(p.Name(), p.version.String())
 
 	err := downloader.Download(fetchUrl, target)
 	if err != nil {
@@ -53,14 +59,14 @@ func (p *ProtocGenGo) Install() error {
 	executableName := p.Name()
 
 	// all files that are going to be installed
-	dlPath := getDlPath(p.Name(), p.version)
+	dlPath := getDlPath(p.Name(), p.version.String())
 	filesMap := map[string][]interface{}{
 		filepath.Join(dlPath, executableName): {filepath.Join(goBinDir, executableName), 0755},
 	}
 
 	ip := store.InstalledPackage{
 		Name:     p.Name(),
-		Version:  p.version,
+		Version:  p.version.String(),
 		FilesMap: map[string]int{},
 	}
 
@@ -106,7 +112,7 @@ func (p *ProtocGenGo) Run(args ...string) error {
 	return nil
 }
 
-func (p *ProtocGenGo) Update(version string) error {
+func (p *ProtocGenGo) Update(version update.Version) error {
 	p.version = version
 	if err := p.Uninstall(); err != nil {
 		return err
@@ -129,9 +135,16 @@ func (p *ProtocGenGo) Dependencies() []dep.Component {
 	return nil
 }
 
-func NewProtocGenGo(db *store.DB, version string) *ProtocGenGo {
+func NewProtocGenGo(db *store.DB) *ProtocGenGo {
 	return &ProtocGenGo{
-		version: version,
-		db:      db,
+		db: db,
 	}
+}
+
+func (p *ProtocGenGo) IsDev() bool {
+	return true
+}
+
+func (p *ProtocGenGo) RepoUrl() update.RepositoryURL {
+	return protocGenGoRepo
 }
