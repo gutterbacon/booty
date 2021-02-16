@@ -47,7 +47,7 @@ func (j *Jb) Download() error {
 	if osutil.DirExists(targetDir) {
 		return downloader.GitCheckout("v"+j.version.String(), targetDir)
 	}
-	return downloader.GitClone(jbRepo, targetDir, "v"+j.version.String())
+	return downloader.GitClone(jbRepo, targetDir, "master")
 }
 
 func (j *Jb) Dependencies() []dep.Component {

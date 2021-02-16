@@ -50,7 +50,7 @@ func testGetLatest(t *testing.T) {
 func testFallbackScrape(t *testing.T) {
 	ver, err := update.FallbackScrape("https://github.com/grpc/grpc-go")
 	require.NoError(t, err)
-	require.Equal(t, "v1.1.0", ver)
+	require.Equal(t, "cmd/protoc-gen-go-grpc/v1.1.0", ver)
 
 	ver, err = update.FallbackScrape("https://github.com/amplify-edge/protoc-gen-cobra")
 	require.NoError(t, err)

@@ -140,7 +140,7 @@ func versionNumber(v string) string {
 func FallbackScrape(repoUrl RepositoryURL) (string, error) {
 	// scrape it if it doesn't work
 	htc := http.Client{Timeout: defaultTimeout}
-	releaseUrl := string(repoUrl) + "/releases"
+	releaseUrl := string(repoUrl) + "/releases/latest"
 	req, err := http.NewRequest(http.MethodGet, releaseUrl, nil)
 	if err != nil {
 		return "", err
@@ -153,13 +153,9 @@ func FallbackScrape(repoUrl RepositoryURL) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	latest := doc.Find(".release-header").Find("a").First().Text()
-	if latest == "" {
+	latestTag := doc.Find(".d-none.d-md-block.mt-2.list-style-none").Children().First().Find("a").First().Text()
+	if latestTag == "" {
 		return "", fmt.Errorf("releases not found")
 	}
-	splitted := strings.Split(latest, " ")
-	if len(splitted) > 1 {
-		return splitted[len(splitted)-1], nil
-	}
-	return strings.Trim(latest, " "), nil
+	return strings.TrimSpace(latestTag), nil
 }
