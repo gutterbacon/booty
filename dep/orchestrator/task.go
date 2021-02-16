@@ -1,6 +1,8 @@
 package orchestrator
 
-import "sync"
+import (
+	"sync"
+)
 
 type task struct {
 	err error
@@ -30,7 +32,7 @@ func newTaskPool(tasks []*task) *taskPool {
 }
 
 func (tp *taskPool) runAll() {
-	for i := 0; i < len(tp.tasks); i++ {
+	for i := 0; i < 4; i++ {
 		go tp.do()
 	}
 	tp.wg.Add(len(tp.tasks))

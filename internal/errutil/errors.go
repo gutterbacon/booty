@@ -11,6 +11,7 @@ const (
 	ErrInvalidParameters = iota
 	ErrSetupDir
 	ErrInvalidComponent
+	ErrDownloadComponent
 	ErrInstallComponent
 	ErrUninstallComponent
 )
@@ -39,6 +40,8 @@ func (err Error) description() string {
 		return "Invalid parameters"
 	case ErrInvalidComponent:
 		return "Invalid component"
+	case ErrDownloadComponent:
+		return "Failed to download component"
 	case ErrInstallComponent:
 		return "Failed to install component"
 	case ErrUninstallComponent:
