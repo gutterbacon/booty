@@ -32,6 +32,7 @@ func init() {
 
 func TestUpdater(t *testing.T) {
 	t.Run("testCheckRelease", testUpdateCheck)
+	t.Run("testGetLatest", testGetLatest)
 }
 
 func testUpdateCheck(t *testing.T) {
@@ -39,3 +40,8 @@ func testUpdateCheck(t *testing.T) {
 	require.NoError(t, err)
 }
 
+func testGetLatest(t *testing.T) {
+	ver, err := update.GetLatestVersion("https://github.com/grpc/grpc-go")
+	require.NoError(t, err)
+	require.Equal(t, "1.1.0", ver)
+}

@@ -85,6 +85,7 @@ func (o *Orchestrator) Command() *cobra.Command {
 		cmd.InstallCommand(o),
 		cmd.UninstallAllCommand(o),
 		cmd.UninstallCommand(o),
+		cmd.JbCommand(o),
 	}
 	if o.cfg.DevMode {
 		extraCmds = append(
@@ -177,7 +178,7 @@ func (o *Orchestrator) Uninstall(name string) error {
 		k := c
 		if k.Name() == name {
 			if err = k.Uninstall(); err != nil {
-				return errutil.New(errutil.ErrUninstallComponent, fmt.Errorf("name: %s, version: %s"))
+				return errutil.New(errutil.ErrUninstallComponent, fmt.Errorf("name: %s, version: %s, err: %v", k.Name(), k.Version(), err))
 			}
 		}
 	}
@@ -188,7 +189,7 @@ func (o *Orchestrator) UninstallAll() error {
 	o.logger.Info("uninstall all components")
 	for _, c := range o.components {
 		if err := c.Uninstall(); err != nil {
-			return errutil.New(errutil.ErrUninstallComponent, fmt.Errorf("name: %s, version: %s"))
+			return errutil.New(errutil.ErrUninstallComponent, fmt.Errorf("name: %s, version: %s, err: %v", c.Name(), c.Version(), err))
 		}
 	}
 	return nil

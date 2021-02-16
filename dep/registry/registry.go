@@ -41,22 +41,36 @@ func NewRegistry(db *store.DB, ac *config.AppConfig) (*Registry, error) {
 	devComponents := map[string]dep.Component{} // dev components
 	regComponents := map[string]dep.Component{} // regular components
 	for _, c := range comps {
-		if c.IsDev() {
-			v := ac.GetVersion(c.Name())
-			if v == "" {
-				v, err = update.GetLatestVersion(c.RepoUrl())
-				if err != nil {
+		if c.Dependencies() != nil {
+			for _, d := range c.Dependencies() {
+				if err = setVersion(ac, d); err != nil {
 					return nil, err
 				}
 			}
-			c.SetVersion(update.Version(v))
-			devComponents[c.Name()] = c
-		} else {
+		}
+		if err = setVersion(ac, c); err != nil {
+			return nil, err
+		}
+		if !c.IsDev() {
 			regComponents[c.Name()] = c
 		}
+		devComponents[c.Name()] = c
 	}
 	return &Registry{
 		DevComponents: devComponents,
 		Components:    regComponents,
 	}, err
+}
+
+func setVersion(ac *config.AppConfig, c dep.Component) error {
+	var err error
+	v := ac.GetVersion(c.Name())
+	if v == "" {
+		v, err = update.GetLatestVersion(c.RepoUrl())
+		if err != nil {
+			return err
+		}
+	}
+	c.SetVersion(update.Version(v))
+	return nil
 }

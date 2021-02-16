@@ -7,6 +7,7 @@ package update
 import (
 	"context"
 	"github.com/google/go-github/github"
+	"path/filepath"
 	"time"
 
 	"go.amplifyedge.org/booty-v2/internal/logging"
@@ -80,6 +81,7 @@ func (c *Checker) fetchLatest(r *repoInfo, ghc *github.Client) error {
 		return err
 	}
 	v := *release.TagName
+	v = versionNumber(v)
 	if isTagNewer(r.curVer.toSemver(), parseReleaseTag(v)) {
 		c.logger.Infof("latest version is newer: %s than current: %s, updating...", r.curVer, Version(v))
 		// assign it to the repos
@@ -104,5 +106,14 @@ func GetLatestVersion(repoUrl RepositoryURL) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	return *release.TagName, nil
+	v := *release.TagName
+	return versionNumber(v), nil
+}
+
+func versionNumber(v string) string {
+	v = filepath.Base(v)
+	if v[0] == 'v' || v[0] == 'V' {
+		return v[1:]
+	}
+	return v
 }
