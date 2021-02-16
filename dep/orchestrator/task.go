@@ -7,10 +7,11 @@ import (
 type task struct {
 	err error
 	job func() error
+	errFunc func(err error) error
 }
 
-func newTask(job func() error) *task {
-	return &task{job: job}
+func newTask(job func() error, errFunc func(err error) error) *task {
+	return &task{job: job, errFunc: errFunc}
 }
 
 func (t *task) runTask(wg *sync.WaitGroup) {

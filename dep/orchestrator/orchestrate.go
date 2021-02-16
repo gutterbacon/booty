@@ -127,16 +127,22 @@ func (o *Orchestrator) DownloadAll() error {
 	var tasks []*task
 	for _, c := range o.components {
 		k := c
-		tasks = append(tasks, newTask(k.Download))
+		tasks = append(tasks, newTask(k.Download, dlErr(k)))
 	}
 	pool := newTaskPool(tasks)
 	pool.runAll()
 	for _, t := range pool.tasks {
 		if t.err != nil {
-			return t.err
+			return t.errFunc(t.err)
 		}
 	}
 	return nil
+}
+
+func dlErr(c dep.Component) func(err error) error {
+	return func(err error) error {
+		return errutil.New(errutil.ErrDownloadComponent, fmt.Errorf("name: %s, version: %s, error: %v", c.Name(), c.Version(), err))
+	}
 }
 
 func (o *Orchestrator) Run(name string, args ...string) error {
