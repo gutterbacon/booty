@@ -3,6 +3,7 @@ module go.amplifyedge.org/booty-v2
 go 1.16
 
 require (
+	github.com/PuerkitoBio/goquery v1.6.1
 	github.com/cheggaaa/pb v1.0.27
 	github.com/fatih/color v1.10.0 // indirect
 	github.com/go-git/go-git/v5 v5.2.0

@@ -1,1 +1,3 @@
-config/config.reference.json
+{
+  "dev": true
+}

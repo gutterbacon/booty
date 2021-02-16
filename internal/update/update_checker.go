@@ -6,8 +6,12 @@ package update
 
 import (
 	"context"
+	"fmt"
+	"github.com/PuerkitoBio/goquery"
 	"github.com/google/go-github/github"
+	"net/http"
 	"path/filepath"
+	"strings"
 	"time"
 
 	"go.amplifyedge.org/booty-v2/internal/logging"
@@ -76,12 +80,19 @@ func (c *Checker) fetchLatest(r *repoInfo, ghc *github.Client) error {
 	c.logger.Infof("checking update for: %s", r.repoUrl)
 	ctx, cancel := context.WithTimeout(context.Background(), defaultTimeout)
 	defer cancel()
+	var v, latest string
 	release, _, err := ghc.Repositories.GetLatestRelease(ctx, r.repoUser, r.repoName)
 	if err != nil {
-		return err
+		// scrape it if it doesn't work
+		latest, err = FallbackScrape(r.repoUrl)
+		if err != nil {
+			return err
+		}
+		v = versionNumber(latest)
 	}
-	v := *release.TagName
-	v = versionNumber(v)
+	if release != nil {
+		v = versionNumber(*release.TagName)
+	}
 	if isTagNewer(r.curVer.toSemver(), parseReleaseTag(v)) {
 		c.logger.Infof("latest version is newer: %s than current: %s, updating...", r.curVer, Version(v))
 		// assign it to the repos
@@ -102,11 +113,19 @@ func GetLatestVersion(repoUrl RepositoryURL) (string, error) {
 	if err != nil {
 		return "", err
 	}
+	var v string
 	release, _, err := ghc.Repositories.GetLatestRelease(ctx, info.repoUser, info.repoName)
 	if err != nil {
-		return "", err
+		var latest string
+		latest, err = FallbackScrape(repoUrl)
+		if err != nil {
+			return "", err
+		}
+		v = versionNumber(latest)
 	}
-	v := *release.TagName
+	if release != nil {
+		v = *release.TagName
+	}
 	return versionNumber(v), nil
 }
 
@@ -116,4 +135,31 @@ func versionNumber(v string) string {
 		return v[1:]
 	}
 	return v
+}
+
+func FallbackScrape(repoUrl RepositoryURL) (string, error) {
+	// scrape it if it doesn't work
+	htc := http.Client{Timeout: defaultTimeout}
+	releaseUrl := string(repoUrl) + "/releases"
+	req, err := http.NewRequest(http.MethodGet, releaseUrl, nil)
+	if err != nil {
+		return "", err
+	}
+	resp, err := htc.Do(req)
+	if err != nil {
+		return "", err
+	}
+	doc, err := goquery.NewDocumentFromReader(resp.Body)
+	if err != nil {
+		return "", err
+	}
+	latest := doc.Find(".release-header").Find("a").First().Text()
+	if latest == "" {
+		return "", fmt.Errorf("releases not found")
+	}
+	splitted := strings.Split(latest, " ")
+	if len(splitted) > 1 {
+		return splitted[len(splitted)-1], nil
+	}
+	return strings.Trim(latest, " "), nil
 }
