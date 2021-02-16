@@ -95,11 +95,15 @@ type readCloser struct {
 func (c *readCloser) Close() error { return c.close() }
 
 func GitClone(fetchUrl string, targetDir string, tag string) error {
-	_, err := git.PlainClone(targetDir, false, &git.CloneOptions{
-		URL:           fetchUrl,
-		Progress:      os.Stdout,
-		ReferenceName: plumbing.NewTagReferenceName(tag),
-	})
+	cloneOpts := &git.CloneOptions{
+		URL:      fetchUrl,
+		Progress: os.Stdout,
+	}
+	if tag != "" {
+		cloneOpts.ReferenceName = plumbing.NewTagReferenceName(tag)
+	}
+
+	_, err := git.PlainClone(targetDir, false, cloneOpts)
 	return err
 }
 
