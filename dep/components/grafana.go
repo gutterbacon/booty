@@ -135,9 +135,7 @@ func (g *Grafana) Install() error {
 		return err
 	}
 	g.svc = s
-	if err = g.svc.Install(); err != nil {
-		return err
-	}
+	_ = g.svc.Install()
 	// store version, installed paths to db
 	if err = g.db.New(&ip); err != nil {
 		return err
@@ -165,10 +163,7 @@ func (g *Grafana) Uninstall() error {
 		}
 	}
 	// remove downloaded files
-	err = g.svc.Uninstall()
-	if err != nil {
-		return err
-	}
+	_ = g.svc.Uninstall()
 	dlPath := getDlPath(g.Name(), g.version.String())
 	return os.RemoveAll(dlPath)
 }

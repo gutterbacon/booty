@@ -166,9 +166,7 @@ func (v *VicMet) Install() error {
 	}
 	v.svcs = svcs
 	for _, s := range v.svcs {
-		if err = s.Install(); err != nil {
-			return err
-		}
+		_ = s.Install()
 	}
 	if err = v.db.New(&ip); err != nil {
 		return err
