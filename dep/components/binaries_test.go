@@ -1,6 +1,8 @@
 package components_test
 
 import (
+	"go.amplifyedge.org/booty-v2/internal/store"
+	"go.amplifyedge.org/booty-v2/internal/store/badger"
 	"os"
 
 	"go.amplifyedge.org/booty-v2/dep"
@@ -8,22 +10,20 @@ import (
 
 	"go.amplifyedge.org/booty-v2/dep/components"
 	"go.amplifyedge.org/booty-v2/internal/logging/zaplog"
-	"go.amplifyedge.org/booty-v2/internal/store"
-
 	"testing"
 
 	"github.com/stretchr/testify/require"
 )
 
 var (
-	db *store.DB
+	db store.Storer
 )
 
 func init() {
 	l := zaplog.NewZapLogger(zaplog.WARN, "store-test", true)
 	l.InitLogger(nil)
 	_ = os.MkdirAll("./testdata/db", 0755)
-	db = store.NewDB(l, "./testdata/db")
+	db = badger.NewDB(l, "./testdata/db")
 }
 
 func TestBinaries(t *testing.T) {

@@ -4,17 +4,16 @@ import (
 	"fmt"
 	ks "github.com/kardianos/service"
 	"go.amplifyedge.org/booty-v2/internal/service"
+	"go.amplifyedge.org/booty-v2/internal/store/badger"
 	"go.amplifyedge.org/booty-v2/internal/update"
 	"os"
 	"path/filepath"
 	"strings"
 
 	"go.amplifyedge.org/booty-v2/dep"
+	"go.amplifyedge.org/booty-v2/internal/downloader"
 	"go.amplifyedge.org/booty-v2/internal/fileutil"
 	"go.amplifyedge.org/booty-v2/internal/osutil"
-	"go.amplifyedge.org/booty-v2/internal/store"
-
-	"go.amplifyedge.org/booty-v2/internal/downloader"
 )
 
 const (
@@ -26,11 +25,11 @@ const (
 // Grafana implements Component interface
 type Grafana struct {
 	version update.Version
-	db      *store.DB
+	db      store.Storer
 	svc     *service.Svc
 }
 
-func NewGrafana(db *store.DB) *Grafana {
+func NewGrafana(db store.Storer) *Grafana {
 	return &Grafana{db: db}
 }
 

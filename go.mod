@@ -14,6 +14,7 @@ require (
 	github.com/otiai10/copy v1.4.2
 	github.com/spf13/cobra v1.1.1
 	github.com/stretchr/testify v1.7.0
+	github.com/thedevsaddam/gojsonq v2.3.0+incompatible
 	github.com/timshannon/badgerhold/v2 v2.0.0-20201228162759-17050a01e34c
 	go.uber.org/zap v1.10.0
 	golang.org/x/sys v0.0.0-20210124154548-22da62e12c0c // indirect

@@ -21,7 +21,7 @@ const (
 
 type ProtocGenGoGrpc struct {
 	version update.Version
-	db      *store.DB
+	db      store.Storer
 }
 
 func (p *ProtocGenGoGrpc) Name() string {
@@ -146,7 +146,7 @@ func (p *ProtocGenGoGrpc) RepoUrl() update.RepositoryURL {
 	return genRpcRepo
 }
 
-func NewProtocGenGoGrpc(db *store.DB) *ProtocGenGoGrpc {
+func NewProtocGenGoGrpc(db store.Storer) *ProtocGenGoGrpc {
 	return &ProtocGenGoGrpc{
 		db: db,
 	}

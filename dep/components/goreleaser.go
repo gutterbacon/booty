@@ -2,6 +2,7 @@ package components
 
 import (
 	"fmt"
+	"go.amplifyedge.org/booty-v2/internal/store/badger"
 	"go.amplifyedge.org/booty-v2/internal/update"
 	"os"
 	"path/filepath"
@@ -14,7 +15,6 @@ import (
 	// "path/filepath"
 
 	"go.amplifyedge.org/booty-v2/internal/osutil"
-	"go.amplifyedge.org/booty-v2/internal/store"
 )
 
 const (
@@ -25,10 +25,10 @@ const (
 
 type Goreleaser struct {
 	version update.Version
-	db      *store.DB
+	db      store.Storer
 }
 
-func NewGoreleaser(db *store.DB) *Goreleaser {
+func NewGoreleaser(db store.Storer) *Goreleaser {
 	return &Goreleaser{
 		db: db,
 	}

@@ -3,6 +3,7 @@ package components
 import (
 	"embed"
 	"fmt"
+	"go.amplifyedge.org/booty-v2/internal/store"
 	"go.amplifyedge.org/booty-v2/internal/update"
 	"io/ioutil"
 	"os"
@@ -16,7 +17,6 @@ import (
 	"go.amplifyedge.org/booty-v2/internal/downloader"
 	"go.amplifyedge.org/booty-v2/internal/osutil"
 	"go.amplifyedge.org/booty-v2/internal/service"
-	"go.amplifyedge.org/booty-v2/internal/store"
 )
 
 //go:embed files/Caddyfile
@@ -30,11 +30,11 @@ const (
 
 type Caddy struct {
 	version update.Version
-	db      *store.DB
+	db      store.Storer
 	svc     *service.Svc
 }
 
-func NewCaddy(db *store.DB) *Caddy {
+func NewCaddy(db store.Storer) *Caddy {
 	return &Caddy{
 		db:      db,
 	}

@@ -9,13 +9,13 @@ import (
 	"fmt"
 	"github.com/PuerkitoBio/goquery"
 	"github.com/google/go-github/github"
+	"go.amplifyedge.org/booty-v2/internal/store"
 	"net/http"
 	"path/filepath"
 	"strings"
 	"time"
 
 	"go.amplifyedge.org/booty-v2/internal/logging"
-	"go.amplifyedge.org/booty-v2/internal/store"
 )
 
 const (
@@ -34,12 +34,12 @@ func (v Version) String() string {
 
 type Checker struct {
 	logger     logging.Logger
-	db         *store.DB                          // the badger database
+	db         store.Storer                       // the badger database
 	repos      map[RepositoryURL]Version          // repository urls
 	updateFunc func(RepositoryURL, Version) error // call this function on new release
 }
 
-func NewChecker(logger logging.Logger, db *store.DB, repos map[RepositoryURL]Version, updateFunc func(r RepositoryURL, v Version) error) *Checker {
+func NewChecker(logger logging.Logger, db store.Storer, repos map[RepositoryURL]Version, updateFunc func(r RepositoryURL, v Version) error) *Checker {
 	return &Checker{
 		db:         db,
 		repos:      repos,

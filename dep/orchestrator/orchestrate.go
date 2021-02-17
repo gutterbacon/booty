@@ -5,6 +5,7 @@ import (
 	"github.com/spf13/cobra"
 	registry2 "go.amplifyedge.org/booty-v2/dep/registry"
 	"go.amplifyedge.org/booty-v2/internal/errutil"
+	"go.amplifyedge.org/booty-v2/internal/store/badger"
 	"io/ioutil"
 	"os"
 	"path/filepath"
@@ -15,7 +16,6 @@ import (
 	"go.amplifyedge.org/booty-v2/internal/logging"
 	"go.amplifyedge.org/booty-v2/internal/logging/zaplog"
 	"go.amplifyedge.org/booty-v2/internal/osutil"
-	"go.amplifyedge.org/booty-v2/internal/store"
 )
 
 // Orchestrator implements Executor, Agent, and Commander
@@ -55,7 +55,7 @@ func NewOrchestrator(app string) *Orchestrator {
 	ac = config.NewAppConfig(logger, fileContent)
 
 	// setup badger database for package tracking
-	db := store.NewDB(logger, filepath.Join(osutil.GetDataDir(), "packages"))
+	db := badger.NewDB(logger, filepath.Join(osutil.GetDataDir(), "packages"))
 
 	// setup registry
 	registry, err := registry2.NewRegistry(db, ac)

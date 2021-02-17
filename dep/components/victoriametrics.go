@@ -2,6 +2,7 @@ package components
 
 import (
 	"embed"
+	"go.amplifyedge.org/booty-v2/internal/store"
 	"go.amplifyedge.org/booty-v2/internal/update"
 	"io/ioutil"
 	"os"
@@ -14,7 +15,6 @@ import (
 	"go.amplifyedge.org/booty-v2/internal/fileutil"
 	"go.amplifyedge.org/booty-v2/internal/osutil"
 	"go.amplifyedge.org/booty-v2/internal/service"
-	"go.amplifyedge.org/booty-v2/internal/store"
 )
 
 //go:embed files/prometheus.yml
@@ -26,11 +26,11 @@ const (
 
 type VicMet struct {
 	version update.Version
-	db      *store.DB
+	db      store.Storer
 	svcs    []*service.Svc
 }
 
-func NewVicMet(db *store.DB) *VicMet {
+func NewVicMet(db store.Storer) *VicMet {
 	return &VicMet{
 		db: db,
 	}

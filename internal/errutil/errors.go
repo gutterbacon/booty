@@ -10,6 +10,9 @@ type ErrReason int
 const (
 	ErrInvalidParameters = iota
 	ErrSetupDir
+	ErrOpenFile
+	ErrNewFile
+	ErrEmptyFile
 	ErrInvalidComponent
 	ErrDownloadComponent
 	ErrInstallComponent
@@ -46,6 +49,12 @@ func (err Error) description() string {
 		return "Failed to install component"
 	case ErrUninstallComponent:
 		return "Failed to uninstall component"
+	case ErrOpenFile:
+		return "Failed to open file"
+	case ErrNewFile:
+		return "Failed to create new file db"
+	case ErrEmptyFile:
+		return "Empty file"
 	}
 
 	return "Unknown error"

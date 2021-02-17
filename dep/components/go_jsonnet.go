@@ -18,7 +18,7 @@ const (
 
 type GoJsonnet struct {
 	version update.Version
-	db      *store.DB
+	db      store.Storer
 }
 
 func (g *GoJsonnet) Name() string {
@@ -133,7 +133,7 @@ func (g *GoJsonnet) Backup() error {
 	return nil
 }
 
-func NewGoJsonnet(db *store.DB) *GoJsonnet {
+func NewGoJsonnet(db store.Storer) *GoJsonnet {
 	return &GoJsonnet{
 		db: db,
 	}

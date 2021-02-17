@@ -20,7 +20,7 @@ const (
 
 type ProtocGenGo struct {
 	version update.Version
-	db      *store.DB
+	db      store.Storer
 }
 
 func (p *ProtocGenGo) Name() string {
@@ -135,7 +135,7 @@ func (p *ProtocGenGo) Dependencies() []dep.Component {
 	return nil
 }
 
-func NewProtocGenGo(db *store.DB) *ProtocGenGo {
+func NewProtocGenGo(db store.Storer) *ProtocGenGo {
 	return &ProtocGenGo{
 		db: db,
 	}

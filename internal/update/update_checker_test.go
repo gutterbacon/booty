@@ -2,13 +2,13 @@ package update_test
 
 import (
 	"fmt"
+	"go.amplifyedge.org/booty-v2/internal/store/badger"
 	"os"
 	"testing"
 
 	"github.com/stretchr/testify/require"
 
 	"go.amplifyedge.org/booty-v2/internal/logging/zaplog"
-	"go.amplifyedge.org/booty-v2/internal/store"
 	"go.amplifyedge.org/booty-v2/internal/update"
 )
 
@@ -20,7 +20,7 @@ func init() {
 	l := zaplog.NewZapLogger(zaplog.WARN, "update-test", true)
 	l.InitLogger(nil)
 	_ = os.MkdirAll("./testdata/db", 0755)
-	db := store.NewDB(l, "./testdata/db")
+	db := badger.NewDB(l, "./testdata/db")
 	checker = update.NewChecker(l, db, map[update.RepositoryURL]update.Version{
 		update.RepositoryURL("https://github.com/grafana/grafana"):   update.Version("7.4.0"),
 		update.RepositoryURL("https://github.com/caddyserver/caddy"): update.Version("2.3.0"),

@@ -2,6 +2,7 @@ package components
 
 import (
 	"fmt"
+	"go.amplifyedge.org/booty-v2/internal/store/badger"
 	"go.amplifyedge.org/booty-v2/internal/update"
 	"os"
 	"path/filepath"
@@ -13,7 +14,6 @@ import (
 	"go.amplifyedge.org/booty-v2/internal/downloader"
 	"go.amplifyedge.org/booty-v2/internal/fileutil"
 	"go.amplifyedge.org/booty-v2/internal/osutil"
-	"go.amplifyedge.org/booty-v2/internal/store"
 )
 
 const (
@@ -24,11 +24,11 @@ const (
 
 type Protoc struct {
 	version      update.Version
-	db           *store.DB
+	db           store.Storer
 	dependencies []dep.Component
 }
 
-func NewProtoc(db *store.DB, deps []dep.Component) *Protoc {
+func NewProtoc(db store.Storer, deps []dep.Component) *Protoc {
 	return &Protoc{
 		db:           db,
 		dependencies: deps,

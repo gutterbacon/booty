@@ -5,7 +5,7 @@ import (
 	"go.amplifyedge.org/booty-v2/internal/downloader"
 	"go.amplifyedge.org/booty-v2/internal/fileutil"
 	"go.amplifyedge.org/booty-v2/internal/osutil"
-	"go.amplifyedge.org/booty-v2/internal/store"
+	"go.amplifyedge.org/booty-v2/internal/store/badger"
 	"go.amplifyedge.org/booty-v2/internal/update"
 	"os"
 	"path/filepath"
@@ -17,14 +17,14 @@ const (
 
 type Jb struct {
 	version update.Version
-	db      *store.DB
+	db      store.Storer
 }
 
 func (j *Jb) IsDev() bool {
 	return true
 }
 
-func NewJb(db *store.DB) *Jb {
+func NewJb(db store.Storer) *Jb {
 	return &Jb{
 		db: db,
 	}
