@@ -28,6 +28,10 @@ type Goreleaser struct {
 	db      store.Storer
 }
 
+func (g *Goreleaser) IsService() bool {
+	return false
+}
+
 func NewGoreleaser(db store.Storer) *Goreleaser {
 	return &Goreleaser{
 		db: db,

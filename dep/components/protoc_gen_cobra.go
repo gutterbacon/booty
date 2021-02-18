@@ -24,6 +24,10 @@ type ProtocGenCobra struct {
 	db      store.Storer
 }
 
+func (p *ProtocGenCobra) IsService() bool {
+	return false
+}
+
 func NewProtocGenCobra(db store.Storer) *ProtocGenCobra {
 	return &ProtocGenCobra{
 		db: db,

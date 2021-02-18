@@ -40,13 +40,28 @@ func init() {
 }
 
 func TestFileDB(t *testing.T) {
-	t.Run("testInsertPackage", testInsert)
+	t.Run("testAll", testAll)
 }
 
-func testInsert(t *testing.T) {
+func testAll(t *testing.T) {
 	err := filedb.New(ips[0])
 	require.NoError(t, err)
 
 	err = filedb.New(ips[1])
 	require.NoError(t, err)
+
+	ip, err := filedb.Get("grafana")
+	require.NoError(t, err)
+	require.Equal(t, ips[0], ip)
+
+	listIps, err := filedb.List()
+	require.NoError(t, err)
+	require.Equal(t, len(ips), len(listIps))
+
+	err = filedb.Delete("grafana")
+	require.NoError(t, err)
+
+	listIps, _ = filedb.List()
+	require.Equal(t, 1, len(listIps))
+	require.Equal(t, ips[1], listIps[0])
 }

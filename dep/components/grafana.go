@@ -29,6 +29,10 @@ type Grafana struct {
 	svc     *service.Svc
 }
 
+func (g *Grafana) IsService() bool {
+	return true
+}
+
 func NewGrafana(db store.Storer) *Grafana {
 	return &Grafana{db: db}
 }

@@ -21,6 +21,10 @@ type GoJsonnet struct {
 	db      store.Storer
 }
 
+func (g *GoJsonnet) IsService() bool {
+	return false
+}
+
 func (g *GoJsonnet) Name() string {
 	return "jsonnet"
 }

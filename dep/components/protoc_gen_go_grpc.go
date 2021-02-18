@@ -24,6 +24,10 @@ type ProtocGenGoGrpc struct {
 	db      store.Storer
 }
 
+func (p *ProtocGenGoGrpc) IsService() bool {
+	return false
+}
+
 func (p *ProtocGenGoGrpc) Name() string {
 	return "protoc-gen-go-grpc"
 }

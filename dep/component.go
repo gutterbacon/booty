@@ -15,6 +15,7 @@ type Executor interface {
 	AllInstalledComponents() []Component // list all installed components
 	DownloadAll() error                  // fetch all components
 	Run(name string, args ...string) error
+	RunAll() error                     // run all service components
 	Install(name, version string) error // installs a single component by its name
 	InstallAll() error                  // install all components
 	Uninstall(name string) error        // uninstalls a component
@@ -58,5 +59,6 @@ type Component interface {
 	RunStop() error
 	Backup() error
 	IsDev() bool
+	IsService() bool
 	RepoUrl() update.RepositoryURL
 }

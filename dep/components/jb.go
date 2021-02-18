@@ -20,6 +20,10 @@ type Jb struct {
 	db      store.Storer
 }
 
+func (j *Jb) IsService() bool {
+	return false
+}
+
 func (j *Jb) IsDev() bool {
 	return true
 }

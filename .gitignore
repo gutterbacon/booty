@@ -27,3 +27,6 @@ dist
 /dep/components/testdata/db/
 /dep/components/prototest/prototest/
 /internal/update/testdata/db/
+/internal/store/file/fileops_test.json
+/dep/components/testdata/
+/.idea/

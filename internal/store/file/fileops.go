@@ -1,13 +1,12 @@
 package file
 
 import (
-	"bytes"
 	"encoding/json"
 	"fmt"
 	"os"
 	"sync"
 
-	"github.com/thedevsaddam/gojsonq"
+	"github.com/thedevsaddam/gojsonq/v2"
 
 	"go.amplifyedge.org/booty-v2/internal/errutil"
 	"go.amplifyedge.org/booty-v2/internal/logging"
@@ -97,19 +96,14 @@ func (d *DB) Get(pkgName string) (*store.InstalledPackage, error) {
 	if err != nil {
 		return nil, err
 	}
-	buf := bytes.NewBuffer(b)
-	jq := gojsonq.New().Reader(buf).From("packages").WhereEqual("name", pkgName)
-	res, err := jq.GetR()
-	if err != nil {
-		return nil, err
-	}
-	bslice, err := res.String()
+	jq := gojsonq.New().FromString(string(b)).From("packages").WhereEqual("name", pkgName)
+	res := jq.First()
+	b, err = json.Marshal(&res)
 	if err != nil {
 		return nil, err
 	}
 	var ip store.InstalledPackage
-	err = json.Unmarshal([]byte(bslice), &ip)
-	if err != nil {
+	if err = json.Unmarshal(b, &ip); err != nil {
 		return nil, err
 	}
 	return &ip, nil
@@ -143,8 +137,12 @@ func (d *DB) Delete(pkgName string) error {
 		return err
 	}
 	b, err := json.Marshal(&allPkgs)
-	_, err = d.f.WriteAt(b, 0)
-	return err
+	sz, err := d.f.WriteAt(b, 0)
+	if err != nil {
+		return err
+	}
+	d.size = int64(sz)
+	return nil
 }
 
 func (d *DB) getAllPkgs() (*allInstalledPackages, error) {

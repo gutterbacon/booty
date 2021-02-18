@@ -28,6 +28,10 @@ type Protoc struct {
 	dependencies []dep.Component
 }
 
+func (p *Protoc) IsService() bool {
+	return false
+}
+
 func NewProtoc(db store.Storer, deps []dep.Component) *Protoc {
 	return &Protoc{
 		db:           db,

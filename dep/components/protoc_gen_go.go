@@ -23,6 +23,10 @@ type ProtocGenGo struct {
 	db      store.Storer
 }
 
+func (p *ProtocGenGo) IsService() bool {
+	return false
+}
+
 func (p *ProtocGenGo) Name() string {
 	return "protoc-gen-go"
 }

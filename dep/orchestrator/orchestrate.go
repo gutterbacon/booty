@@ -216,6 +216,17 @@ func (o *Orchestrator) AllInstalledComponents() []dep.Component {
 	return nil
 }
 
+func (o *Orchestrator) RunAll() error {
+	for _, o := range o.components {
+		if o.IsService() {
+			if err := o.Run(); err != nil {
+				return err
+			}
+		}
+	}
+	return nil
+}
+
 // ================================================================
 // Agent
 // ================================================================

@@ -34,6 +34,10 @@ type Caddy struct {
 	svc     *service.Svc
 }
 
+func (c *Caddy) IsService() bool {
+	return true
+}
+
 func NewCaddy(db store.Storer) *Caddy {
 	return &Caddy{
 		db:      db,

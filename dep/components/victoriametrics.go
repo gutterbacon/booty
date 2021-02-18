@@ -30,6 +30,10 @@ type VicMet struct {
 	svcs    []*service.Svc
 }
 
+func (v *VicMet) IsService() bool {
+	return true
+}
+
 func NewVicMet(db store.Storer) *VicMet {
 	return &VicMet{
 		db: db,

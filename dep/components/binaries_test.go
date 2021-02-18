@@ -2,7 +2,7 @@ package components_test
 
 import (
 	"go.amplifyedge.org/booty-v2/internal/store"
-	"go.amplifyedge.org/booty-v2/internal/store/badger"
+	"go.amplifyedge.org/booty-v2/internal/store/file"
 	"os"
 
 	"go.amplifyedge.org/booty-v2/dep"
@@ -22,8 +22,7 @@ var (
 func init() {
 	l := zaplog.NewZapLogger(zaplog.WARN, "store-test", true)
 	l.InitLogger(nil)
-	_ = os.MkdirAll("./testdata/db", 0755)
-	db = badger.NewDB(l, "./testdata/db")
+	db, _ = file.NewDB(l, "./testdata/pkgs.lock.json")
 }
 
 func TestBinaries(t *testing.T) {
