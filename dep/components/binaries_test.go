@@ -1,12 +1,11 @@
 package components_test
 
 import (
+	"go.amplifyedge.org/booty-v2/dep"
+	"go.amplifyedge.org/booty-v2/internal/osutil"
 	"go.amplifyedge.org/booty-v2/internal/store"
 	"go.amplifyedge.org/booty-v2/internal/store/file"
 	"os"
-
-	"go.amplifyedge.org/booty-v2/dep"
-	"go.amplifyedge.org/booty-v2/internal/osutil"
 
 	"go.amplifyedge.org/booty-v2/dep/components"
 	"go.amplifyedge.org/booty-v2/internal/logging/zaplog"
@@ -73,8 +72,8 @@ func testGoreleaser(t *testing.T) {
 	require.NoError(t, err)
 
 	// uninstall
-	err = gor.Uninstall()
-	require.NoError(t, err)
+	//err = gor.Uninstall()
+	//require.NoError(t, err)
 }
 
 func testCaddy(t *testing.T) {

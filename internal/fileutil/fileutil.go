@@ -2,6 +2,7 @@ package fileutil
 
 import (
 	"crypto/sha256"
+	"errors"
 	"fmt"
 	"io"
 	"os"
@@ -31,6 +32,22 @@ func Copy(src, dst string) (string, error) {
 			return "", err
 		}
 
+		wlen, err := io.Copy(destination, source)
+		if err != nil {
+			return "", err
+		}
+		if wlen == 0 {
+			return "", errors.New("not copying")
+		}
+
+		_ = source.Close()
+		_ = destination.Close()
+
+		source, err = os.Open(src)
+		if err != nil {
+			return "", err
+		}
+
 		srcStat, err := source.Stat()
 		if err != nil {
 			return "", err
@@ -45,9 +62,8 @@ func Copy(src, dst string) (string, error) {
 		sumBytes := sha256.Sum256(sourceContent)
 		sum := fmt.Sprintf("%x", sumBytes)
 
-		_, err = io.Copy(destination, source)
 		_ = source.Close()
-		_ = destination.Close()
+
 		return sum, err
 
 	}

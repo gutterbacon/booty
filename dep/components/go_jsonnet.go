@@ -60,8 +60,8 @@ func (g *GoJsonnet) Install() error {
 		}
 	}
 	filesMap := map[string][]interface{}{
-		filepath.Join(dlPath, g.Name()):       {filepath.Join(binDir, g.Name()), 0755},
-		filepath.Join(dlPath, g.Name()+"fmt"): {filepath.Join(binDir, g.Name()+"fmt"), 0755},
+		filepath.Join(dlPath, g.Name()): {filepath.Join(binDir, g.Name()), 0755},
+		//filepath.Join(dlPath, g.Name()+"fmt"): {filepath.Join(binDir, g.Name()+"fmt"), 0755},
 	}
 
 	ip, err := commonInstall(g, filesMap)
