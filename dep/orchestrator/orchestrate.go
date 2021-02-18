@@ -23,7 +23,7 @@ import (
 )
 
 const (
-	gracefulPeriod = 10 * time.Second
+	gracefulPeriod = 5 * time.Second
 )
 
 // Orchestrator implements Executor, Agent, and Commander
@@ -42,7 +42,7 @@ func NewOrchestrator(app string) *Orchestrator {
 		Use: app,
 	}
 	// setup logger
-	logger := zaplog.NewZapLogger(zaplog.WARN, app, true)
+	logger := zaplog.NewZapLogger(zaplog.INFO, app, true)
 	logger.InitLogger(nil)
 	// config, loads default config if it doesn't exists
 	etc := osutil.GetEtcDir()
@@ -94,6 +94,7 @@ func (o *Orchestrator) Command() *cobra.Command {
 		cmd.UninstallAllCommand(o),
 		cmd.UninstallCommand(o),
 		cmd.AgentCommand(o),
+		cmd.RunAllCommand(o),
 	}
 	if o.cfg.DevMode {
 		extraCmds = append(
@@ -101,6 +102,7 @@ func (o *Orchestrator) Command() *cobra.Command {
 			cmd.ProtoCommand(o),
 			cmd.ReleaseCommand(o),
 			cmd.JbCommand(o),
+			cmd.JsonnetCommand(o),
 		)
 	}
 	o.command.AddCommand(extraCmds...)
@@ -133,10 +135,34 @@ func (o *Orchestrator) AllComponents() []dep.Component {
 
 func (o *Orchestrator) DownloadAll() error {
 	o.logger.Info("downloading all components")
+	if err := o.setupVersions(); err != nil {
+		return err
+	}
 	var tasks []*task
 	for _, c := range o.components {
 		k := c
 		tasks = append(tasks, newTask(k.Download, dlErr(k)))
+	}
+	pool := newTaskPool(tasks)
+	pool.runAll()
+	for _, t := range pool.tasks {
+		if t.err != nil {
+			return t.errFunc(t.err)
+		}
+	}
+	return nil
+}
+
+func (o *Orchestrator) setupVersions() error {
+	var tasks []*task
+	for _, c := range o.components {
+		k := c
+		if k.Dependencies() != nil {
+			for _, d := range k.Dependencies() {
+				tasks = append(tasks, newTask(setVersion(o.cfg, d), dlErr(d)))
+			}
+		}
+		tasks = append(tasks, newTask(setVersion(o.cfg, k), dlErr(k)))
 	}
 	pool := newTaskPool(tasks)
 	pool.runAll()
@@ -178,7 +204,7 @@ func (o *Orchestrator) InstallAll() error {
 	o.logger.Info("installing all components")
 	for _, c := range o.components {
 		k := c
-		o.logger.Info("installing %s, version: %s", k.Name(), k.Version())
+		o.logger.Infof("installing %s, version: %s", k.Name(), k.Version())
 		if err := k.Install(); err != nil {
 			return errutil.New(errutil.ErrInstallComponent, fmt.Errorf("name: %s, version: %s, err: %v", k.Name(), k.Version(), err))
 		}
@@ -192,6 +218,7 @@ func (o *Orchestrator) Uninstall(name string) error {
 	for _, c := range o.components {
 		k := c
 		if k.Name() == name {
+			o.logger.Infof("uninstalling %s, version: %s", k.Name(), k.Version())
 			if err = k.Uninstall(); err != nil {
 				return errutil.New(errutil.ErrUninstallComponent, fmt.Errorf("name: %s, version: %s, err: %v", k.Name(), k.Version(), err))
 			}
@@ -204,6 +231,7 @@ func (o *Orchestrator) UninstallAll() error {
 	o.logger.Info("uninstall all components")
 	for _, c := range o.components {
 		if err := c.Uninstall(); err != nil {
+			o.logger.Infof("uninstalling %s, version: %s", c.Name(), c.Version())
 			return errutil.New(errutil.ErrUninstallComponent, fmt.Errorf("name: %s, version: %s, err: %v", c.Name(), c.Version(), err))
 		}
 	}
@@ -226,9 +254,9 @@ func (o *Orchestrator) AllInstalledComponents() []dep.Component {
 }
 
 func (o *Orchestrator) RunAll() error {
-	for _, o := range o.components {
-		if o.IsService() {
-			if err := o.Run(); err != nil {
+	for _, c := range o.components {
+		if c.IsService() {
+			if err := c.Run(); err != nil {
 				return err
 			}
 		}
@@ -241,10 +269,9 @@ func (o *Orchestrator) RunAll() error {
 // ================================================================
 
 func (o *Orchestrator) Serve() int {
-	// TODO run as agent in a separate database to check for updates
-	// or to collect metrics for that matter
 	var err error
-	dur := 60 * time.Second
+	// checks twice in one day
+	dur := 12 * time.Hour
 	// create new checker instance
 	repos := map[update.RepositoryURL]update.Version{}
 	for _, c := range o.components {
@@ -273,15 +300,29 @@ func (o *Orchestrator) Serve() int {
 	for {
 		select {
 		case <-ticker.C:
-			o.logger.Infof("checking all components update")
+			o.logger.Info("checking all components update")
 			if err = checker.CheckNewReleases(); err != nil {
 				o.logger.Error(err)
 			}
 		case s := <-sigCh:
 			o.logger.Warningf("getting signal: %s, terminating gracefully", s.String())
 			// TODO do a proper shutdown instead of sleep like this
-			time.Sleep(gracefulPeriod)
 			return 0
 		}
+	}
+}
+
+func setVersion(ac *config.AppConfig, c dep.Component) func() error {
+	var err error
+	return func() error {
+		v := ac.GetVersion(c.Name())
+		if v == "" {
+			v, err = update.GetLatestVersion(c.RepoUrl())
+			if err != nil {
+				return err
+			}
+		}
+		c.SetVersion(update.Version(v))
+		return nil
 	}
 }

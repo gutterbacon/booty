@@ -15,3 +15,13 @@ func JbCommand(e dep.Executor) *cobra.Command {
 	}
 	return runCmd
 }
+
+func JsonnetCommand(e dep.Executor) *cobra.Command {
+	runCmd := &cobra.Command{Use: "jsonnet", DisableFlagParsing: true}
+	runCmd.DisableFlagParsing = true
+	runCmd.Flags().SetInterspersed(true)
+	runCmd.RunE = func(cmd *cobra.Command, args []string) error {
+		return e.Run("jsonnet", args...)
+	}
+	return runCmd
+}

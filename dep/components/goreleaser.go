@@ -10,8 +10,6 @@ import (
 
 	"go.amplifyedge.org/booty-v2/dep"
 	"go.amplifyedge.org/booty-v2/internal/downloader"
-	"go.amplifyedge.org/booty-v2/internal/fileutil"
-
 	// "path/filepath"
 
 	"go.amplifyedge.org/booty-v2/internal/osutil"
@@ -84,24 +82,12 @@ func (g *Goreleaser) Install() error {
 	filesMap := map[string][]interface{}{
 		filepath.Join(dlPath, executableName): {filepath.Join(binDir, executableName), 0755},
 	}
-	ip := store.InstalledPackage{
-		Name:     g.Name(),
-		Version:  g.version.String(),
-		FilesMap: map[string]int{},
-	}
 	// copy file to the global bin directory
-	for k, v := range filesMap {
-		if err = fileutil.Copy(k, v[0].(string)); err != nil {
-			return err
-		}
-		installedName := v[0].(string)
-		installedMode := v[1].(int)
-		if err = os.Chmod(installedName, os.FileMode(installedMode)); err != nil {
-			return err
-		}
-		ip.FilesMap[installedName] = installedMode
+	ip, err := commonInstall(g, filesMap)
+	if err != nil {
+		return err
 	}
-	if err = g.db.New(&ip); err != nil {
+	if err = g.db.New(ip); err != nil {
 		return err
 	}
 	return os.RemoveAll(dlPath)

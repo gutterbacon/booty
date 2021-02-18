@@ -5,7 +5,6 @@ import (
 	"go.amplifyedge.org/booty-v2/dep"
 	"go.amplifyedge.org/booty-v2/dep/components"
 	"go.amplifyedge.org/booty-v2/internal/store"
-	"go.amplifyedge.org/booty-v2/internal/update"
 )
 
 type Registry struct {
@@ -41,16 +40,6 @@ func NewRegistry(db store.Storer, ac *config.AppConfig) (*Registry, error) {
 	devComponents := map[string]dep.Component{} // dev components
 	regComponents := map[string]dep.Component{} // regular components
 	for _, c := range comps {
-		if c.Dependencies() != nil {
-			for _, d := range c.Dependencies() {
-				if err = setVersion(ac, d); err != nil {
-					return nil, err
-				}
-			}
-		}
-		if err = setVersion(ac, c); err != nil {
-			return nil, err
-		}
 		if !c.IsDev() {
 			regComponents[c.Name()] = c
 		}
@@ -60,17 +49,4 @@ func NewRegistry(db store.Storer, ac *config.AppConfig) (*Registry, error) {
 		DevComponents: devComponents,
 		Components:    regComponents,
 	}, err
-}
-
-func setVersion(ac *config.AppConfig, c dep.Component) error {
-	var err error
-	v := ac.GetVersion(c.Name())
-	if v == "" {
-		v, err = update.GetLatestVersion(c.RepoUrl())
-		if err != nil {
-			return err
-		}
-	}
-	c.SetVersion(update.Version(v))
-	return nil
 }

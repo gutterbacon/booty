@@ -12,7 +12,6 @@ import (
 
 	"go.amplifyedge.org/booty-v2/dep"
 	"go.amplifyedge.org/booty-v2/internal/downloader"
-	"go.amplifyedge.org/booty-v2/internal/fileutil"
 	"go.amplifyedge.org/booty-v2/internal/osutil"
 	"go.amplifyedge.org/booty-v2/internal/service"
 )
@@ -134,25 +133,11 @@ func (v *VicMet) Install() error {
 	if err = os.MkdirAll(vmConfigPath, 0755); err != nil {
 		return err
 	}
-	ip := store.InstalledPackage{
-		Name:    v.Name(),
-		Version: v.version.String(),
-		FilesMap: map[string]int{
-			filepath.Join(osutil.GetDataDir(), v.Name(), "storage"): 0755,
-		},
+	ip, err := commonInstall(v, filesMap)
+	if err != nil {
+		return err
 	}
-	// copy file to the bin directory
-	for k, v := range filesMap {
-		if err = fileutil.Copy(k, v[0].(string)); err != nil {
-			return err
-		}
-		installedName := v[0].(string)
-		installedMode := v[1].(int)
-		if err = os.Chmod(installedName, os.FileMode(installedMode)); err != nil {
-			return err
-		}
-		ip.FilesMap[installedName] = installedMode
-	}
+
 	// install default config
 	if exists := osutil.Exists(vmConfigPath); !exists {
 		promData, err := prometheusCfgSample.ReadFile("files/prometheus.yml")
@@ -172,7 +157,7 @@ func (v *VicMet) Install() error {
 	for _, s := range v.svcs {
 		_ = s.Install()
 	}
-	if err = v.db.New(&ip); err != nil {
+	if err = v.db.New(ip); err != nil {
 		return err
 	}
 	return os.RemoveAll(dlPath)
@@ -196,6 +181,11 @@ func (v *VicMet) Uninstall() error {
 		if err = os.RemoveAll(file); err != nil {
 			return err
 		}
+	}
+	vmStoragePath := filepath.Join(osutil.GetDataDir(), v.Name(), "storage")
+	vmConfigPath := filepath.Join(osutil.GetEtcDir(), v.Name(), "prometheus.yml")
+	if v.svcs == nil {
+		v.svcs, _ = v.service(vmConfigPath, vmStoragePath)
 	}
 	for _, s := range v.svcs {
 		if err = s.Uninstall(); err != nil {

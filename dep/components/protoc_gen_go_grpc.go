@@ -3,7 +3,6 @@ package components
 import (
 	"go.amplifyedge.org/booty-v2/dep"
 	"go.amplifyedge.org/booty-v2/internal/downloader"
-	"go.amplifyedge.org/booty-v2/internal/fileutil"
 	"go.amplifyedge.org/booty-v2/internal/osutil"
 	"go.amplifyedge.org/booty-v2/internal/store"
 	"go.amplifyedge.org/booty-v2/internal/update"
@@ -71,25 +70,13 @@ func (p *ProtocGenGoGrpc) Install() error {
 		filepath.Join(dlPath, executableName): {filepath.Join(goBinDir, executableName), 0755},
 	}
 
-	ip := store.InstalledPackage{
-		Name:     p.Name(),
-		Version:  p.version.String(),
-		FilesMap: map[string]int{},
+	ip, err := commonInstall(p, filesMap)
+	if err != nil {
+		return err
 	}
 
-	// copy file to the bin directory
-	for k, v := range filesMap {
-		if err = fileutil.Copy(k, v[0].(string)); err != nil {
-			return err
-		}
-		installedName := v[0].(string)
-		installedMode := v[1].(int)
-		if err = os.Chmod(installedName, os.FileMode(installedMode)); err != nil {
-			return err
-		}
-		ip.FilesMap[installedName] = installedMode
-	}
-	if err = p.db.New(&ip); err != nil {
+
+	if err = p.db.New(ip); err != nil {
 		return err
 	}
 	return os.RemoveAll(dlPath)

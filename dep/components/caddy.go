@@ -9,10 +9,8 @@ import (
 	"os"
 	"path/filepath"
 
-	"go.amplifyedge.org/booty-v2/dep"
-	"go.amplifyedge.org/booty-v2/internal/fileutil"
-
 	ks "github.com/kardianos/service"
+	"go.amplifyedge.org/booty-v2/dep"
 
 	"go.amplifyedge.org/booty-v2/internal/downloader"
 	"go.amplifyedge.org/booty-v2/internal/osutil"
@@ -40,7 +38,7 @@ func (c *Caddy) IsService() bool {
 
 func NewCaddy(db store.Storer) *Caddy {
 	return &Caddy{
-		db:      db,
+		db: db,
 	}
 }
 
@@ -109,25 +107,15 @@ func (c *Caddy) Install() error {
 	filesMap := map[string][]interface{}{
 		filepath.Join(dlPath, executableName): {filepath.Join(binDir, executableName), 0755},
 	}
-	ip := store.InstalledPackage{
-		Name:     c.Name(),
-		Version:  c.version.String(),
-		FilesMap: map[string]int{},
-	}
+
 	// copy file to the global bin directory
 	caddyConfigPath := filepath.Join(osutil.GetEtcDir(), "caddy", "Caddyfile")
 	_ = os.MkdirAll(filepath.Dir(caddyConfigPath), 0755)
-	for k, v := range filesMap {
-		if err = fileutil.Copy(k, v[0].(string)); err != nil {
-			return err
-		}
-		installedName := v[0].(string)
-		installedMode := v[1].(int)
-		if err = os.Chmod(installedName, os.FileMode(installedMode)); err != nil {
-			return err
-		}
-		ip.FilesMap[installedName] = installedMode
+	ip, err := commonInstall(c, filesMap)
+	if err != nil {
+		return err
 	}
+
 	// install default config, only if the config doesn't exists
 	// TODO: prompt user?
 	if exists := osutil.Exists(caddyConfigPath); !exists {
@@ -146,7 +134,7 @@ func (c *Caddy) Install() error {
 	}
 	c.svc = s
 	_ = c.svc.Install()
-	if err = c.db.New(&ip); err != nil {
+	if err = c.db.New(ip); err != nil {
 		return err
 	}
 	return os.RemoveAll(dlPath)
@@ -173,6 +161,10 @@ func (c *Caddy) Uninstall() error {
 			return err
 		}
 	}
+	if c.svc == nil {
+		c.svc, _ = c.service()
+	}
+	_ = c.svc.Stop()
 	_ = c.svc.Uninstall()
 	// remove downloaded files
 	return os.RemoveAll(dlPath)

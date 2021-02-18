@@ -12,7 +12,6 @@ import (
 
 	"go.amplifyedge.org/booty-v2/dep"
 	"go.amplifyedge.org/booty-v2/internal/downloader"
-	"go.amplifyedge.org/booty-v2/internal/fileutil"
 	"go.amplifyedge.org/booty-v2/internal/osutil"
 )
 
@@ -113,23 +112,9 @@ func (g *Grafana) Install() error {
 		filepath.Join(dlPath, "scripts"):               {filepath.Join(grafanaEtcDir, "scripts"), 0755},
 	}
 
-	ip := store.InstalledPackage{
-		Name:     g.Name(),
-		Version:  g.version.String(),
-		FilesMap: map[string]int{},
-	}
-
-	// copy file to the bin directory
-	for k, v := range filesMap {
-		if err = fileutil.Copy(k, v[0].(string)); err != nil {
-			return err
-		}
-		installedName := v[0].(string)
-		installedMode := v[1].(int)
-		if err = os.Chmod(installedName, os.FileMode(installedMode)); err != nil {
-			return err
-		}
-		ip.FilesMap[installedName] = installedMode
+	ip, err := commonInstall(g, filesMap)
+	if err != nil {
+		return err
 	}
 
 	// install service
@@ -140,7 +125,7 @@ func (g *Grafana) Install() error {
 	g.svc = s
 	_ = g.svc.Install()
 	// store version, installed paths to db
-	if err = g.db.New(&ip); err != nil {
+	if err = g.db.New(ip); err != nil {
 		return err
 	}
 	return os.RemoveAll(dlPath)
@@ -166,6 +151,9 @@ func (g *Grafana) Uninstall() error {
 		}
 	}
 	// remove downloaded files
+	if g.svc == nil {
+		g.svc, _ = g.service()
+	}
 	_ = g.svc.Uninstall()
 	dlPath := getDlPath(g.Name(), g.version.String())
 	return os.RemoveAll(dlPath)

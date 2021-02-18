@@ -17,5 +17,6 @@ require (
 	github.com/thedevsaddam/gojsonq/v2 v2.5.2
 	github.com/timshannon/badgerhold/v2 v2.0.0-20201228162759-17050a01e34c
 	go.uber.org/zap v1.10.0
+	golang.org/x/mod v0.1.0
 	golang.org/x/sys v0.0.0-20210124154548-22da62e12c0c // indirect
 )

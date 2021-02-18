@@ -87,10 +87,6 @@ func testCaddy(t *testing.T) {
 	err = cdy.Install()
 	require.NoError(t, err)
 
-	// update
-	// err = cdy.Update("2.3.0")
-	// require.NoError(t, err)
-
 	// run
 	err = cdy.Run()
 	require.NoError(t, err)

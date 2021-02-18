@@ -212,7 +212,7 @@ func openFile(fpath string, write bool) (*os.File, error) {
 	mode := os.FileMode(0600)
 	var flag int
 	if write {
-		flag = os.O_CREATE | os.O_WRONLY | os.O_TRUNC
+		flag = os.O_CREATE | os.O_WRONLY
 	} else {
 		flag = os.O_CREATE | os.O_RDONLY
 	}

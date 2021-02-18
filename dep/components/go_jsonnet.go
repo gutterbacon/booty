@@ -3,7 +3,6 @@ package components
 import (
 	"go.amplifyedge.org/booty-v2/dep"
 	"go.amplifyedge.org/booty-v2/internal/downloader"
-	"go.amplifyedge.org/booty-v2/internal/fileutil"
 	"go.amplifyedge.org/booty-v2/internal/osutil"
 	"go.amplifyedge.org/booty-v2/internal/store"
 	"go.amplifyedge.org/booty-v2/internal/update"
@@ -64,24 +63,13 @@ func (g *GoJsonnet) Install() error {
 		filepath.Join(dlPath, g.Name()):       {filepath.Join(binDir, g.Name()), 0755},
 		filepath.Join(dlPath, g.Name()+"fmt"): {filepath.Join(binDir, g.Name()+"fmt"), 0755},
 	}
-	ip := store.InstalledPackage{
-		Name:     g.Name(),
-		Version:  g.version.String(),
-		FilesMap: map[string]int{},
+
+	ip, err := commonInstall(g, filesMap)
+	if err != nil {
+		return err
 	}
-	// copy file to the bin directory
-	for k, v := range filesMap {
-		if err = fileutil.Copy(k, v[0].(string)); err != nil {
-			return err
-		}
-		installedName := v[0].(string)
-		installedMode := v[1].(int)
-		if err = os.Chmod(installedName, os.FileMode(installedMode)); err != nil {
-			return err
-		}
-		ip.FilesMap[installedName] = installedMode
-	}
-	if err = g.db.New(&ip); err != nil {
+
+	if err = g.db.New(ip); err != nil {
 		return err
 	}
 	return nil
