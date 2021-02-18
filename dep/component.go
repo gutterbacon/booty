@@ -15,7 +15,7 @@ type Executor interface {
 	AllInstalledComponents() []Component // list all installed components
 	DownloadAll() error                  // fetch all components
 	Run(name string, args ...string) error
-	RunAll() error                     // run all service components
+	RunAll() error                      // run all service components
 	Install(name, version string) error // installs a single component by its name
 	InstallAll() error                  // install all components
 	Uninstall(name string) error        // uninstalls a component
@@ -26,7 +26,7 @@ type Executor interface {
 
 // Agent is responsible for
 type Agent interface {
-	Serve() error // do work as agent (view updates, collect metrics if any etc)
+	Serve() int // do work as agent (view updates, collect metrics if any etc), returns status code of the operation
 }
 
 // Commander has to be able to output a cobra.Command and logging.Logger

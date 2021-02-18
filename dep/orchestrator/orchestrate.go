@@ -6,9 +6,13 @@ import (
 	registry2 "go.amplifyedge.org/booty-v2/dep/registry"
 	"go.amplifyedge.org/booty-v2/internal/errutil"
 	"go.amplifyedge.org/booty-v2/internal/store/file"
+	"go.amplifyedge.org/booty-v2/internal/update"
 	"io/ioutil"
 	"os"
+	"os/signal"
 	"path/filepath"
+	"syscall"
+	"time"
 
 	"go.amplifyedge.org/booty-v2/cmd"
 	"go.amplifyedge.org/booty-v2/config"
@@ -16,6 +20,10 @@ import (
 	"go.amplifyedge.org/booty-v2/internal/logging"
 	"go.amplifyedge.org/booty-v2/internal/logging/zaplog"
 	"go.amplifyedge.org/booty-v2/internal/osutil"
+)
+
+const (
+	gracefulPeriod = 10 * time.Second
 )
 
 // Orchestrator implements Executor, Agent, and Commander
@@ -85,13 +93,14 @@ func (o *Orchestrator) Command() *cobra.Command {
 		cmd.InstallCommand(o),
 		cmd.UninstallAllCommand(o),
 		cmd.UninstallCommand(o),
-		cmd.JbCommand(o),
+		cmd.AgentCommand(o),
 	}
 	if o.cfg.DevMode {
 		extraCmds = append(
 			extraCmds,
 			cmd.ProtoCommand(o),
 			cmd.ReleaseCommand(o),
+			cmd.JbCommand(o),
 		)
 	}
 	o.command.AddCommand(extraCmds...)
@@ -231,15 +240,48 @@ func (o *Orchestrator) RunAll() error {
 // Agent
 // ================================================================
 
-func (o *Orchestrator) Serve() error {
+func (o *Orchestrator) Serve() int {
 	// TODO run as agent in a separate database to check for updates
 	// or to collect metrics for that matter
 	var err error
-	agentDbDir := filepath.Join(osutil.GetDataDir(), "agent-store")
-	err = os.MkdirAll(agentDbDir, 0755)
-	if err != nil {
-		return err
+	dur := 60 * time.Second
+	// create new checker instance
+	repos := map[update.RepositoryURL]update.Version{}
+	for _, c := range o.components {
+		repos[c.RepoUrl()] = c.Version()
 	}
-	//agentDb := store.NewDB(o.logger, agentDbDir)
-	return nil
+	checker := update.NewChecker(o.logger, repos, func(r update.RepositoryURL, v update.Version) error {
+		// find component matching the repo url
+		for _, c := range o.components {
+			if c.RepoUrl() == r && v != c.Version() {
+				if c.IsService() {
+					if err = c.RunStop(); err != nil {
+						return errutil.New(errutil.ErrUpdateComponent, fmt.Errorf("stopping component service error, %s version %s error: %v", c.Name(), c.Version(), err))
+					}
+				}
+				if err = c.Update(v); err != nil {
+					return errutil.New(errutil.ErrUpdateComponent, fmt.Errorf("%s version %s error: %v", c.Name(), c.Version(), err))
+				}
+			}
+		}
+		return nil
+	})
+	sigCh := make(chan os.Signal, 1)
+	signal.Notify(sigCh, syscall.SIGINT, syscall.SIGTERM)
+
+	ticker := time.NewTicker(dur)
+	for {
+		select {
+		case <-ticker.C:
+			o.logger.Infof("checking all components update")
+			if err = checker.CheckNewReleases(); err != nil {
+				o.logger.Error(err)
+			}
+		case s := <-sigCh:
+			o.logger.Warningf("getting signal: %s, terminating gracefully", s.String())
+			// TODO do a proper shutdown instead of sleep like this
+			time.Sleep(gracefulPeriod)
+			return 0
+		}
+	}
 }

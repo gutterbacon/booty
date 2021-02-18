@@ -17,6 +17,7 @@ const (
 	ErrDownloadComponent
 	ErrInstallComponent
 	ErrUninstallComponent
+	ErrUpdateComponent
 )
 
 // Error contains error reason and the actual error if any
@@ -55,6 +56,8 @@ func (err Error) description() string {
 		return "Failed to create new file db"
 	case ErrEmptyFile:
 		return "Empty file"
+	case ErrUpdateComponent:
+		return "Failed to update component"
 	}
 
 	return "Unknown error"
