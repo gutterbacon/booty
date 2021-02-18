@@ -4,7 +4,7 @@ import (
 	"fmt"
 	ks "github.com/kardianos/service"
 	"go.amplifyedge.org/booty-v2/internal/service"
-	"go.amplifyedge.org/booty-v2/internal/store/badger"
+	"go.amplifyedge.org/booty-v2/internal/store"
 	"go.amplifyedge.org/booty-v2/internal/update"
 	"os"
 	"path/filepath"

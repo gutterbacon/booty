@@ -2,7 +2,7 @@ package components
 
 import (
 	"fmt"
-	"go.amplifyedge.org/booty-v2/internal/store/badger"
+	"go.amplifyedge.org/booty-v2/internal/store"
 	"go.amplifyedge.org/booty-v2/internal/update"
 	"os"
 	"path/filepath"
