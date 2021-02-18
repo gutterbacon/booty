@@ -1,34 +1,70 @@
 package fileutil
 
 import (
+	"crypto/sha256"
+	"errors"
+	"fmt"
 	"io"
 	"os"
 	"strings"
 
 	"github.com/otiai10/copy"
+	"golang.org/x/mod/sumdb/dirhash"
 )
 
-func Copy(src, dst string) error {
+// Copy copies a file or directory from source to destination
+// returning directory hash or file hash
+func Copy(src, dst string) (string, error) {
 	sourceFileStat, err := os.Stat(src)
 	if err != nil {
-		return err
+		return "", err
 	}
 
 	if sourceFileStat.Mode().IsRegular() {
-		source, err := os.Open(src)
+		var source *os.File
+		source, err = os.Open(src)
 		if err != nil {
-			return err
+			return "", err
 		}
 
 		destination, err := os.Create(dst)
 		if err != nil {
-			return err
+			return "", err
 		}
 
-		_, err = io.Copy(destination, source)
+		wlen, err := io.Copy(destination, source)
+		if err != nil {
+			return "", err
+		}
+		if wlen == 0 {
+			return "", errors.New("not copying")
+		}
+
 		_ = source.Close()
 		_ = destination.Close()
-		return err
+
+		source, err = os.Open(src)
+		if err != nil {
+			return "", err
+		}
+
+		srcStat, err := source.Stat()
+		if err != nil {
+			return "", err
+		}
+
+		sourceContent := make([]byte, srcStat.Size())
+		_, err = source.Read(sourceContent)
+		if err != nil {
+			return "", err
+		}
+
+		sumBytes := sha256.Sum256(sourceContent)
+		sum := fmt.Sprintf("%x", sumBytes)
+
+		_ = source.Close()
+
+		return sum, err
 
 	}
 
@@ -41,5 +77,9 @@ func Copy(src, dst string) error {
 		},
 	}
 
-	return copy.Copy(src, dst, opt)
+	if err = copy.Copy(src, dst, opt); err != nil {
+		return "", err
+	}
+
+	return dirhash.HashDir(src, "", dirhash.Hash1)
 }

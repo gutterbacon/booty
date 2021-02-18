@@ -2,6 +2,8 @@ package components
 
 import (
 	"fmt"
+	"go.amplifyedge.org/booty-v2/internal/store"
+	"go.amplifyedge.org/booty-v2/internal/update"
 	"os"
 	"path/filepath"
 	"strings"
@@ -10,25 +12,27 @@ import (
 	"go.amplifyedge.org/booty-v2/dep"
 
 	"go.amplifyedge.org/booty-v2/internal/downloader"
-	"go.amplifyedge.org/booty-v2/internal/fileutil"
 	"go.amplifyedge.org/booty-v2/internal/osutil"
-	"go.amplifyedge.org/booty-v2/internal/store"
 )
 
 const (
 	// version -- version -- os-arch except windows
-	protocUrlFormat = "https://github.com/protocolbuffers/protobuf/releases/download/v%s/protoc-%s-%s.zip"
+	protocRepo      = "https://github.com/protocolbuffers/protobuf"
+	protocUrlFormat = protocRepo + "/releases/download/v%s/protoc-%s-%s.zip"
 )
 
 type Protoc struct {
-	version      string
-	db           *store.DB
+	version      update.Version
+	db           store.Storer
 	dependencies []dep.Component
 }
 
-func NewProtoc(db *store.DB, version string, deps []dep.Component) *Protoc {
+func (p *Protoc) IsService() bool {
+	return false
+}
+
+func NewProtoc(db store.Storer, deps []dep.Component) *Protoc {
 	return &Protoc{
-		version:      version,
 		db:           db,
 		dependencies: deps,
 	}
@@ -38,8 +42,12 @@ func (p *Protoc) Name() string {
 	return "protoc"
 }
 
-func (p *Protoc) Version() string {
+func (p *Protoc) Version() update.Version {
 	return p.version
+}
+
+func (p *Protoc) SetVersion(v update.Version) {
+	p.version = v
 }
 
 func (p *Protoc) Download() error {
@@ -73,7 +81,7 @@ func (p *Protoc) Download() error {
 		osName = "win64"
 	}
 	fetchUrl := fmt.Sprintf(protocUrlFormat, p.version, p.version, osName)
-	targetDir := getDlPath("protobuf", p.version)
+	targetDir := getDlPath("protobuf", p.version.String())
 	err := downloader.Download(fetchUrl, targetDir)
 	if err != nil {
 		return err
@@ -100,37 +108,25 @@ func (p *Protoc) Install() error {
 	}
 
 	// all files that are going to be installed
-	dlPath := getDlPath("protobuf", p.version)
+	dlPath := getDlPath("protobuf", p.version.String())
 	filesMap := map[string][]interface{}{
 		filepath.Join(dlPath, "bin", executableName): {filepath.Join(binDir, executableName), 0755},
 		filepath.Join(dlPath, "include", "google"):   {filepath.Join(includeDir, "google"), 0755},
 	}
 
-	ip := store.InstalledPackage{
-		Name:     p.Name(),
-		Version:  p.version,
-		FilesMap: map[string]int{},
+	// copy file to the bin directory
+	ip, err := commonInstall(p, filesMap)
+	if err != nil {
+		return err
 	}
 
-	// copy file to the bin directory
-	for k, v := range filesMap {
-		if err = fileutil.Copy(k, v[0].(string)); err != nil {
-			return err
-		}
-		installedName := v[0].(string)
-		installedMode := v[1].(int)
-		if err = os.Chmod(installedName, os.FileMode(installedMode)); err != nil {
-			return err
-		}
-		ip.FilesMap[installedName] = installedMode
-	}
-	if err = p.db.New(&ip); err != nil {
+	if err = p.db.New(ip); err != nil {
 		return err
 	}
 	return os.RemoveAll(dlPath)
 }
 
-func (p *Protoc) Update(version string) error {
+func (p *Protoc) Update(version update.Version) error {
 	p.version = version
 	if err := p.Uninstall(); err != nil {
 		return err
@@ -206,4 +202,12 @@ func (p *Protoc) Backup() error {
 
 func (p *Protoc) Dependencies() []dep.Component {
 	return p.dependencies
+}
+
+func (p *Protoc) IsDev() bool {
+	return true
+}
+
+func (p *Protoc) RepoUrl() update.RepositoryURL {
+	return protocRepo
 }

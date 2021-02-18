@@ -2,30 +2,34 @@ package components
 
 import (
 	"fmt"
+	"go.amplifyedge.org/booty-v2/internal/store"
+	"go.amplifyedge.org/booty-v2/internal/update"
 	"os"
 	"path/filepath"
 
 	"go.amplifyedge.org/booty-v2/dep"
 	"go.amplifyedge.org/booty-v2/internal/downloader"
-	"go.amplifyedge.org/booty-v2/internal/fileutil"
 	"go.amplifyedge.org/booty-v2/internal/osutil"
-	"go.amplifyedge.org/booty-v2/internal/store"
 )
 
 const (
 	// version -- version -- os_arch -- ext
-	protoCobraUrlFormat = "https://github.com/amplify-edge/protoc-gen-cobra/releases/download/v%s/protoc-gen-cobra-%s-%s.%s"
+	protoCobraRepo      = "https://github.com/amplify-edge/protoc-gen-cobra"
+	protoCobraUrlFormat = protoCobraRepo + "/releases/download/v%s/protoc-gen-cobra-%s-%s.%s"
 )
 
 type ProtocGenCobra struct {
-	version string
-	db      *store.DB
+	version update.Version
+	db      store.Storer
 }
 
-func NewProtocGenCobra(db *store.DB, version string) *ProtocGenCobra {
+func (p *ProtocGenCobra) IsService() bool {
+	return false
+}
+
+func NewProtocGenCobra(db store.Storer) *ProtocGenCobra {
 	return &ProtocGenCobra{
-		version: version,
-		db:      db,
+		db: db,
 	}
 }
 
@@ -33,12 +37,16 @@ func (p *ProtocGenCobra) Name() string {
 	return "protoc-gen-cobra"
 }
 
-func (p *ProtocGenCobra) Version() string {
+func (p *ProtocGenCobra) Version() update.Version {
 	return p.version
 }
 
+func (p *ProtocGenCobra) SetVersion(v update.Version) {
+	p.version = v
+}
+
 func (p *ProtocGenCobra) Download() error {
-	target := getDlPath(p.Name(), p.version)
+	target := getDlPath(p.Name(), p.version.String())
 	var ext string
 	switch osutil.GetOS() {
 	case "linux", "darwin":
@@ -65,31 +73,16 @@ func (p *ProtocGenCobra) Install() error {
 		executableName += ".exe"
 	}
 	// all files that are going to be installed
-	dlPath := getDlPath(p.Name(), p.version)
+	dlPath := getDlPath(p.Name(), p.version.String())
 	filesMap := map[string][]interface{}{
 		filepath.Join(dlPath, executableName): {filepath.Join(goBinDir, executableName), 0755},
 	}
 
-	ip := store.InstalledPackage{
-		Name:    p.Name(),
-		Version: p.version,
-		FilesMap: map[string]int{
-			filepath.Join(goBinDir, executableName): 0755,
-		},
+	ip, err := commonInstall(p, filesMap)
+	if err != nil {
+		return err
 	}
-	// copy file to the bin directory
-	for k, v := range filesMap {
-		if err = fileutil.Copy(k, v[0].(string)); err != nil {
-			return err
-		}
-		installedName := v[0].(string)
-		installedMode := v[1].(int)
-		if err = os.Chmod(installedName, os.FileMode(installedMode)); err != nil {
-			return err
-		}
-		ip.FilesMap[installedName] = installedMode
-	}
-	if err = p.db.New(&ip); err != nil {
+	if err = p.db.New(ip); err != nil {
 		return err
 	}
 	return os.RemoveAll(dlPath)
@@ -118,7 +111,7 @@ func (p *ProtocGenCobra) Run(args ...string) error {
 	return nil
 }
 
-func (p *ProtocGenCobra) Update(version string) error {
+func (p *ProtocGenCobra) Update(version update.Version) error {
 	p.version = version
 	if err := p.Uninstall(); err != nil {
 		return err
@@ -139,4 +132,12 @@ func (p *ProtocGenCobra) Backup() error {
 
 func (p *ProtocGenCobra) Dependencies() []dep.Component {
 	return nil
+}
+
+func (p *ProtocGenCobra) IsDev() bool {
+	return true
+}
+
+func (p *ProtocGenCobra) RepoUrl() update.RepositoryURL {
+	return protoCobraRepo
 }

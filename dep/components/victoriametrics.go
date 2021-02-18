@@ -2,6 +2,8 @@ package components
 
 import (
 	"embed"
+	"go.amplifyedge.org/booty-v2/internal/store"
+	"go.amplifyedge.org/booty-v2/internal/update"
 	"io/ioutil"
 	"os"
 	"path/filepath"
@@ -10,13 +12,11 @@ import (
 
 	"go.amplifyedge.org/booty-v2/dep"
 	"go.amplifyedge.org/booty-v2/internal/downloader"
-	"go.amplifyedge.org/booty-v2/internal/fileutil"
 	"go.amplifyedge.org/booty-v2/internal/osutil"
 	"go.amplifyedge.org/booty-v2/internal/service"
-	"go.amplifyedge.org/booty-v2/internal/store"
 )
 
-//go:emabed files/prometheus.yml
+//go:embed files/prometheus.yml
 var prometheusCfgSample embed.FS
 
 const (
@@ -24,16 +24,23 @@ const (
 )
 
 type VicMet struct {
-	version string
-	db      *store.DB
+	version update.Version
+	db      store.Storer
 	svcs    []*service.Svc
 }
 
-func NewVicMet(db *store.DB, version string) *VicMet {
+func (v *VicMet) IsService() bool {
+	return true
+}
+
+func NewVicMet(db store.Storer) *VicMet {
 	return &VicMet{
-		version: version,
-		db:      db,
+		db: db,
 	}
+}
+
+func (v *VicMet) SetVersion(ver update.Version) {
+	v.version = ver
 }
 
 func (v *VicMet) service(promCfgPath, vmStoragePath string) ([]*service.Svc, error) {
@@ -77,19 +84,20 @@ func (v *VicMet) Name() string {
 	return "victoria-metrics"
 }
 
-func (v *VicMet) Version() string {
+func (v *VicMet) Version() update.Version {
 	return v.version
 }
 
 func (v *VicMet) Download() error {
+	// victoriametrics doesn't support windows yet
 	if osutil.GetOS() == "windows" {
 		return nil
 	}
-	targetDir := getDlPath(v.Name(), v.version)
+	targetDir := getDlPath(v.Name(), v.version.String())
 	if osutil.DirExists(targetDir) {
-		return nil
+		return downloader.GitCheckout("v"+v.version.String(), targetDir)
 	}
-	return downloader.GitClone(vicmetUrlFmt, targetDir, "v"+v.version)
+	return downloader.GitClone(vicmetUrlFmt, targetDir, "v"+v.version.String())
 }
 
 func (v *VicMet) Dependencies() []dep.Component {
@@ -100,7 +108,7 @@ func (v *VicMet) Install() error {
 	if osutil.GetOS() == "windows" {
 		return nil
 	}
-	dlPath := getDlPath(v.Name(), v.version)
+	dlPath := getDlPath(v.Name(), v.version.String())
 	var err error
 	binDir := osutil.GetBinDir()
 	if err = os.Chdir(dlPath); err != nil {
@@ -108,9 +116,13 @@ func (v *VicMet) Install() error {
 	}
 	recipes := []string{"victoria-metrics", "vmagent", "vmalert", "vmauth", "vmbackup", "vmctl", "vminsert", "vmrestore", "vmselect", "vmstorage"}
 	// make pure local binaries
+	filesMap := map[string][]interface{}{}
 	for _, r := range recipes {
 		if err = osutil.Exec("make", "app-local-pure", "APP_NAME="+r); err != nil {
 			return err
+		}
+		filesMap[filepath.Join(dlPath, "bin", r+"-pure")] = []interface{}{
+			filepath.Join(binDir, r), 0755,
 		}
 	}
 	vmStoragePath := filepath.Join(osutil.GetDataDir(), v.Name(), "storage")
@@ -121,37 +133,11 @@ func (v *VicMet) Install() error {
 	if err = os.MkdirAll(vmConfigPath, 0755); err != nil {
 		return err
 	}
-	ip := store.InstalledPackage{
-		Name:    v.Name(),
-		Version: v.version,
-		FilesMap: map[string]int{
-			filepath.Join(osutil.GetDataDir(), v.Name(), "storage"): 0755,
-		},
+	ip, err := commonInstall(v, filesMap)
+	if err != nil {
+		return err
 	}
-	filesMap := map[string][]interface{}{
-		filepath.Join(dlPath, "bin", v.Name()+"-pure"): {filepath.Join(binDir, v.Name()), 0755},
-		filepath.Join(dlPath, "bin", "vmagent-pure"):   {filepath.Join(binDir, "vmagent"), 0755},
-		filepath.Join(dlPath, "bin", "vmalert-pure"):   {filepath.Join(binDir, "vmalert"), 0755},
-		filepath.Join(dlPath, "bin", "vmauth-pure"):    {filepath.Join(binDir, "vmauth"), 0755},
-		filepath.Join(dlPath, "bin", "vmbackup-pure"):  {filepath.Join(binDir, "vmbackup"), 0755},
-		filepath.Join(dlPath, "bin", "vmctl-pure"):     {filepath.Join(binDir, "vmctl"), 0755},
-		filepath.Join(dlPath, "bin", "vminsert-pure"):  {filepath.Join(binDir, "vminsert"), 0755},
-		filepath.Join(dlPath, "bin", "vmrestore-pure"): {filepath.Join(binDir, "vmrestore"), 0755},
-		filepath.Join(dlPath, "bin", "vmselect-pure"):  {filepath.Join(binDir, "vmselect"), 0755},
-		filepath.Join(dlPath, "bin", "vmstorage-pure"): {filepath.Join(binDir, "vmstorage"), 0755},
-	}
-	// copy file to the bin directory
-	for k, v := range filesMap {
-		if err = fileutil.Copy(k, v[0].(string)); err != nil {
-			return err
-		}
-		installedName := v[0].(string)
-		installedMode := v[1].(int)
-		if err = os.Chmod(installedName, os.FileMode(installedMode)); err != nil {
-			return err
-		}
-		ip.FilesMap[installedName] = installedMode
-	}
+
 	// install default config
 	if exists := osutil.Exists(vmConfigPath); !exists {
 		promData, err := prometheusCfgSample.ReadFile("files/prometheus.yml")
@@ -169,11 +155,9 @@ func (v *VicMet) Install() error {
 	}
 	v.svcs = svcs
 	for _, s := range v.svcs {
-		if err = s.Install(); err != nil {
-			return err
-		}
+		_ = s.Install()
 	}
-	if err = v.db.New(&ip); err != nil {
+	if err = v.db.New(ip); err != nil {
 		return err
 	}
 	return os.RemoveAll(dlPath)
@@ -197,6 +181,11 @@ func (v *VicMet) Uninstall() error {
 		if err = os.RemoveAll(file); err != nil {
 			return err
 		}
+	}
+	vmStoragePath := filepath.Join(osutil.GetDataDir(), v.Name(), "storage")
+	vmConfigPath := filepath.Join(osutil.GetEtcDir(), v.Name(), "prometheus.yml")
+	if v.svcs == nil {
+		v.svcs, _ = v.service(vmConfigPath, vmStoragePath)
 	}
 	for _, s := range v.svcs {
 		if err = s.Uninstall(); err != nil {
@@ -227,7 +216,7 @@ func (v *VicMet) Run(args ...string) error {
 	return nil
 }
 
-func (v *VicMet) Update(version string) error {
+func (v *VicMet) Update(version update.Version) error {
 	if osutil.GetOS() == "windows" {
 		return nil
 	}
@@ -265,4 +254,12 @@ func (v *VicMet) RunStop() error {
 func (v *VicMet) Backup() error {
 	// TODO
 	return nil
+}
+
+func (v *VicMet) IsDev() bool {
+	return true
+}
+
+func (v *VicMet) RepoUrl() update.RepositoryURL {
+	return vicmetUrlFmt
 }

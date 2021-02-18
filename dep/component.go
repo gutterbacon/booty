@@ -2,16 +2,37 @@
 // specified environment (i.e. dev or user)
 package dep
 
-// Agent is responsible for
-type Agent interface {
-	Components() []Component // get all components for an env (dev or user for example)
-	DownloadAll() error      // fetch all components
+import (
+	"github.com/spf13/cobra"
+	"go.amplifyedge.org/booty-v2/internal/logging"
+	"go.amplifyedge.org/booty-v2/internal/update"
+)
+
+// Executor is responsible for
+type Executor interface {
+	Component(name string) Component
+	AllComponents() []Component          // get all components for an env (dev or user for example)
+	AllInstalledComponents() []Component // list all installed components
+	DownloadAll() error                  // fetch all components
 	Run(name string, args ...string) error
-	Install(name, version string) error // install single component by its name
+	RunAll() error                      // run all service components
+	Install(name, version string) error // installs a single component by its name
 	InstallAll() error                  // install all components
+	Uninstall(name string) error        // uninstalls a component
+	UninstallAll() error                // uninstall all components
 	Backup(name string) error           // backup single component by its name
 	BackupAll() error                   // backup all components
-	Serve() error                       // run as server
+}
+
+// Agent is responsible for
+type Agent interface {
+	Serve() int // do work as agent (view updates, collect metrics if any etc), returns status code of the operation
+}
+
+// Commander has to be able to output a cobra.Command and logging.Logger
+type Commander interface {
+	Logger() logging.Logger
+	Command() *cobra.Command
 }
 
 // Component is an interface
@@ -27,13 +48,17 @@ type Agent interface {
 // this way if you want to add another component you only have
 type Component interface {
 	Name() string
-	Version() string
+	Version() update.Version
+	SetVersion(update.Version)
 	Download() error // download to dir
 	Dependencies() []Component
 	Install() error
 	Uninstall() error
 	Run(args ...string) error
-	Update(version string) error
+	Update(version update.Version) error
 	RunStop() error
 	Backup() error
+	IsDev() bool
+	IsService() bool
+	RepoUrl() update.RepositoryURL
 }

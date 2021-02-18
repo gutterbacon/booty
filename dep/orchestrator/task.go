@@ -1,14 +1,17 @@
 package orchestrator
 
-import "sync"
+import (
+	"sync"
+)
 
 type task struct {
 	err error
 	job func() error
+	errFunc func(err error) error
 }
 
-func newTask(job func() error) *task {
-	return &task{job: job}
+func newTask(job func() error, errFunc func(err error) error) *task {
+	return &task{job: job, errFunc: errFunc}
 }
 
 func (t *task) runTask(wg *sync.WaitGroup) {
@@ -30,7 +33,7 @@ func newTaskPool(tasks []*task) *taskPool {
 }
 
 func (tp *taskPool) runAll() {
-	for i := 0; i < len(tp.tasks); i++ {
+	for i := 0; i < 4; i++ {
 		go tp.do()
 	}
 	tp.wg.Add(len(tp.tasks))

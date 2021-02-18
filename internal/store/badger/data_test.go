@@ -1,15 +1,15 @@
-package store_test
+package badger_test
 
 import (
 	"github.com/stretchr/testify/require"
-	bhold "github.com/timshannon/badgerhold/v2"
 	"go.amplifyedge.org/booty-v2/internal/logging/zaplog"
 	"go.amplifyedge.org/booty-v2/internal/store"
+	"go.amplifyedge.org/booty-v2/internal/store/badger"
 	"testing"
 )
 
 var (
-	db  *store.DB
+	db  *badger.DB
 	ips = []*store.InstalledPackage{
 		{
 			Name:    "grafana",
@@ -31,7 +31,7 @@ var (
 func init() {
 	l := zaplog.NewZapLogger(zaplog.DEBUG, "store-test", true)
 	l.InitLogger(nil)
-	db = store.NewDB(l, "./testdata")
+	db = badger.NewDB(l, "./testdata")
 }
 
 func TestStore(t *testing.T) {
@@ -60,22 +60,15 @@ func testGet(t *testing.T) {
 
 func testList(t *testing.T) {
 	// test when query is nil
-	pkgs, err := db.List(nil)
+	pkgs, err := db.List()
 	require.NoError(t, err)
 	require.Equal(t, len(ips), len(pkgs))
-
-	// test when query is something
-	pkgs, err = db.List(bhold.Where("Name").Ne("grafana"))
-	require.NoError(t, err)
-	require.Equal(t, pkgs, []*store.InstalledPackage{
-		ips[1],
-	})
 }
 
 func testDelete(t *testing.T) {
-	err := db.Delete(nil, []string{"grafana", "bs-crypt"})
+	err := db.Delete("grafana")
 	require.NoError(t, err)
 
-	pkgs, _ := db.List(nil)
-	require.Equal(t, 0, len(pkgs))
+	pkgs, _ := db.List()
+	require.Equal(t, 1, len(pkgs))
 }

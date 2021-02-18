@@ -4,37 +4,45 @@ import (
 	"fmt"
 	ks "github.com/kardianos/service"
 	"go.amplifyedge.org/booty-v2/internal/service"
+	"go.amplifyedge.org/booty-v2/internal/store"
+	"go.amplifyedge.org/booty-v2/internal/update"
 	"os"
 	"path/filepath"
 	"strings"
 
 	"go.amplifyedge.org/booty-v2/dep"
-	"go.amplifyedge.org/booty-v2/internal/fileutil"
-	"go.amplifyedge.org/booty-v2/internal/osutil"
-	"go.amplifyedge.org/booty-v2/internal/store"
-
 	"go.amplifyedge.org/booty-v2/internal/downloader"
+	"go.amplifyedge.org/booty-v2/internal/osutil"
 )
 
 const (
 	// version -- os-arch
-	fetchUrlFormat = "https://dl.grafana.com/oss/release/grafana-%s.%s.%s"
+	grafanaBaseRepo = "https://github.com/grafana/grafana"
+	fetchUrlFormat  = "https://dl.grafana.com/oss/release/grafana-%s.%s.%s"
 )
 
 // Grafana implements Component interface
 type Grafana struct {
-	version string
-	db      *store.DB
+	version update.Version
+	db      store.Storer
 	svc     *service.Svc
 }
 
-func NewGrafana(db *store.DB, version string) *Grafana {
-	return &Grafana{version: version, db: db}
+func (g *Grafana) IsService() bool {
+	return true
+}
+
+func NewGrafana(db store.Storer) *Grafana {
+	return &Grafana{db: db}
 }
 
 // Gets grafana's version
-func (g *Grafana) Version() string {
-	return g.version
+func (g *Grafana) Version() update.Version {
+	return update.Version(g.version)
+}
+
+func (g *Grafana) SetVersion(v update.Version) {
+	g.version = v
 }
 
 func (g *Grafana) Name() string {
@@ -88,7 +96,7 @@ func (g *Grafana) Install() error {
 		serverExecutable += ".exe"
 		clientExecutable += ".exe"
 	}
-	dlPath := getDlPath(g.Name(), g.version)
+	dlPath := getDlPath(g.Name(), g.version.String())
 
 	err = os.MkdirAll(grafanaEtcDir, 0755)
 
@@ -104,23 +112,9 @@ func (g *Grafana) Install() error {
 		filepath.Join(dlPath, "scripts"):               {filepath.Join(grafanaEtcDir, "scripts"), 0755},
 	}
 
-	ip := store.InstalledPackage{
-		Name:     g.Name(),
-		Version:  g.version,
-		FilesMap: map[string]int{},
-	}
-
-	// copy file to the bin directory
-	for k, v := range filesMap {
-		if err = fileutil.Copy(k, v[0].(string)); err != nil {
-			return err
-		}
-		installedName := v[0].(string)
-		installedMode := v[1].(int)
-		if err = os.Chmod(installedName, os.FileMode(installedMode)); err != nil {
-			return err
-		}
-		ip.FilesMap[installedName] = installedMode
+	ip, err := commonInstall(g, filesMap)
+	if err != nil {
+		return err
 	}
 
 	// install service
@@ -129,11 +123,9 @@ func (g *Grafana) Install() error {
 		return err
 	}
 	g.svc = s
-	if err = g.svc.Install(); err != nil {
-		return err
-	}
+	_ = g.svc.Install()
 	// store version, installed paths to db
-	if err = g.db.New(&ip); err != nil {
+	if err = g.db.New(ip); err != nil {
 		return err
 	}
 	return os.RemoveAll(dlPath)
@@ -159,15 +151,15 @@ func (g *Grafana) Uninstall() error {
 		}
 	}
 	// remove downloaded files
-	err = g.svc.Uninstall()
-	if err != nil {
-		return err
+	if g.svc == nil {
+		g.svc, _ = g.service()
 	}
-	dlPath := getDlPath(g.Name(), g.version)
+	_ = g.svc.Uninstall()
+	dlPath := getDlPath(g.Name(), g.version.String())
 	return os.RemoveAll(dlPath)
 }
 
-func (g *Grafana) Update(version string) error {
+func (g *Grafana) Update(version update.Version) error {
 	g.version = version
 	if err := g.Uninstall(); err != nil {
 		return err
@@ -180,14 +172,14 @@ func (g *Grafana) Update(version string) error {
 
 func (g *Grafana) Run(args ...string) error {
 	if g.svc == nil {
-		g.svc, _  = g.service()
+		g.svc, _ = g.service()
 	}
 	return g.svc.Start()
 }
 
 func (g *Grafana) Backup() error {
 	if g.svc == nil {
-		g.svc, _  = g.service()
+		g.svc, _ = g.service()
 	}
 	return nil
 }
@@ -198,4 +190,12 @@ func (g *Grafana) RunStop() error {
 
 func (g *Grafana) Dependencies() []dep.Component {
 	return nil
+}
+
+func (g *Grafana) IsDev() bool {
+	return true
+}
+
+func (g *Grafana) RepoUrl() update.RepositoryURL {
+	return grafanaBaseRepo
 }

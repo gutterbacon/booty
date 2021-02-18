@@ -1,31 +1,21 @@
-.PHONY: all
+.PHONY: all dep mock-release release
 .DEFAULT_GOAL := all
 VERSION_GITHASH = $(shell git rev-parse master | tr -d '\n')
 GO_LDFLAGS = CGO_ENABLED=0 go build -ldflags "-X main.build=${VERSION_GITHASH}" -a -tags netgo
 
-# Should not depend on any other repo / makefiles.
-# should be self-contained since this is the bootstrapper of all things.
-include ./includes/os.mk
-include ./includes/gitr.mk
-include ./includes/help.mk
 
-all: this-print this-build
-all-ci: all this-dep this-mock-release
-all-release: all this-dep this-release
+all: build
+all-ci: all dep mock-release
+all-release: all dep release
 
-## print all
-this-print:
-	$(MAKE) os-print
-	$(MAKE) gitr-print
-
-this-build:
+build:
 	$(GO_LDFLAGS) -o bin/booty main.go
 
-this-dep:
+dep:
 	./bin/booty install-all
 
-this-mock-release:
+mock-release:
 	./bin/booty release --rm-dist --skip-publish --snapshot
 
-this-release:
+release:
 	./bin/booty release release

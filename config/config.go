@@ -20,13 +20,16 @@ type BinaryInfo struct {
 
 type AppConfig struct {
 	DevMode  bool         `json:"dev"`
-	Binaries []BinaryInfo `json:"binaries"`
+	Binaries []BinaryInfo `json:"binaries,omitempty"`
 }
 
 func NewAppConfig(logger logging.Logger, r []byte) *AppConfig {
 	var ac AppConfig
 	if err := json.Unmarshal(r, &ac); err != nil {
 		logger.Fatalf("error parsing version information: %v", err)
+	}
+	if ac.Binaries == nil {
+		ac.Binaries = []BinaryInfo{}
 	}
 	return &ac
 }
