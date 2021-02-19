@@ -14,6 +14,7 @@ const (
 	ErrNewFile
 	ErrEmptyFile
 	ErrInvalidComponent
+	ErrSettingVersion
 	ErrDownloadComponent
 	ErrInstallComponent
 	ErrUninstallComponent
@@ -58,6 +59,8 @@ func (err Error) description() string {
 		return "Empty file"
 	case ErrUpdateComponent:
 		return "Failed to update component"
+	case ErrSettingVersion:
+		return "Error setting component's version"
 	}
 
 	return "Unknown error"

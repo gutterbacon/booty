@@ -1,25 +1,33 @@
 package orchestrator
 
 import (
+	"bytes"
 	"fmt"
-	"github.com/spf13/cobra"
-	registry2 "go.amplifyedge.org/booty-v2/dep/registry"
-	"go.amplifyedge.org/booty-v2/internal/errutil"
-	"go.amplifyedge.org/booty-v2/internal/store/file"
-	"go.amplifyedge.org/booty-v2/internal/update"
+	"io"
 	"io/ioutil"
 	"os"
 	"os/signal"
 	"path/filepath"
 	"syscall"
+	"text/tabwriter"
 	"time"
+
+	"github.com/fatih/color"
+	"github.com/spf13/cobra"
 
 	"go.amplifyedge.org/booty-v2/cmd"
 	"go.amplifyedge.org/booty-v2/config"
 	"go.amplifyedge.org/booty-v2/dep"
+	registry2 "go.amplifyedge.org/booty-v2/dep/registry"
+	"go.amplifyedge.org/booty-v2/internal/errutil"
 	"go.amplifyedge.org/booty-v2/internal/logging"
 	"go.amplifyedge.org/booty-v2/internal/logging/zaplog"
 	"go.amplifyedge.org/booty-v2/internal/osutil"
+	"go.amplifyedge.org/booty-v2/internal/store"
+	"go.amplifyedge.org/booty-v2/internal/store/file"
+	"go.amplifyedge.org/booty-v2/internal/update"
+	sharedCmd "go.amplifyedge.org/shared-v2/tool/bs-crypt/cmd"
+	langCmd "go.amplifyedge.org/shared-v2/tool/bs-lang/cmd"
 )
 
 const (
@@ -32,6 +40,7 @@ type Orchestrator struct {
 	components map[string]dep.Component
 	logger     logging.Logger
 	command    *cobra.Command
+	db         store.Storer
 }
 
 // constructor
@@ -64,6 +73,9 @@ func NewOrchestrator(app string) *Orchestrator {
 
 	// setup file database for package tracking
 	db, err := file.NewDB(logger, filepath.Join(osutil.GetDataDir(), "packages"))
+	if err != nil {
+		logger.Fatalf("error creating database: %v", err)
+	}
 
 	// setup registry
 	registry, err := registry2.NewRegistry(db, ac)
@@ -81,6 +93,7 @@ func NewOrchestrator(app string) *Orchestrator {
 		components: comps,
 		logger:     logger,
 		command:    rootCmd,
+		db:         db,
 	}
 }
 
@@ -95,6 +108,11 @@ func (o *Orchestrator) Command() *cobra.Command {
 		cmd.UninstallCommand(o),
 		cmd.AgentCommand(o),
 		cmd.RunAllCommand(o),
+		cmd.ListAllCommand(o),
+		// here we exported all the internal tools we might need (bs-crypt, bs-lang, etc)
+		sharedCmd.EncryptCmd(),
+		sharedCmd.DecryptCmd(),
+		langCmd.RootCmd,
 	}
 	if o.cfg.DevMode {
 		extraCmds = append(
@@ -192,6 +210,11 @@ func (o *Orchestrator) Install(name, version string) error {
 		err = errutil.New(errutil.ErrInvalidComponent, fmt.Errorf("name: %s, version: %s", name, version))
 		return err
 	}
+	// download it
+	c.SetVersion(update.Version(version))
+	if err = c.Download(); err != nil {
+		return errutil.New(errutil.ErrDownloadComponent, fmt.Errorf("name: %s, version: %s, err: %v", c.Name(), c.Version(), err))
+	}
 	// try installing it
 	if err = c.Install(); err != nil {
 		return errutil.New(errutil.ErrInstallComponent, fmt.Errorf("name: %s, version: %s, err: %v", name, version, err))
@@ -248,9 +271,32 @@ func (o *Orchestrator) BackupAll() error {
 	return nil
 }
 
-func (o *Orchestrator) AllInstalledComponents() []dep.Component {
+func (o *Orchestrator) AllInstalledComponents() ([]byte, error) {
 	// TODO
-	return nil
+	pkgs, err := o.db.List()
+	if err != nil {
+		return nil, err
+	}
+	var b []byte
+	buf := bytes.NewBuffer(b)
+	tw := tabwriter.NewWriter(buf, 80, 2, 4, ' ', tabwriter.TabIndent)
+	for _, p := range pkgs {
+		printRow(tw, "\n%s\t\t%s", p.Name, p.Version)
+	}
+	err = tw.Flush()
+	if err != nil {
+		return nil, err
+	}
+	return buf.Bytes(), nil
+}
+
+var (
+	pkgColor     = color.New(color.FgBlue).SprintFunc()
+	versionColor = color.New(color.FgYellow).SprintFunc()
+)
+
+func printRow(out io.Writer, format, key string, value string) {
+	_, _ = fmt.Fprintf(out, format, pkgColor(key), versionColor(value))
 }
 
 func (o *Orchestrator) RunAll() error {

@@ -13,11 +13,6 @@ import (
 	"go.amplifyedge.org/booty-v2/internal/store"
 )
 
-const (
-	mb        = 1024 * 1024 // megabytes
-	endOffset = 2
-)
-
 type allInstalledPackages struct {
 	Packages []*store.InstalledPackage `json:"packages"`
 }
