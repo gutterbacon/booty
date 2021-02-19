@@ -8,7 +8,7 @@ import (
 
 // runs Goreleaser under the hood
 func ReleaseCommand(e dep.Executor) *cobra.Command {
-	runCmd := &cobra.Command{Use: "release", DisableFlagParsing: true}
+	runCmd := &cobra.Command{Use: "release", DisableFlagParsing: true, Short: "wrapper for goreleaser"}
 	runCmd.DisableFlagParsing = true
 	runCmd.Flags().SetInterspersed(true)
 	runCmd.RunE = func(cmd *cobra.Command, args []string) error {

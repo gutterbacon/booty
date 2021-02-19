@@ -7,7 +7,7 @@ import (
 )
 
 func JbCommand(e dep.Executor) *cobra.Command {
-	runCmd := &cobra.Command{Use: "jb", DisableFlagParsing: true}
+	runCmd := &cobra.Command{Use: "jb", DisableFlagParsing: true, Short: "jsonnet-bundler"}
 	runCmd.DisableFlagParsing = true
 	runCmd.Flags().SetInterspersed(true)
 	runCmd.RunE = func(cmd *cobra.Command, args []string) error {
@@ -17,7 +17,7 @@ func JbCommand(e dep.Executor) *cobra.Command {
 }
 
 func JsonnetCommand(e dep.Executor) *cobra.Command {
-	runCmd := &cobra.Command{Use: "jsonnet", DisableFlagParsing: true}
+	runCmd := &cobra.Command{Use: "jsonnet", DisableFlagParsing: true, Short: "jsonnet"}
 	runCmd.DisableFlagParsing = true
 	runCmd.Flags().SetInterspersed(true)
 	runCmd.RunE = func(cmd *cobra.Command, args []string) error {
