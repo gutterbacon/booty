@@ -1,5 +1,5 @@
 ![CI](https://github.com/amplify-edge/booty/workflows/CI/badge.svg)
-[![Cover](https://github.com/amplify-edge/booty/actions/workflows/tests.yml/badge.svg?event=pull_request)](https://github.com/amplify-edge/booty/actions/workflows/tests.yml)
+[![codecov](https://codecov.io/gh/alexadhy/booty/branch/master/graph/badge.svg?token=VLMYJWAQWJ)](https://codecov.io/gh/alexadhy/booty)
 
 # (WIP) Booty
 
