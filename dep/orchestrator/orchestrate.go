@@ -30,10 +30,6 @@ import (
 	langCmd "go.amplifyedge.org/shared-v2/tool/bs-lang/cmd"
 )
 
-const (
-	gracefulPeriod = 5 * time.Second
-)
-
 // Orchestrator implements Executor, Agent, and Commander
 type Orchestrator struct {
 	cfg        *config.AppConfig
@@ -157,23 +153,11 @@ func (o *Orchestrator) DownloadAll() error {
 	if err != nil {
 		return err
 	}
-	//var tasks []*task
-	//for _, c := range o.components {
-	//	k := c
-	//	tasks = append(tasks, newTask(k.Download, dlErr(k)))
-	//}
-	//pool := newTaskPool(tasks)
-	//pool.runAll()
-	//for _, t := range pool.tasks {
-	//	if t.err != nil {
-	//		return t.errFunc(t.err)
-	//	}
-	//}
 	for _, c := range o.components {
 		if c.Dependencies() != nil {
 			for _, d := range c.Dependencies() {
 				if err = d.Download(); err != nil {
-					return err
+					return dlErr(d)(err)
 				}
 			}
 		}
