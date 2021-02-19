@@ -6,7 +6,7 @@ require (
 	github.com/CatchZeng/gutils v0.1.5 // indirect
 	github.com/PuerkitoBio/goquery v1.6.1
 	github.com/cheggaaa/pb v1.0.27
-	github.com/fatih/color v1.10.0 // indirect
+	github.com/fatih/color v1.10.0
 	github.com/fsnotify/fsnotify v1.4.9 // indirect
 	github.com/go-git/go-git/v5 v5.2.0
 	github.com/golang/protobuf v1.4.2 // indirect
@@ -29,7 +29,6 @@ require (
 	github.com/stretchr/testify v1.7.0
 	github.com/thedevsaddam/gojsonq/v2 v2.5.2
 	github.com/tidwall/pretty v1.0.5 // indirect
-	github.com/timshannon/badgerhold/v2 v2.0.0-20201228162759-17050a01e34c
 	go.amplifyedge.org/shared-v2/tool/bs-crypt v0.0.0-20210219053301-6556f04a088c
 	go.amplifyedge.org/shared-v2/tool/bs-lang v0.0.0-20210219053301-6556f04a088c
 	go.uber.org/zap v1.16.0

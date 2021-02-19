@@ -14,7 +14,7 @@ func ListAllCommand(e dep.Executor) *cobra.Command {
 		if err != nil {
 			return err
 		}
-		_, err = fmt.Fprint(os.Stdout, b)
+		_, err = fmt.Fprint(os.Stdout, string(b))
 		return err
 	}
 	return installAllCmd

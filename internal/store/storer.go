@@ -9,7 +9,7 @@ type Storer interface {
 }
 
 type InstalledPackage struct {
-	Name     string            `badgerholdIndex:"key" json:"name"` // name of the package
+	Name     string            `json:"name"` // name of the package
 	Version  string            `json:"version"`                    // package version
 	FilesMap map[string]string `json:"filesMap"`                   // files installed
 }

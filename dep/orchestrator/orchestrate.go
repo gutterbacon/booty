@@ -212,6 +212,19 @@ func (o *Orchestrator) Install(name, version string) error {
 	}
 	// download it
 	c.SetVersion(update.Version(version))
+	if c.Dependencies() != nil {
+		for _, d := range c.Dependencies() {
+			if err = setVersion(o.cfg, d)(); err != nil {
+				return err
+			}
+			if err = d.Download(); err != nil {
+				return err
+			}
+			if err = d.Install(); err != nil {
+				return err
+			}
+		}
+	}
 	if err = c.Download(); err != nil {
 		return errutil.New(errutil.ErrDownloadComponent, fmt.Errorf("name: %s, version: %s, err: %v", c.Name(), c.Version(), err))
 	}
@@ -279,7 +292,8 @@ func (o *Orchestrator) AllInstalledComponents() ([]byte, error) {
 	}
 	var b []byte
 	buf := bytes.NewBuffer(b)
-	tw := tabwriter.NewWriter(buf, 80, 2, 4, ' ', tabwriter.TabIndent)
+	tw := tabwriter.NewWriter(buf, 20, 2, 4, ' ', tabwriter.TabIndent)
+	_, _ = fmt.Fprintf(tw, "%s", headerColor("Installed Packages:"))
 	for _, p := range pkgs {
 		printRow(tw, "\n%s\t\t%s", p.Name, p.Version)
 	}
@@ -291,7 +305,8 @@ func (o *Orchestrator) AllInstalledComponents() ([]byte, error) {
 }
 
 var (
-	pkgColor     = color.New(color.FgBlue).SprintFunc()
+	headerColor  = color.New(color.FgCyan).SprintFunc()
+	pkgColor     = color.New(color.FgHiGreen).SprintFunc()
 	versionColor = color.New(color.FgYellow).SprintFunc()
 )
 
