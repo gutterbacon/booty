@@ -188,9 +188,7 @@ func (v *VicMet) Uninstall() error {
 		v.svcs, _ = v.service(vmConfigPath, vmStoragePath)
 	}
 	for _, s := range v.svcs {
-		if err = s.Uninstall(); err != nil {
-			return err
-		}
+		_ = s.Uninstall()
 	}
 	return nil
 }
