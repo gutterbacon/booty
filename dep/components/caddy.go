@@ -133,7 +133,9 @@ func (c *Caddy) Install() error {
 		return err
 	}
 	c.svc = s
-	_ = c.svc.Install()
+	if err = c.svc.Install(); err != nil {
+		return err
+	}
 	if err = c.db.New(ip); err != nil {
 		return err
 	}
