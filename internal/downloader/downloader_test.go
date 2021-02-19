@@ -13,7 +13,7 @@ func init() {
 
 func TestDownloader(t *testing.T) {
 	t.Log("test download")
-	err := downloader.Download("https://github.com/caddyserver/caddy/releases/download/v2.3.0/caddy_v2.3.0_linux_amd64.tar.gz", "./downloaded")
+	err := downloader.Download("https://github.com/caddyserver/caddy/releases/download/v2.3.0/caddy_2.3.0_linux_arm64.tar.gz", "./downloaded")
 	require.NoError(t, err)
 
 	err = downloader.GitClone("https://github.com/goreleaser/goreleaser", "./downloaded", "")
