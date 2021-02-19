@@ -27,15 +27,17 @@ func testAll(t *testing.T) {
 	err := composer.DownloadAll()
 	require.NoError(t, err)
 
-	err = composer.InstallAll()
-	require.NoError(t, err)
+	//err = composer.InstallAll()
+	//require.NoError(t, err)
 
 	err = composer.Install("goreleaser", "0.155.1")
 	require.NoError(t, err)
 
+	err = composer.Uninstall("goreleaser")
+
 	_, err = composer.AllInstalledComponents()
 	require.NoError(t, err)
 
-	err = composer.UninstallAll()
-	require.NoError(t, err)
+	//err = composer.UninstallAll()
+	//require.NoError(t, err)
 }

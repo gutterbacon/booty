@@ -18,7 +18,4 @@ func TestDownloader(t *testing.T) {
 
 	err = downloader.GitClone("https://github.com/goreleaser/goreleaser", "./downloaded", "")
 	require.NoError(t, err)
-
-	err = downloader.GitClone("https://github.com/goreleaser/goreleaser", "./downloaded", "v0.157.0")
-	require.NoError(t, err)
 }
