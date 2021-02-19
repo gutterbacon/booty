@@ -18,7 +18,7 @@ import (
 	"go.amplifyedge.org/booty-v2/cmd"
 	"go.amplifyedge.org/booty-v2/config"
 	"go.amplifyedge.org/booty-v2/dep"
-	registry2 "go.amplifyedge.org/booty-v2/dep/registry"
+	rg "go.amplifyedge.org/booty-v2/dep/registry"
 	"go.amplifyedge.org/booty-v2/internal/errutil"
 	"go.amplifyedge.org/booty-v2/internal/logging"
 	"go.amplifyedge.org/booty-v2/internal/logging/zaplog"
@@ -78,7 +78,7 @@ func NewOrchestrator(app string) *Orchestrator {
 	}
 
 	// setup registry
-	registry, err := registry2.NewRegistry(db, ac)
+	registry, err := rg.NewRegistry(db, ac)
 	if err != nil {
 		logger.Fatalf("error creating components: %v", err)
 	}
