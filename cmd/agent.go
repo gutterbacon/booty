@@ -7,7 +7,7 @@ import (
 )
 
 func AgentCommand(a dep.Agent) *cobra.Command {
-	agentCmd := &cobra.Command{Use: "agent"}
+	agentCmd := &cobra.Command{Use: "agent", Short: "run as agent"}
 	agentCmd.RunE = func(cmd *cobra.Command, args []string) error {
 		if exitCode := a.Serve(); exitCode != 0 {
 			return fmt.Errorf("exit code: %d", exitCode)

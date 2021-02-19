@@ -11,9 +11,9 @@ import (
 // Executor is responsible for
 type Executor interface {
 	Component(name string) Component
-	AllComponents() []Component          // get all components for an env (dev or user for example)
-	AllInstalledComponents() []Component // list all installed components
-	DownloadAll() error                  // fetch all components
+	AllComponents() []Component              // get all components for an env (dev or user for example)
+	AllInstalledComponents() ([]byte, error) // list all installed components
+	DownloadAll() error                      // fetch all components
 	Run(name string, args ...string) error
 	RunAll() error                      // run all service components
 	Install(name, version string) error // installs a single component by its name

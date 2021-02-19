@@ -7,7 +7,7 @@ import (
 
 // runs all services under the hood
 func RunAllCommand(e dep.Executor) *cobra.Command {
-	runCmd := &cobra.Command{Use: "run-all", DisableFlagParsing: true}
+	runCmd := &cobra.Command{Use: "run-all", DisableFlagParsing: true, Short: "run-all components that can be run as service."}
 	runCmd.DisableFlagParsing = true
 	runCmd.Flags().SetInterspersed(true)
 	runCmd.RunE = func(cmd *cobra.Command, args []string) error {

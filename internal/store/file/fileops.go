@@ -13,14 +13,11 @@ import (
 	"go.amplifyedge.org/booty-v2/internal/store"
 )
 
-const (
-	mb        = 1024 * 1024 // megabytes
-	endOffset = 2
-)
-
 type allInstalledPackages struct {
 	Packages []*store.InstalledPackage `json:"packages"`
 }
+
+var mu sync.Mutex
 
 // It's a file db
 type DB struct {
@@ -45,17 +42,17 @@ func (d *DB) New(ip *store.InstalledPackage) error {
 		return err
 	}
 	// check if it exists
-	if _, err = d.Get(ip.Name); err != nil {
-		// it doesn't exists
-		allPkgs.Packages = append(allPkgs.Packages, ip)
-	} else {
-		// find one with that name
-		for _, p := range allPkgs.Packages {
-			if p.Name == ip.Name {
-				p = ip
-			}
+	exists := false
+	for _, p := range allPkgs.Packages {
+		if p.Name == ip.Name {
+			exists = true
+			p = ip
 		}
 	}
+	if !exists {
+		allPkgs.Packages = append(allPkgs.Packages, ip)
+	}
+
 	// replace the file content
 	var b []byte
 	b, err = json.Marshal(&allPkgs)
@@ -165,7 +162,6 @@ func (d *DB) getAllPkgs() (*allInstalledPackages, error) {
 }
 
 func NewDB(logger logging.Logger, fpath string) (*DB, error) {
-	mu := sync.Mutex{}
 	f, size, err := newOrExistingWrite(&mu, fpath)
 	if err != nil {
 		return nil, err
@@ -199,7 +195,7 @@ func newOrExistingWrite(mu *sync.Mutex, fpath string) (*os.File, int64, error) {
 		if err != nil {
 			return nil, 0, errutil.New(errutil.ErrOpenFile, err)
 		}
-		wlen, err := f.Write(b)
+		wlen, err := f.WriteAt(b, 0)
 		if err != nil {
 			return nil, 0, errutil.New(errutil.ErrOpenFile, err)
 		}

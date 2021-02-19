@@ -19,3 +19,6 @@ mock-release:
 
 release:
 	./bin/booty release release
+
+test:
+	go test -v -race -coverprofile=coverage.txt -covermode=atomic ./...

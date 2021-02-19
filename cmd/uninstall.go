@@ -7,7 +7,7 @@ import (
 
 // UninstallAll uninstalls all of the components
 func UninstallAllCommand(e dep.Executor) *cobra.Command {
-	uninstallAllCmd := &cobra.Command{Use: "uninstall-all"}
+	uninstallAllCmd := &cobra.Command{Use: "uninstall-all",  Short: "uninstall all components"}
 	uninstallAllCmd.RunE = func(cmd *cobra.Command, args []string) error {
 		return e.UninstallAll()
 	}
@@ -17,6 +17,7 @@ func UninstallAllCommand(e dep.Executor) *cobra.Command {
 func UninstallCommand(e dep.Executor) *cobra.Command {
 	uninstallCmd := &cobra.Command{
 		Use: "uninstall <name>",
+		Short: "uninstall <component_name>",
 		Args: cobra.ExactArgs(1),
 	}
 	uninstallCmd.RunE = func(cmd *cobra.Command, args []string) error {

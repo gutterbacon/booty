@@ -10,7 +10,7 @@ import (
 
 // InstallAll installs the component's binary to prefix
 func InstallAllCommand(e dep.Executor) *cobra.Command {
-	installAllCmd := &cobra.Command{Use: "install-all"}
+	installAllCmd := &cobra.Command{Use: "install-all", Short: "install all components"}
 	installAllCmd.RunE = func(cmd *cobra.Command, args []string) error {
 		if err := e.DownloadAll(); err != nil {
 			return err
@@ -23,8 +23,9 @@ func InstallAllCommand(e dep.Executor) *cobra.Command {
 // Install installs the component with name as args
 func InstallCommand(e dep.Executor) *cobra.Command {
 	installCmd := &cobra.Command{
-		Use:  "install <name> <version>",
-		Args: cobra.ExactArgs(2),
+		Use:   "install <name> <version>",
+		Short: "install <component_name> <version>",
+		Args:  cobra.ExactArgs(2),
 	}
 	installCmd.RunE = func(cmd *cobra.Command, args []string) error {
 		if len(args) < 2 {
