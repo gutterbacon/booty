@@ -45,17 +45,17 @@ func (d *DB) New(ip *store.InstalledPackage) error {
 		return err
 	}
 	// check if it exists
-	if _, err = d.Get(ip.Name); err != nil {
-		// it doesn't exists
-		allPkgs.Packages = append(allPkgs.Packages, ip)
-	} else {
-		// find one with that name
-		for _, p := range allPkgs.Packages {
-			if p.Name == ip.Name {
-				p = ip
-			}
+	exists := false
+	for _, p := range allPkgs.Packages {
+		if p.Name == ip.Name {
+			exists = true
+			p = ip
 		}
 	}
+	if !exists {
+		allPkgs.Packages = append(allPkgs.Packages, ip)
+	}
+
 	// replace the file content
 	var b []byte
 	b, err = json.Marshal(&allPkgs)
@@ -199,7 +199,7 @@ func newOrExistingWrite(mu *sync.Mutex, fpath string) (*os.File, int64, error) {
 		if err != nil {
 			return nil, 0, errutil.New(errutil.ErrOpenFile, err)
 		}
-		wlen, err := f.Write(b)
+		wlen, err := f.WriteAt(b, 0)
 		if err != nil {
 			return nil, 0, errutil.New(errutil.ErrOpenFile, err)
 		}

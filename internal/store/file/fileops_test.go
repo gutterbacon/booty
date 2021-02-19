@@ -15,15 +15,15 @@ var (
 		{
 			Name:    "grafana",
 			Version: "7.4.0",
-			FilesMap: map[string]int{
-				"/usr/local/bin/grafana-server": 0755,
+			FilesMap: map[string]string{
+				"/usr/local/bin/grafana-server": "some_hash",
 			},
 		},
 		{
 			Name:    "bs-crypt",
-			Version: "some_hash",
-			FilesMap: map[string]int{
-				"/usr/local/bin/bs-crypt": 0755,
+			Version: "0.0.1",
+			FilesMap: map[string]string{
+				"/usr/local/bin/bs-crypt": "some_other_hash",
 			},
 		},
 	}
@@ -48,6 +48,16 @@ func testAll(t *testing.T) {
 	require.NoError(t, err)
 
 	err = filedb.New(ips[1])
+	require.NoError(t, err)
+
+	newIp := &store.InstalledPackage{
+		Name:    "bs-crypt",
+		Version: "0.0.2",
+		FilesMap: map[string]string{
+			"/usr/local/bin/bs-crypt": "some_hash",
+		},
+	}
+	err = filedb.New(newIp)
 	require.NoError(t, err)
 
 	ip, err := filedb.Get("grafana")
