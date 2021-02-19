@@ -17,6 +17,8 @@ type allInstalledPackages struct {
 	Packages []*store.InstalledPackage `json:"packages"`
 }
 
+var mu sync.Mutex
+
 // It's a file db
 type DB struct {
 	mu          *sync.Mutex // mutex
@@ -160,7 +162,6 @@ func (d *DB) getAllPkgs() (*allInstalledPackages, error) {
 }
 
 func NewDB(logger logging.Logger, fpath string) (*DB, error) {
-	mu := sync.Mutex{}
 	f, size, err := newOrExistingWrite(&mu, fpath)
 	if err != nil {
 		return nil, err

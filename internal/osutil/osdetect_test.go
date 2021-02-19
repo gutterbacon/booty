@@ -8,13 +8,7 @@ import (
 )
 
 func TestOsDetectUtils(t *testing.T) {
-	t.Run("testCurChown", testUserChown)
 	t.Run("testGetDirs", testGetDirs)
-}
-
-func testUserChown(t *testing.T) {
-	err := osutil.CurUserChown("/tmp/shit.txt")
-	require.NoError(t, err)
 }
 
 func testGetDirs(t *testing.T) {

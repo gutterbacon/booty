@@ -1,6 +1,7 @@
 package orchestrator_test
 
 import (
+	"os"
 	"testing"
 
 	"go.amplifyedge.org/booty-v2/dep/orchestrator"
@@ -13,33 +14,28 @@ var (
 )
 
 func init() {
+	_ = os.MkdirAll("./testdata", 0755)
+	_ = os.Setenv("BOOTY_HOME", "./testdata")
 	composer = orchestrator.NewOrchestrator("booty")
 }
 
 func TestOrchestrator(t *testing.T) {
-	//t.Run("testCleanAll", testUninstallAll)
-	t.Run("testDownloadAll", testDownloadAll)
-	t.Run("testInstallSingle", testInstallSingle)
-	t.Run("testInstallAll", testInstallAll)
-	t.Run("testUninstallAll", testUninstallAll)
+	t.Run("testAll", testAll)
 }
 
-func testDownloadAll(t *testing.T) {
+func testAll(t *testing.T) {
 	err := composer.DownloadAll()
 	require.NoError(t, err)
-}
 
-func testInstallAll(t *testing.T) {
-	err := composer.InstallAll()
+	err = composer.InstallAll()
 	require.NoError(t, err)
-}
 
-func testInstallSingle(t *testing.T) {
-	err := composer.Install("goreleaser", "0.155.1")
+	err = composer.Install("goreleaser", "0.155.1")
 	require.NoError(t, err)
-}
 
-func testUninstallAll(t *testing.T) {
-	err := composer.UninstallAll()
+	_, err = composer.AllInstalledComponents()
+	require.NoError(t, err)
+
+	err = composer.UninstallAll()
 	require.NoError(t, err)
 }
