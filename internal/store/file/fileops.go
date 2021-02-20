@@ -6,8 +6,6 @@ import (
 	"os"
 	"sync"
 
-	"github.com/thedevsaddam/gojsonq/v2"
-
 	"go.amplifyedge.org/booty-v2/internal/errutil"
 	"go.amplifyedge.org/booty-v2/internal/logging"
 	"go.amplifyedge.org/booty-v2/internal/store"
@@ -80,30 +78,16 @@ func (d *DB) Get(pkgName string) (*store.InstalledPackage, error) {
 	if d.size == 0 {
 		return nil, errutil.New(errutil.ErrEmptyFile, fmt.Errorf("no package installed of name: %s", pkgName))
 	}
-	f, err := openFile(d.filepath, false)
+	allPkgs, err := d.getAllPkgs()
 	if err != nil {
 		return nil, err
 	}
-	b := make([]byte, d.size)
-	_, err = f.Read(b)
-	if err != nil {
-		return nil, err
+	for _, p := range allPkgs.Packages {
+		if p.Name == pkgName {
+			return p, nil
+		}
 	}
-	err = f.Close()
-	if err != nil {
-		return nil, err
-	}
-	jq := gojsonq.New().FromString(string(b)).From("packages").WhereEqual("name", pkgName)
-	res := jq.First()
-	b, err = json.Marshal(&res)
-	if err != nil {
-		return nil, err
-	}
-	var ip store.InstalledPackage
-	if err = json.Unmarshal(b, &ip); err != nil {
-		return nil, err
-	}
-	return &ip, nil
+	return nil, fmt.Errorf("error: package not found")
 }
 
 func (d *DB) List() ([]*store.InstalledPackage, error) {

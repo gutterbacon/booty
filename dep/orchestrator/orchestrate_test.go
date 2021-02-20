@@ -1,8 +1,6 @@
 package orchestrator_test
 
 import (
-	"go.amplifyedge.org/booty-v2/internal/osutil"
-	"go.amplifyedge.org/booty-v2/internal/testutil"
 	"os"
 	"testing"
 
@@ -53,12 +51,11 @@ func testAll(t *testing.T) {
 	_, err = composer.AllInstalledComponents()
 	require.NoError(t, err)
 
-	if osutil.GetOS() == "linux" || osutil.GetOS() == "darwin" {
-		status := composer.Serve()
-		//_ = syscall.Kill(syscall.Getpid(), syscall.SIGTERM)
-		_ = testutil.Kill()
-		require.Equal(t, 0, status)
-	}
+	checker := composer.Checker()
+	require.NotEqual(t, nil, checker)
+
+	err = checker.CheckNewReleases()
+	require.NoError(t, err)
 
 	err = composer.Backup("goreleaser")
 	require.NoError(t, err)

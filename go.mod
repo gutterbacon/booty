@@ -14,10 +14,8 @@ require (
 	github.com/otiai10/copy v1.4.2
 	github.com/spf13/cobra v1.1.3
 	github.com/stretchr/testify v1.7.0
-	github.com/thedevsaddam/gojsonq/v2 v2.5.2
 	go.amplifyedge.org/shared-v2/tool/bs-crypt v0.0.0-20210219053301-6556f04a088c
 	go.amplifyedge.org/shared-v2/tool/bs-lang v0.0.0-20210219053301-6556f04a088c
 	go.uber.org/zap v1.16.0
 	golang.org/x/mod v0.4.1
-	golang.org/x/sys v0.0.0-20201015000850-e3ed0017c211
 )

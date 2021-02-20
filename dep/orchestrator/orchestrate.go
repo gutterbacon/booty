@@ -3,17 +3,12 @@ package orchestrator
 import (
 	"bytes"
 	"fmt"
-	"io"
-	"io/ioutil"
-	"os"
-	"os/signal"
-	"path/filepath"
-	"syscall"
-	"text/tabwriter"
-	"time"
-
 	"github.com/fatih/color"
 	"github.com/spf13/cobra"
+	"io"
+	"io/ioutil"
+	"path/filepath"
+	"text/tabwriter"
 
 	"go.amplifyedge.org/booty-v2/cmd"
 	"go.amplifyedge.org/booty-v2/config"
@@ -102,7 +97,7 @@ func (o *Orchestrator) Command() *cobra.Command {
 		cmd.InstallCommand(o),
 		cmd.UninstallAllCommand(o),
 		cmd.UninstallCommand(o),
-		cmd.AgentCommand(o),
+		cmd.AgentCommand(o, o),
 		cmd.RunAllCommand(o),
 		cmd.ListAllCommand(o),
 		// here we exported all the internal tools we might need (bs-crypt, bs-lang, etc)
@@ -326,10 +321,9 @@ func (o *Orchestrator) RunAll() error {
 // Agent
 // ================================================================
 
-func (o *Orchestrator) Serve() int {
+func (o *Orchestrator) Checker() *update.Checker {
 	var err error
-	// checks twice in one day
-	dur := 12 * time.Hour
+
 	// create new checker instance
 	repos := map[update.RepositoryURL]update.Version{}
 	for _, c := range o.components {
@@ -351,23 +345,7 @@ func (o *Orchestrator) Serve() int {
 		}
 		return nil
 	})
-	sigCh := make(chan os.Signal, 1)
-	signal.Notify(sigCh, syscall.SIGINT, syscall.SIGTERM)
-
-	ticker := time.NewTicker(dur)
-	for {
-		select {
-		case <-ticker.C:
-			o.logger.Info("checking all components update")
-			if err = checker.CheckNewReleases(); err != nil {
-				o.logger.Error(err)
-			}
-		case s := <-sigCh:
-			o.logger.Warningf("getting signal: %s, terminating gracefully", s.String())
-			// TODO do a proper shutdown instead of sleep like this
-			return 0
-		}
-	}
+	return checker
 }
 
 func setVersion(ac *config.AppConfig, c dep.Component) func() error {
