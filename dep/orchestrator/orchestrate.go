@@ -150,11 +150,6 @@ func (o *Orchestrator) DownloadAll() error {
 	var tasks []*task
 	for _, c := range o.components {
 		k := c
-		if k.Dependencies() != nil {
-			for _, d := range k.Dependencies() {
-				tasks = append(tasks, newTask(d.Download, dlErr(k)))
-			}
-		}
 		tasks = append(tasks, newTask(k.Download, dlErr(k)))
 	}
 	pool := newTaskPool(tasks)
@@ -247,15 +242,15 @@ func (o *Orchestrator) InstallAll() error {
 func (o *Orchestrator) Uninstall(name string) error {
 	var err error
 	o.logger.Info("uninstall %s version %s", name)
-	for _, c := range o.components {
-		k := c
-		if k.Name() == name {
-			o.logger.Infof("uninstalling %s, version: %s", k.Name(), k.Version())
-			if err = k.Uninstall(); err != nil {
-				return errutil.New(errutil.ErrUninstallComponent, fmt.Errorf("name: %s, version: %s, err: %v", k.Name(), k.Version(), err))
-			}
-		}
+	c := o.Component(name)
+	if c == nil {
+		return errutil.New(errutil.ErrUninstallComponent, fmt.Errorf("name: %s, err: no package of that name available", name))
 	}
+	o.logger.Infof("uninstalling %s, version: %s", c.Name(), c.Version())
+	if err = c.Uninstall(); err != nil {
+		return errutil.New(errutil.ErrUninstallComponent, fmt.Errorf("name: %s, version: %s, err: %v", c.Name(), c.Version(), err))
+	}
+
 	return nil
 }
 

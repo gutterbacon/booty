@@ -8,10 +8,14 @@ import (
 	"time"
 
 	"github.com/cavaliercoder/grab"
-	"github.com/cheggaaa/pb/v3"
 	"github.com/go-git/go-git/v5"
 	"github.com/go-git/go-git/v5/plumbing"
 	"github.com/mholt/archiver/v3"
+)
+
+const (
+	mbyte = 1 << 20
+	gbyte = 1 << 30
 )
 
 func Download(dlUrl string, targetDir string) error {
@@ -22,7 +26,7 @@ func Download(dlUrl string, targetDir string) error {
 	filename := filepath.Base(u.Path)
 	dlDir := filepath.Dir(targetDir)
 	destPath := filepath.Join(dlDir, filename)
-	if err = downloadFile(dlUrl, destPath); err != nil {
+	if err = downloadFile(dlUrl, destPath, filename); err != nil {
 		return err
 	}
 	if err = extractDownloadedFile(destPath, filename, targetDir); err != nil {
@@ -31,36 +35,30 @@ func Download(dlUrl string, targetDir string) error {
 	return nil
 }
 
-func downloadFile(dlUrl, target string) error {
+func downloadFile(dlUrl, target, filename string) error {
 	// download client
 	client := grab.NewClient()
 	req, _ := grab.NewRequest(target, dlUrl)
 
-	fmt.Printf("Downloading %s\n", req.URL())
 	resp := client.Do(req)
-	fileSize := resp.Size
 
 	// start UI loop
 	t := time.NewTicker(500 * time.Millisecond)
 	defer t.Stop()
 
-	bar := pb.Full.Start64(fileSize)
-	bar.SetMaxWidth(100)
-	bar.Set(pb.Bytes, true)
-	bar.Start()
-
-	prevCompleted := int64(0)
-
 	go func() {
 		for {
 			select {
 			case <-t.C:
-				completedNow := resp.BytesComplete()
-				bar.Add64(completedNow - prevCompleted)
-				prevCompleted = completedNow
+				sz := humanize(resp.Size)
+				fmt.Printf("%s %.2f / %.2f %s (%.2f%%)\n",
+					filename,
+					humanize(resp.BytesComplete()),
+					sz,
+					totalSz(sz),
+					100*resp.Progress())
 
 			case <-resp.Done:
-				bar.Finish()
 				break
 			}
 		}
@@ -71,6 +69,21 @@ func downloadFile(dlUrl, target string) error {
 		return err
 	}
 	return nil
+}
+
+func humanize(i int64) float64 {
+	sz := float64(i) / mbyte
+	if sz >= 1000 {
+		sz /= gbyte
+	}
+	return sz
+}
+
+func totalSz(f float64) string {
+	if f < gbyte {
+		return "MB"
+	}
+	return "GB"
 }
 
 func extractDownloadedFile(srcPath, filename, targetDir string) error {

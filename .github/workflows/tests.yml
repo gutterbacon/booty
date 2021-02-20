@@ -9,7 +9,7 @@ jobs:
     strategy:
       fail-fast: true # saves ci time, won't be worth it if it even runs other platform
       matrix:
-        os: [ ubuntu-20.04, macos-latest, windows-latest ]
+        os: [ ubuntu-20.04, macos-latest ]
         go-version: [ 1.16.0 ]
         target: [ 'test' ]
 
@@ -48,7 +48,7 @@ jobs:
         working-directory: ${{ github.workspace }}/go/src/github.com/${{ github.repository }}
         env:
           target: ${{ matrix.target }}
-        timeout-minutes: 12
+        timeout-minutes: 20
 
       - name: upload coverage
         shell: bash
