@@ -12,9 +12,9 @@ jobs:
     strategy:
       fail-fast: false # saves ci time, won't be worth it if it even runs other platform
       matrix:
-        os: [ubuntu-20.04, macos-latest, windows-latest]
-        go-version: [1.16.0]
-        target: ['all-ci']
+        os: [ ubuntu-20.04, macos-latest, windows-latest ]
+        go-version: [ 1.16.0 ]
+        target: [ 'all-ci' ]
 
     runs-on: ${{ matrix.os }}
 
@@ -47,9 +47,6 @@ jobs:
       - name: make ${{ matrix.target }}
         shell: bash
         run: |
-          # workaround for https://github.com/actions/setup-go/issues/14
-          #export GOPATH=${GITHUB_WORKSPACE}/go
-          #export PATH=$PATH:$GOPATH/bin
           make $target
         working-directory: ${{ github.workspace }}/go/src/github.com/${{ github.repository }}
         env:
