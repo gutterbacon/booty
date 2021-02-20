@@ -24,6 +24,15 @@ func TestOrchestrator(t *testing.T) {
 }
 
 func testAll(t *testing.T) {
+	c := composer.Component("grafana")
+	require.NotEqual(t, nil, c)
+
+	comps := composer.AllComponents()
+	require.NotEqual(t, nil, comps)
+
+	l := composer.Logger()
+	require.NotEqual(t, nil, l)
+
 	err := composer.DownloadAll()
 	require.NoError(t, err)
 
@@ -33,7 +42,11 @@ func testAll(t *testing.T) {
 	err = composer.Install("goreleaser", "0.155.1")
 	require.NoError(t, err)
 
+	err = composer.Run("goreleaser", "-v")
+	require.NoError(t, err)
+
 	err = composer.Uninstall("goreleaser")
+	require.NoError(t, err)
 
 	_, err = composer.AllInstalledComponents()
 	require.NoError(t, err)
