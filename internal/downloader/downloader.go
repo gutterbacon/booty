@@ -1,98 +1,92 @@
 package downloader
 
 import (
-	"github.com/go-git/go-git/v5/plumbing"
-	"io"
+	"fmt"
 	"net/url"
 	"os"
 	"path/filepath"
-	"sync"
+	"time"
 
-	"github.com/cheggaaa/pb"
+	"github.com/cavaliercoder/grab"
+	"github.com/cheggaaa/pb/v3"
 	"github.com/go-git/go-git/v5"
-	"github.com/hashicorp/go-getter"
-
-	"go.amplifyedge.org/booty-v2/internal/osutil"
+	"github.com/go-git/go-git/v5/plumbing"
+	"github.com/mholt/archiver/v3"
 )
 
 func Download(dlUrl string, targetDir string) error {
-	// make sure url is valid
-	_, err := url.Parse(dlUrl)
+	u, err := url.Parse(dlUrl)
 	if err != nil {
 		return err
 	}
-	if osutil.GetOS() == "windows" {
-		return getter.Get(targetDir, dlUrl)
+	filename := filepath.Base(u.Path)
+	dlDir := filepath.Dir(targetDir)
+	destPath := filepath.Join(dlDir, filename)
+	if err = downloadFile(dlUrl, destPath); err != nil {
+		return err
 	}
-	return getter.Get(targetDir, dlUrl, getter.WithProgress(defaultProgressBar))
-}
-
-// defaultProgressBar is the default instance of a cheggaaa
-// progress bar.
-var defaultProgressBar getter.ProgressTracker = &progressBar{}
-
-// ProgressBar wraps a github.com/cheggaaa/pb.Pool
-// in order to display download progress for one or multiple
-// downloads.
-//
-// If two different instance of ProgressBar try to
-// display a progress only one will be displayed.
-// It is therefore recommended to use DefaultProgressBar
-type progressBar struct {
-	// lock everything below
-	lock sync.Mutex
-
-	pool *pb.Pool
-
-	pbs int
-}
-
-func ProgressBarConfig(bar *pb.ProgressBar, prefix string) {
-	bar.SetUnits(pb.U_BYTES)
-	bar.Prefix(prefix)
-}
-
-// TrackProgress instantiates a new progress bar that will
-// display the progress of stream until closed.
-// total can be 0.
-func (cpb *progressBar) TrackProgress(src string, currentSize, totalSize int64, stream io.ReadCloser) io.ReadCloser {
-	cpb.lock.Lock()
-	defer cpb.lock.Unlock()
-
-	newPb := pb.New64(totalSize)
-	newPb.Set64(currentSize)
-	ProgressBarConfig(newPb, filepath.Base(src))
-	if cpb.pool == nil {
-		cpb.pool = pb.NewPool()
-		cpb.pool.Start()
+	if err = extractDownloadedFile(destPath, filename, targetDir); err != nil {
+		return err
 	}
-	cpb.pool.Add(newPb)
-	reader := newPb.NewProxyReader(stream)
+	return nil
+}
 
-	cpb.pbs++
-	return &readCloser{
-		Reader: reader,
-		close: func() error {
-			cpb.lock.Lock()
-			defer cpb.lock.Unlock()
+func downloadFile(dlUrl, target string) error {
+	// download client
+	client := grab.NewClient()
+	req, _ := grab.NewRequest(target, dlUrl)
 
-			newPb.Finish()
-			cpb.pbs--
-			if cpb.pbs <= 0 {
-				cpb.pool.Stop()
-				cpb.pool = nil
+	fmt.Printf("Downloading %s\n", req.URL())
+	resp := client.Do(req)
+	fileSize := resp.Size
+
+	// start UI loop
+	t := time.NewTicker(500 * time.Millisecond)
+	defer t.Stop()
+
+	bar := pb.Full.Start64(fileSize)
+	bar.SetMaxWidth(100)
+	bar.Set(pb.Bytes, true)
+	bar.Start()
+
+	prevCompleted := int64(0)
+
+	go func() {
+		for {
+			select {
+			case <-t.C:
+				completedNow := resp.BytesComplete()
+				bar.Add64(completedNow - prevCompleted)
+				prevCompleted = completedNow
+
+			case <-resp.Done:
+				bar.Finish()
+				break
 			}
-			return nil
-		},
+		}
+	}()
+
+	// check for errors
+	if err := resp.Err(); err != nil {
+		return err
+	}
+	return nil
+}
+
+func extractDownloadedFile(srcPath, filename, targetDir string) error {
+	var err error
+	fileExt := filepath.Ext(filename)
+	switch fileExt {
+	case ".gz", ".xz", ".zip", ".br", ".sz", ".bz2":
+		err = archiver.Unarchive(srcPath, targetDir)
+		if err != nil {
+			return err
+		}
+		return os.RemoveAll(srcPath)
+	default:
+		return nil
 	}
 }
-
-type readCloser struct {
-	io.Reader
-	close func() error
-}
-
-func (c *readCloser) Close() error { return c.close() }
 
 func GitClone(fetchUrl string, targetDir string, tag string) error {
 	cloneOpts := &git.CloneOptions{

@@ -144,20 +144,24 @@ func (o *Orchestrator) AllComponents() []dep.Component {
 
 func (o *Orchestrator) DownloadAll() error {
 	o.logger.Info("downloading all components")
-	err := o.setupVersions()
-	if err != nil {
+	if err := o.setupVersions(); err != nil {
 		return err
 	}
+	var tasks []*task
 	for _, c := range o.components {
-		if c.Dependencies() != nil {
-			for _, d := range c.Dependencies() {
-				if err = d.Download(); err != nil {
-					return dlErr(d)(err)
-				}
+		k := c
+		if k.Dependencies() != nil {
+			for _, d := range k.Dependencies() {
+				tasks = append(tasks, newTask(d.Download, dlErr(k)))
 			}
 		}
-		if err = c.Download(); err != nil {
-			return err
+		tasks = append(tasks, newTask(k.Download, dlErr(k)))
+	}
+	pool := newTaskPool(tasks)
+	pool.runAll()
+	for _, t := range pool.tasks {
+		if t.err != nil {
+			return t.errFunc(t.err)
 		}
 	}
 	return nil

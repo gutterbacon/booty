@@ -3,6 +3,7 @@ package orchestrator_test
 import (
 	"os"
 	"testing"
+	"time"
 
 	"go.amplifyedge.org/booty-v2/dep/orchestrator"
 
@@ -62,6 +63,8 @@ func testAll(t *testing.T) {
 
 	err = composer.BackupAll()
 	require.NoError(t, err)
+
+	time.Sleep(10 * time.Second)
 
 	err = composer.UninstallAll()
 	require.NoError(t, err)
