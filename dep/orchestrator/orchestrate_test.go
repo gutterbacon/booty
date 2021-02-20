@@ -2,6 +2,7 @@ package orchestrator_test
 
 import (
 	"os"
+	"syscall"
 	"testing"
 
 	"go.amplifyedge.org/booty-v2/dep/orchestrator"
@@ -50,6 +51,10 @@ func testAll(t *testing.T) {
 
 	_, err = composer.AllInstalledComponents()
 	require.NoError(t, err)
+
+	status := composer.Serve()
+	_ = syscall.Kill(syscall.Getpid(), syscall.SIGTERM)
+	require.Equal(t, 0, status)
 
 	err = composer.UninstallAll()
 	require.NoError(t, err)
