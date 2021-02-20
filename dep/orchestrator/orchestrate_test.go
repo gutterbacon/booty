@@ -33,8 +33,15 @@ func testAll(t *testing.T) {
 	c = composer.Component("fragana")
 	require.Equal(t, nil, c)
 
+	t.Log("listing all components")
 	comps := composer.AllComponents()
 	require.NotEqual(t, nil, comps)
+
+	t.Log("listing all commands")
+	cmds := composer.Command()
+	expectedName := "booty"
+	require.Equal(t, cmds.Name(), expectedName)
+	require.True(t, cmds.HasAvailableSubCommands())
 
 	l := composer.Logger()
 	require.NotEqual(t, nil, l)
