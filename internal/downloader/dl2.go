@@ -21,14 +21,15 @@ func Download(dlUrl string, targetDir string) error {
 	}
 	var notex bool
 	if notex, err = isEmptyDir(targetDir); notex || err != nil {
-		return getter.Get(targetDir, dlUrl, getter.WithProgress(defaultProgressBar))
+		progBar := progressBar{}
+		return getter.Get(targetDir, dlUrl, getter.WithProgress(&progBar))
 	}
 	return nil
 }
 
-// defaultProgressBar is the default instance of a cheggaaa
-// progress bar.
-var defaultProgressBar getter.ProgressTracker = &progressBar{}
+//// defaultProgressBar is the default instance of a cheggaaa
+//// progress bar.
+//var defaultProgressBar getter.ProgressTracker = &progressBar{}
 
 // ProgressBar wraps a github.com/cheggaaa/pb.Pool
 // in order to display download progress for one or multiple
