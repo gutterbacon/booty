@@ -5,8 +5,10 @@ import (
 	"fmt"
 	"github.com/fatih/color"
 	"github.com/spf13/cobra"
+	"go.amplifyedge.org/booty-v2/internal/downloader"
 	"io"
 	"io/ioutil"
+	"os"
 	"path/filepath"
 	"text/tabwriter"
 
@@ -311,6 +313,23 @@ func (o *Orchestrator) RunAll() error {
 			if err := c.Run(); err != nil {
 				return err
 			}
+		}
+	}
+	return nil
+}
+
+func (o *Orchestrator) CleanCache() error {
+	cacheDir := osutil.GetDownloadDir()
+	if empty, _ := downloader.IsEmptyDir(cacheDir); empty {
+		return nil
+	}
+	entries, err := ioutil.ReadDir(cacheDir)
+	if err != nil {
+		return errutil.New(errutil.ErrCleaningCache, fmt.Errorf(": %v", err))
+	}
+	for _, e := range entries {
+		if err = os.RemoveAll(filepath.Join(cacheDir, e.Name())); err != nil {
+			return err
 		}
 	}
 	return nil

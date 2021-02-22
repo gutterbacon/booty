@@ -96,14 +96,7 @@ func (m *Mkcert) Run(args ...string) error {
 }
 
 func (m *Mkcert) Update(version update.Version) error {
-	m.version = version
-	if err := m.Uninstall(); err != nil {
-		return err
-	}
-	if err := m.Download(); err != nil {
-		return err
-	}
-	return m.Install()
+	return commonUpdate(m, version)
 }
 
 func (m *Mkcert) RunStop() error {
