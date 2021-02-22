@@ -1,12 +1,13 @@
 package downloader
 
 import (
+	pb "github.com/cheggaaa/pb"
 	"github.com/hashicorp/go-getter"
-	"go.amplifyedge.org/booty-v2/internal/osutil"
-	"gopkg.in/cheggaaa/pb.v1"
 	"io"
 	"net/url"
 	"path/filepath"
+
+	//"path/filepath"
 	"sync"
 )
 
@@ -16,35 +17,36 @@ func Download(dlUrl string, targetDir string) error {
 	if err != nil {
 		return err
 	}
-	if osutil.GetOS() == "windows" {
-		return getter.Get(targetDir, dlUrl)
-	}
 	var notex bool
+
+	httpGetter := getter.HttpGetter{Netrc: true}
+
 	if notex, err = isEmptyDir(targetDir); notex || err != nil {
-		progBar := progressBar{}
-		return getter.Get(targetDir, dlUrl, getter.WithProgress(&progBar))
+		pbar := progressBar{}
+		progress := getter.WithProgress(&pbar)
+		client := &getter.Client{
+			Src:     dlUrl,
+			Dst:     targetDir,
+			Mode:    getter.ClientModeAny,
+			Options: []getter.ClientOption{progress},
+			Getters: map[string]getter.Getter{
+				"file":  &getter.FileGetter{Copy: false},
+				"http":  &httpGetter,
+				"https": &httpGetter,
+				"s3":    new(getter.S3Getter),
+				"gcs":   new(getter.GCSGetter),
+			},
+		}
+		return client.Get()
 	}
 	return nil
 }
 
-//// defaultProgressBar is the default instance of a cheggaaa
-//// progress bar.
-//var defaultProgressBar getter.ProgressTracker = &progressBar{}
-
-// ProgressBar wraps a github.com/cheggaaa/pb.Pool
-// in order to display download progress for one or multiple
-// downloads.
-//
-// If two different instance of ProgressBar try to
-// display a progress only one will be displayed.
-// It is therefore recommended to use DefaultProgressBar
 type progressBar struct {
 	// lock everything below
 	lock sync.Mutex
-
 	pool *pb.Pool
-
-	pbs int
+	pbs  int
 }
 
 func ProgressBarConfig(bar *pb.ProgressBar, prefix string) {
