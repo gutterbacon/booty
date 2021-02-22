@@ -16,6 +16,9 @@ func TestDownloader(t *testing.T) {
 	err := downloader.Download("https://github.com/caddyserver/caddy/releases/download/v2.3.0/caddy_2.3.0_linux_arm64.tar.gz", "./downloaded/caddy-2.3.0")
 	require.NoError(t, err)
 
-	err = downloader.GitClone("https://github.com/goreleaser/goreleaser", "./downloaded/goreleaser-master", "")
+	err = downloader.Download("github.com/goreleaser/goreleaser?ref=v0.157.0", "./downloaded/goreleaser-0.157.0")
+	require.NoError(t, err)
+
+	err = downloader.Download("github.com/google/go-jsonnet?ref=v0.17.0", "./downloaded/jsonnet-0.17.0")
 	require.NoError(t, err)
 }

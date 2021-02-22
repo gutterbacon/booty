@@ -20,7 +20,8 @@ import (
 var prometheusCfgSample embed.FS
 
 const (
-	vicmetUrlFmt = "https://github.com/VictoriaMetrics/VictoriaMetrics"
+	vicMetUrlBase = "github.com/VictoriaMetrics/VictoriaMetrics"
+	vicmetUrlFmt  = "https://" + vicMetUrlBase
 )
 
 type VicMet struct {
@@ -94,14 +95,7 @@ func (v *VicMet) Download() error {
 		return nil
 	}
 	targetDir := getDlPath(v.Name(), v.version.String())
-	if osutil.DirExists(targetDir) {
-		err := downloader.GitCheckout("v"+v.version.String(), targetDir)
-		if err != nil && err.Error() == "already up-to-date" {
-			return nil
-		}
-		return nil
-	}
-	return downloader.GitClone(vicmetUrlFmt, targetDir, "v"+v.version.String())
+	return downloader.Download(vicMetUrlBase+"?ref=v"+v.version.String(), targetDir)
 }
 
 func (v *VicMet) Dependencies() []dep.Component {

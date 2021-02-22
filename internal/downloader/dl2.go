@@ -1,13 +1,13 @@
 package downloader
 
 import (
-	pb "github.com/cheggaaa/pb"
+	pb "github.com/cheggaaa/pb/v3"
 	"github.com/hashicorp/go-getter"
+	"go.amplifyedge.org/booty-v2/internal/osutil"
 	"io"
 	"net/url"
 	"path/filepath"
 
-	//"path/filepath"
 	"sync"
 )
 
@@ -22,18 +22,22 @@ func Download(dlUrl string, targetDir string) error {
 	if notex, err = isEmptyDir(targetDir); notex || err != nil {
 		httpGetter := getter.HttpGetter{Netrc: true}
 		pbar := progressBar{}
-		progress := getter.WithProgress(&pbar)
+		progress := []getter.ClientOption{getter.WithProgress(&pbar)}
+		if osutil.GetOS() == "windows" {
+			progress = []getter.ClientOption{}
+		}
 		client := &getter.Client{
 			Src:     dlUrl,
 			Dst:     targetDir,
 			Mode:    getter.ClientModeAny,
-			Options: []getter.ClientOption{progress},
+			Options: progress,
 			Getters: map[string]getter.Getter{
 				"file":  &getter.FileGetter{Copy: false},
 				"http":  &httpGetter,
 				"https": &httpGetter,
 				"s3":    new(getter.S3Getter),
 				"gcs":   new(getter.GCSGetter),
+				"git":   new(getter.GitGetter),
 			},
 		}
 		return client.Get()
@@ -42,47 +46,35 @@ func Download(dlUrl string, targetDir string) error {
 }
 
 type progressBar struct {
-	// lock everything below
-	lock sync.Mutex
-	pool *pb.Pool
-	pbs  int
-}
-
-func ProgressBarConfig(bar *pb.ProgressBar, prefix string) {
-	bar.SetUnits(pb.U_BYTES)
-	bar.Prefix(prefix)
+	lock     sync.Mutex
+	progress *pb.ProgressBar
 }
 
 // TrackProgress instantiates a new progress bar that will
 // display the progress of stream until closed.
 // total can be 0.
+
+const pbTpl pb.ProgressBarTemplate = `{{ string . "prefix" }} {{counters . | green }} {{ bar . "<" "=" (cycle . "↖" "↗" "↘" "↙" ) "." ">" | cyan }} {{speed . | green }} {{percent .}} {{ string . "suffix" }}`
+
 func (cpb *progressBar) TrackProgress(src string, currentSize, totalSize int64, stream io.ReadCloser) io.ReadCloser {
 	cpb.lock.Lock()
 	defer cpb.lock.Unlock()
-
-	newPb := pb.New64(totalSize)
-	newPb.Set64(currentSize)
-	ProgressBarConfig(newPb, filepath.Base(src))
-	if cpb.pool == nil {
-		cpb.pool = pb.NewPool()
-		_ = cpb.pool.Start()
+	if cpb.progress == nil {
+		cpb.progress = pb.New64(totalSize)
 	}
-	cpb.pool.Add(newPb)
-	reader := newPb.NewProxyReader(stream)
+	p := pbTpl.Start64(totalSize)
+	p.Set("prefix", filepath.Base(src+": "))
+	p.Set("suffix", "\n")
+	p.SetCurrent(currentSize)
+	p.Set(pb.Bytes, true)
+	barReader := p.NewProxyReader(stream)
 
-	cpb.pbs++
 	return &readCloser{
-		Reader: reader,
+		Reader: barReader,
 		close: func() error {
 			cpb.lock.Lock()
 			defer cpb.lock.Unlock()
-
-			newPb.Finish()
-			cpb.pbs--
-			if cpb.pbs <= 0 {
-				_ = cpb.pool.Stop()
-				cpb.pool = nil
-			}
+			p.Finish()
 			return nil
 		},
 	}

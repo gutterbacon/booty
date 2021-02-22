@@ -12,7 +12,8 @@ import (
 
 const (
 	// version -- version -- os_alt_arch
-	jsonnetUrl = "https://github.com/google/go-jsonnet"
+	jsonnetBase = "github.com/google/go-jsonnet"
+	jsonnetUrl  = "https://" + jsonnetBase
 )
 
 type GoJsonnet struct {
@@ -34,14 +35,7 @@ func (g *GoJsonnet) Version() update.Version {
 
 func (g *GoJsonnet) Download() error {
 	targetDir := getDlPath(g.Name(), g.version.String())
-	if osutil.DirExists(targetDir) {
-		err := downloader.GitCheckout("v"+g.version.String(), targetDir)
-		if err != nil && err.Error() == "already up-to-date" {
-			return nil
-		}
-		return nil
-	}
-	return downloader.GitClone(jsonnetUrl, targetDir, "v"+g.version.String())
+	return downloader.Download(jsonnetBase+"?ref=v"+g.version.String(), targetDir)
 }
 
 func (g *GoJsonnet) Dependencies() []dep.Component {
@@ -59,7 +53,7 @@ func (g *GoJsonnet) Install() error {
 	// build binaries
 	recipes := []string{g.Name(), g.Name() + "fmt"}
 	for _, r := range recipes {
-		if err = osutil.Exec("go", "build", "-o", r, filepath.Join(dlPath, "cmd", r)); err != nil {
+		if err = osutil.Exec("go", "build", "-ldflags", `-s -w`, "-o", r, filepath.Join(dlPath, "cmd", r)); err != nil {
 			return err
 		}
 	}
