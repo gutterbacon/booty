@@ -79,7 +79,7 @@ func (p *ProtocGenGoGrpc) Install() error {
 	if err = p.db.New(ip); err != nil {
 		return err
 	}
-	return os.RemoveAll(dlPath)
+	return nil
 }
 
 func (p *ProtocGenGoGrpc) Uninstall() error {

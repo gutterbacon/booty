@@ -111,7 +111,7 @@ func (p *Protoc) Install() error {
 	if err = p.db.New(ip); err != nil {
 		return err
 	}
-	return os.RemoveAll(dlPath)
+	return nil
 }
 
 func (p *Protoc) Update(version update.Version) error {

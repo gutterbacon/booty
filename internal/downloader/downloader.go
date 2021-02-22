@@ -1,98 +1,116 @@
 package downloader
 
 import (
-	"github.com/go-git/go-git/v5/plumbing"
-	"io"
+	"fmt"
+	"io/ioutil"
 	"net/url"
 	"os"
 	"path/filepath"
-	"sync"
+	"time"
 
-	"github.com/cheggaaa/pb"
+	"github.com/cavaliercoder/grab"
 	"github.com/go-git/go-git/v5"
-	"github.com/hashicorp/go-getter"
-
-	"go.amplifyedge.org/booty-v2/internal/osutil"
+	"github.com/go-git/go-git/v5/plumbing"
+	"github.com/mholt/archiver/v3"
 )
 
+const (
+	mbyte = 1 << 20
+	gbyte = 1 << 30
+)
+
+func isEmptyDir(name string) (bool, error) {
+	entries, err := ioutil.ReadDir(name)
+	if err != nil {
+		return false, err
+	}
+	return len(entries) == 0, nil
+}
+
 func Download(dlUrl string, targetDir string) error {
-	// make sure url is valid
-	_, err := url.Parse(dlUrl)
+	u, err := url.Parse(dlUrl)
 	if err != nil {
 		return err
 	}
-	if osutil.GetOS() == "windows" {
-		return getter.Get(targetDir, dlUrl)
+	filename := filepath.Base(u.Path)
+	dlDir := filepath.Dir(targetDir)
+	destPath := filepath.Join(dlDir, filename)
+	if notex, err := isEmptyDir(targetDir); notex || err != nil {
+		if err = downloadFile(dlUrl, destPath, filename); err != nil {
+			return err
+		}
+		if err = extractDownloadedFile(destPath, filename, targetDir); err != nil {
+			return err
+		}
 	}
-	return getter.Get(targetDir, dlUrl, getter.WithProgress(defaultProgressBar))
+	return nil
 }
 
-// defaultProgressBar is the default instance of a cheggaaa
-// progress bar.
-var defaultProgressBar getter.ProgressTracker = &progressBar{}
+func downloadFile(dlUrl, target, filename string) error {
+	// download client
+	client := grab.NewClient()
+	req, _ := grab.NewRequest(target, dlUrl)
 
-// ProgressBar wraps a github.com/cheggaaa/pb.Pool
-// in order to display download progress for one or multiple
-// downloads.
-//
-// If two different instance of ProgressBar try to
-// display a progress only one will be displayed.
-// It is therefore recommended to use DefaultProgressBar
-type progressBar struct {
-	// lock everything below
-	lock sync.Mutex
+	resp := client.Do(req)
 
-	pool *pb.Pool
+	// start UI loop
+	t := time.NewTicker(500 * time.Millisecond)
+	defer t.Stop()
 
-	pbs int
-}
+	go func() {
+		for {
+			select {
+			case <-t.C:
+				sz := humanize(resp.Size)
+				fmt.Printf("%s %.2f / %.2f %s (%.2f%%)\n",
+					filename,
+					humanize(resp.BytesComplete()),
+					sz,
+					totalSz(sz),
+					100*resp.Progress())
 
-func ProgressBarConfig(bar *pb.ProgressBar, prefix string) {
-	bar.SetUnits(pb.U_BYTES)
-	bar.Prefix(prefix)
-}
-
-// TrackProgress instantiates a new progress bar that will
-// display the progress of stream until closed.
-// total can be 0.
-func (cpb *progressBar) TrackProgress(src string, currentSize, totalSize int64, stream io.ReadCloser) io.ReadCloser {
-	cpb.lock.Lock()
-	defer cpb.lock.Unlock()
-
-	newPb := pb.New64(totalSize)
-	newPb.Set64(currentSize)
-	ProgressBarConfig(newPb, filepath.Base(src))
-	if cpb.pool == nil {
-		cpb.pool = pb.NewPool()
-		cpb.pool.Start()
-	}
-	cpb.pool.Add(newPb)
-	reader := newPb.NewProxyReader(stream)
-
-	cpb.pbs++
-	return &readCloser{
-		Reader: reader,
-		close: func() error {
-			cpb.lock.Lock()
-			defer cpb.lock.Unlock()
-
-			newPb.Finish()
-			cpb.pbs--
-			if cpb.pbs <= 0 {
-				cpb.pool.Stop()
-				cpb.pool = nil
+			case <-resp.Done:
+				break
 			}
-			return nil
-		},
+		}
+	}()
+
+	// check for errors
+	if err := resp.Err(); err != nil {
+		return err
+	}
+	return nil
+}
+
+func humanize(i int64) float64 {
+	sz := float64(i) / mbyte
+	if sz >= 1000 {
+		sz /= gbyte
+	}
+	return sz
+}
+
+func totalSz(f float64) string {
+	if f < gbyte {
+		return "MB"
+	}
+	return "GB"
+}
+
+func extractDownloadedFile(srcPath, filename, targetDir string) error {
+	var err error
+	fileExt := filepath.Ext(filename)
+	switch fileExt {
+	case ".gz", ".xz", ".zip", ".br", ".sz", ".bz2":
+		err = archiver.Unarchive(srcPath, targetDir)
+		if err != nil {
+			return err
+		}
+		return os.RemoveAll(srcPath)
+	default:
+		return nil
 	}
 }
-
-type readCloser struct {
-	io.Reader
-	close func() error
-}
-
-func (c *readCloser) Close() error { return c.close() }
 
 func GitClone(fetchUrl string, targetDir string, tag string) error {
 	cloneOpts := &git.CloneOptions{

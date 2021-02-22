@@ -137,7 +137,7 @@ func (c *Caddy) Install() error {
 	if err = c.db.New(ip); err != nil {
 		return err
 	}
-	return os.RemoveAll(dlPath)
+	return nil
 }
 
 func (c *Caddy) Uninstall() error {

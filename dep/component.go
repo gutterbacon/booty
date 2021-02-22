@@ -26,7 +26,7 @@ type Executor interface {
 
 // Agent is responsible for
 type Agent interface {
-	Serve() int // do work as agent (view updates, collect metrics if any etc), returns status code of the operation
+	Checker() *update.Checker // do work as agent (view updates, collect metrics if any etc), returns status code of the operation
 }
 
 // Commander has to be able to output a cobra.Command and logging.Logger

@@ -1,9 +1,6 @@
 name: Cover
 
-on:
-  pull_request:
-    branches:
-      - '*'
+on: [ pull_request ]
 
 jobs:
   all:
@@ -12,7 +9,7 @@ jobs:
     strategy:
       fail-fast: true # saves ci time, won't be worth it if it even runs other platform
       matrix:
-        os: [ ubuntu-latest, macos-latest ]
+        os: [ ubuntu-20.04 ]
         go-version: [ 1.16.0 ]
         target: [ 'test' ]
 
@@ -47,11 +44,15 @@ jobs:
       - name: make ${{ matrix.target }}
         shell: bash
         run: |
-          # workaround for https://github.com/actions/setup-go/issues/14
-          #export GOPATH=${GITHUB_WORKSPACE}/go
-          #export PATH=$PATH:$GOPATH/bin
           make $target
         working-directory: ${{ github.workspace }}/go/src/github.com/${{ github.repository }}
         env:
           target: ${{ matrix.target }}
-        timeout-minutes: 12
+
+      - name: upload coverage
+        shell: bash
+        working-directory: ${{ github.workspace }}/go/src/github.com/${{ github.repository }}
+        run: |
+          bash <(curl -s https://codecov.io/bash)
+        env:
+          CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}

@@ -234,3 +234,4 @@ func checkEnv(key string) bool {
 	env := os.Getenv(key)
 	return env != ""
 }
+

@@ -3,17 +3,12 @@ package orchestrator
 import (
 	"bytes"
 	"fmt"
-	"io"
-	"io/ioutil"
-	"os"
-	"os/signal"
-	"path/filepath"
-	"syscall"
-	"text/tabwriter"
-	"time"
-
 	"github.com/fatih/color"
 	"github.com/spf13/cobra"
+	"io"
+	"io/ioutil"
+	"path/filepath"
+	"text/tabwriter"
 
 	"go.amplifyedge.org/booty-v2/cmd"
 	"go.amplifyedge.org/booty-v2/config"
@@ -28,10 +23,6 @@ import (
 	"go.amplifyedge.org/booty-v2/internal/update"
 	sharedCmd "go.amplifyedge.org/shared-v2/tool/bs-crypt/cmd"
 	langCmd "go.amplifyedge.org/shared-v2/tool/bs-lang/cmd"
-)
-
-const (
-	gracefulPeriod = 5 * time.Second
 )
 
 // Orchestrator implements Executor, Agent, and Commander
@@ -106,7 +97,7 @@ func (o *Orchestrator) Command() *cobra.Command {
 		cmd.InstallCommand(o),
 		cmd.UninstallAllCommand(o),
 		cmd.UninstallCommand(o),
-		cmd.AgentCommand(o),
+		cmd.AgentCommand(o, o),
 		cmd.RunAllCommand(o),
 		cmd.ListAllCommand(o),
 		// here we exported all the internal tools we might need (bs-crypt, bs-lang, etc)
@@ -153,32 +144,19 @@ func (o *Orchestrator) AllComponents() []dep.Component {
 
 func (o *Orchestrator) DownloadAll() error {
 	o.logger.Info("downloading all components")
-	err := o.setupVersions()
-	if err != nil {
+	if err := o.setupVersions(); err != nil {
 		return err
 	}
-	//var tasks []*task
-	//for _, c := range o.components {
-	//	k := c
-	//	tasks = append(tasks, newTask(k.Download, dlErr(k)))
-	//}
-	//pool := newTaskPool(tasks)
-	//pool.runAll()
-	//for _, t := range pool.tasks {
-	//	if t.err != nil {
-	//		return t.errFunc(t.err)
-	//	}
-	//}
+	var tasks []*task
 	for _, c := range o.components {
-		if c.Dependencies() != nil {
-			for _, d := range c.Dependencies() {
-				if err = d.Download(); err != nil {
-					return err
-				}
-			}
-		}
-		if err = c.Download(); err != nil {
-			return err
+		k := c
+		tasks = append(tasks, newTask(k.Download, dlErr(k)))
+	}
+	pool := newTaskPool(tasks)
+	pool.runAll()
+	for _, t := range pool.tasks {
+		if t.err != nil {
+			return t.errFunc(t.err)
 		}
 	}
 	return nil
@@ -263,16 +241,16 @@ func (o *Orchestrator) InstallAll() error {
 
 func (o *Orchestrator) Uninstall(name string) error {
 	var err error
-	o.logger.Info("uninstall %s version %s", name)
-	for _, c := range o.components {
-		k := c
-		if k.Name() == name {
-			o.logger.Infof("uninstalling %s, version: %s", k.Name(), k.Version())
-			if err = k.Uninstall(); err != nil {
-				return errutil.New(errutil.ErrUninstallComponent, fmt.Errorf("name: %s, version: %s, err: %v", k.Name(), k.Version(), err))
-			}
-		}
+	o.logger.Infof("uninstall %s", name)
+	c := o.Component(name)
+	if c == nil {
+		return errutil.New(errutil.ErrUninstallComponent, fmt.Errorf("name: %s, err: no package of that name available", name))
 	}
+	o.logger.Infof("uninstalling %s, version: %s", c.Name(), c.Version())
+	if err = c.Uninstall(); err != nil {
+		return errutil.New(errutil.ErrUninstallComponent, fmt.Errorf("name: %s, version: %s, err: %v", c.Name(), c.Version(), err))
+	}
+
 	return nil
 }
 
@@ -342,10 +320,9 @@ func (o *Orchestrator) RunAll() error {
 // Agent
 // ================================================================
 
-func (o *Orchestrator) Serve() int {
+func (o *Orchestrator) Checker() *update.Checker {
 	var err error
-	// checks twice in one day
-	dur := 12 * time.Hour
+
 	// create new checker instance
 	repos := map[update.RepositoryURL]update.Version{}
 	for _, c := range o.components {
@@ -367,23 +344,7 @@ func (o *Orchestrator) Serve() int {
 		}
 		return nil
 	})
-	sigCh := make(chan os.Signal, 1)
-	signal.Notify(sigCh, syscall.SIGINT, syscall.SIGTERM)
-
-	ticker := time.NewTicker(dur)
-	for {
-		select {
-		case <-ticker.C:
-			o.logger.Info("checking all components update")
-			if err = checker.CheckNewReleases(); err != nil {
-				o.logger.Error(err)
-			}
-		case s := <-sigCh:
-			o.logger.Warningf("getting signal: %s, terminating gracefully", s.String())
-			// TODO do a proper shutdown instead of sleep like this
-			return 0
-		}
-	}
+	return checker
 }
 
 func setVersion(ac *config.AppConfig, c dep.Component) func() error {

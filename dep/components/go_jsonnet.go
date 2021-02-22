@@ -29,13 +29,17 @@ func (g *GoJsonnet) Name() string {
 }
 
 func (g *GoJsonnet) Version() update.Version {
-	return update.Version(g.version)
+	return g.version
 }
 
 func (g *GoJsonnet) Download() error {
 	targetDir := getDlPath(g.Name(), g.version.String())
 	if osutil.DirExists(targetDir) {
-		return downloader.GitCheckout("v"+g.version.String(), targetDir)
+		err := downloader.GitCheckout("v"+g.version.String(), targetDir)
+		if err != nil && err.Error() == "already up-to-date" {
+			return nil
+		}
+		return nil
 	}
 	return downloader.GitClone(jsonnetUrl, targetDir, "v"+g.version.String())
 }

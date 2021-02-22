@@ -1,5 +1,5 @@
 ![CI](https://github.com/amplify-edge/booty/workflows/CI/badge.svg)
-[![Cover](https://github.com/amplify-edge/booty/actions/workflows/tests.yml/badge.svg?event=pull_request)](https://github.com/amplify-edge/booty/actions/workflows/tests.yml)
+[![codecov](https://codecov.io/gh/alexadhy/booty/branch/master/graph/badge.svg?token=VLMYJWAQWJ)](https://codecov.io/gh/alexadhy/booty)
 
 # (WIP) Booty
 
@@ -32,10 +32,11 @@ The file `config.reference.json` is provided as a reference should you want to c
 
 1. Download 3rd party binaries and libraries our project needs
 2. Install said binaries
+3. Also install service, managed by OS' service supervisor, preferably as user service on dev and as system-wide service running under unprivileged user on production.
+4. Ability to run each service on the foreground like pingcap's `tiup playground`
+5. Ability to self update and check for updates for third party binaries
+
 
 ## Short Term TODO
 
-1. Also install service, managed by OS' service supervisor, preferably as user service on dev and as system-wide service running under unprivileged user on production.
-2. Ability to run each service on the foreground like pingcap's `tiup playground`
-3. Ability to self update and check for updates for third party binaries
 4. Manage configs and backups for `maintemplatev2`
