@@ -11,7 +11,8 @@ import (
 )
 
 const (
-	jbRepo = "https://github.com/jsonnet-bundler/jsonnet-bundler"
+	jbBaseRepo = "github.com/jsonnet-bundler/jsonnet-bundler"
+	jbRepo     = "https://" + jbBaseRepo
 )
 
 type Jb struct {
@@ -47,14 +48,7 @@ func (j *Jb) Version() update.Version {
 
 func (j *Jb) Download() error {
 	targetDir := getDlPath(j.Name(), j.version.String())
-	if osutil.DirExists(targetDir) {
-		err := downloader.GitCheckout("v"+j.version.String(), targetDir)
-		if err != nil && err.Error() == "already up-to-date" {
-			return nil
-		}
-		return nil
-	}
-	return downloader.GitClone(jbRepo, targetDir, "")
+	return downloader.Download(jbBaseRepo+"?ref=v"+j.version.String(), targetDir)
 }
 
 func (j *Jb) Dependencies() []dep.Component {
