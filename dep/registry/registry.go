@@ -34,6 +34,7 @@ func NewRegistry(db store.Storer) (*Registry, error) {
 		components.NewVicMet(db),
 		components.NewJb(db),
 		components.NewMkcert(db),
+		components.NewProtocGenInjectTag(db),
 	}
 
 	// register it
