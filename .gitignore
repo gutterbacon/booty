@@ -30,3 +30,4 @@ dist
 /internal/store/file/fileops_test.json
 /dep/components/testdata/
 /.idea/
+/coverage.txt
