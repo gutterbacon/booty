@@ -94,7 +94,7 @@ func (p *ProtocGenInjectTag) Uninstall() error {
 }
 
 func (p *ProtocGenInjectTag) Run(args ...string) error {
-	return osutil.Exec(p.Name(), args...)
+	return osutil.Exec(filepath.Join(osutil.GetBinDir(), p.Name()), args...)
 }
 
 func (p *ProtocGenInjectTag) Update(version update.Version) error {

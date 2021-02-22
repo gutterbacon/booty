@@ -92,7 +92,7 @@ func (m *Mkcert) Uninstall() error {
 
 func (m *Mkcert) Run(args ...string) error {
 	_ = os.Setenv("CAROOT", filepath.Join(osutil.GetDataDir(), m.Name()))
-	return osutil.Exec(m.Name(), args...)
+	return osutil.Exec(filepath.Join(osutil.GetBinDir(), m.Name()), args...)
 }
 
 func (m *Mkcert) Update(version update.Version) error {

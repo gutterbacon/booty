@@ -102,7 +102,7 @@ func (j *Jb) Uninstall() error {
 }
 
 func (j *Jb) Run(args ...string) error {
-	return osutil.Exec(j.Name(), args...)
+	return osutil.Exec(filepath.Join(osutil.GetBinDir(), j.Name()), args...)
 }
 
 func (j *Jb) Update(version update.Version) error {
