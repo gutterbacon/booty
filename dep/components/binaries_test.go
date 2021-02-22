@@ -41,6 +41,7 @@ func TestBinaries(t *testing.T) {
 	t.Run("testJb", testJb)
 	t.Run("testVictoriaMetrics", testVictoriaMetrics)
 	t.Run("testMkcert", testMkcert)
+	t.Run("testProtocGenInject", testProtocGenInject)
 }
 
 func testGrafana(t *testing.T) {
@@ -264,6 +265,22 @@ func testMkcert(t *testing.T) {
 	require.NoError(t, err)
 
 	err = m.Update("1.4.3")
+	require.NoError(t, err)
+
+	err = m.Uninstall()
+	require.NoError(t, err)
+}
+
+func testProtocGenInject(t *testing.T) {
+	m := components.NewProtocGenInjectTag(db)
+	m.SetVersion("1.1.0")
+	err := m.Download()
+	require.NoError(t, err)
+
+	err = m.Install()
+	require.NoError(t, err)
+
+	err = m.Update("1.1.0")
 	require.NoError(t, err)
 
 	err = m.Uninstall()
