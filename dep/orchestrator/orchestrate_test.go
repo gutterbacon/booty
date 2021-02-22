@@ -75,8 +75,9 @@ func testAll(t *testing.T) {
 	require.Error(t, errutil.New(errutil.ErrUninstallComponent, fmt.Errorf("name: %s, err: no package of that name available", "nonexistent")), err)
 
 	t.Log("listing all components")
-	_, err = composer.AllInstalledComponents()
+	b, err := composer.AllInstalledComponents()
 	require.NoError(t, err)
+	require.NotEqual(t, nil, b)
 
 	t.Log("running check for updates")
 	checker := composer.Checker()

@@ -2,7 +2,6 @@ package downloader
 
 import (
 	"fmt"
-	"go.amplifyedge.org/booty-v2/internal/osutil"
 	"net/url"
 	"os"
 	"path/filepath"
@@ -27,13 +26,11 @@ func Download(dlUrl string, targetDir string) error {
 	filename := filepath.Base(u.Path)
 	dlDir := filepath.Dir(targetDir)
 	destPath := filepath.Join(dlDir, filename)
-	if ex, err := osutil.IsEmptyDir(targetDir); err != nil || ex {
-		if err = downloadFile(dlUrl, destPath, filename); err != nil {
-			return err
-		}
-		if err = extractDownloadedFile(destPath, filename, targetDir); err != nil {
-			return err
-		}
+	if err = downloadFile(dlUrl, destPath, filename); err != nil {
+		return err
+	}
+	if err = extractDownloadedFile(destPath, filename, targetDir); err != nil {
+		return err
 	}
 	return nil
 }
@@ -91,6 +88,7 @@ func totalSz(f float64) string {
 
 func extractDownloadedFile(srcPath, filename, targetDir string) error {
 	var err error
+	_ = os.RemoveAll(targetDir)
 	fileExt := filepath.Ext(filename)
 	switch fileExt {
 	case ".gz", ".xz", ".zip", ".br", ".sz", ".bz2":
