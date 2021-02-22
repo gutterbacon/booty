@@ -2,6 +2,7 @@ package downloader
 
 import (
 	"fmt"
+	"io/ioutil"
 	"net/url"
 	"os"
 	"path/filepath"
@@ -18,6 +19,14 @@ const (
 	gbyte = 1 << 30
 )
 
+func isEmptyDir(name string) (bool, error) {
+	entries, err := ioutil.ReadDir(name)
+	if err != nil {
+		return false, err
+	}
+	return len(entries) == 0, nil
+}
+
 func Download(dlUrl string, targetDir string) error {
 	u, err := url.Parse(dlUrl)
 	if err != nil {
@@ -26,11 +35,13 @@ func Download(dlUrl string, targetDir string) error {
 	filename := filepath.Base(u.Path)
 	dlDir := filepath.Dir(targetDir)
 	destPath := filepath.Join(dlDir, filename)
-	if err = downloadFile(dlUrl, destPath, filename); err != nil {
-		return err
-	}
-	if err = extractDownloadedFile(destPath, filename, targetDir); err != nil {
-		return err
+	if notex, err := isEmptyDir(targetDir); notex || err != nil {
+		if err = downloadFile(dlUrl, destPath, filename); err != nil {
+			return err
+		}
+		if err = extractDownloadedFile(destPath, filename, targetDir); err != nil {
+			return err
+		}
 	}
 	return nil
 }
@@ -88,7 +99,6 @@ func totalSz(f float64) string {
 
 func extractDownloadedFile(srcPath, filename, targetDir string) error {
 	var err error
-	_ = os.RemoveAll(targetDir)
 	fileExt := filepath.Ext(filename)
 	switch fileExt {
 	case ".gz", ".xz", ".zip", ".br", ".sz", ".bz2":

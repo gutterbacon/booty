@@ -58,7 +58,7 @@ func (g *Grafana) Download() error {
 	case "windows":
 		fetchUrl = fmt.Sprintf(fetchUrlFormat, g.version, osname, "zip")
 	}
-	targetDir := osutil.GetDownloadDir()
+	targetDir := getDlPath(g.Name(), g.version.String())
 	err := downloader.Download(fetchUrl, targetDir)
 	if err != nil {
 		return err
@@ -96,7 +96,7 @@ func (g *Grafana) Install() error {
 		serverExecutable += ".exe"
 		clientExecutable += ".exe"
 	}
-	dlPath := getDlPath(g.Name(), g.version.String())
+	dlPath := filepath.Join(getDlPath(g.Name(), g.version.String()), g.Name()+"-"+g.version.String())
 
 	err = os.MkdirAll(grafanaEtcDir, 0755)
 

@@ -2,8 +2,6 @@ package osutil
 
 import (
 	"fmt"
-	"io/fs"
-	"io/ioutil"
 	"log"
 	"os"
 	"os/exec"
@@ -237,11 +235,3 @@ func checkEnv(key string) bool {
 	return env != ""
 }
 
-func IsEmptyDir(name string) (bool, error) {
-	var entries []fs.FileInfo
-	entries, err = ioutil.ReadDir(name)
-	if err != nil {
-		return false, err
-	}
-	return len(entries) == 0, nil
-}
