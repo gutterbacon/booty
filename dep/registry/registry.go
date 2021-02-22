@@ -1,7 +1,6 @@
 package registry
 
 import (
-	"go.amplifyedge.org/booty-v2/config"
 	"go.amplifyedge.org/booty-v2/dep"
 	"go.amplifyedge.org/booty-v2/dep/components"
 	"go.amplifyedge.org/booty-v2/internal/store"
@@ -12,7 +11,7 @@ type Registry struct {
 	Components    map[string]dep.Component
 }
 
-func NewRegistry(db store.Storer, ac *config.AppConfig) (*Registry, error) {
+func NewRegistry(db store.Storer) (*Registry, error) {
 	var err error
 	// protoc deps
 	protoGenGo := components.NewProtocGenGo(db)
@@ -34,6 +33,7 @@ func NewRegistry(db store.Storer, ac *config.AppConfig) (*Registry, error) {
 		components.NewGoJsonnet(db),
 		components.NewVicMet(db),
 		components.NewJb(db),
+		components.NewMkcert(db),
 	}
 
 	// register it

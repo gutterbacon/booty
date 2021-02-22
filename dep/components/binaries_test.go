@@ -40,6 +40,7 @@ func TestBinaries(t *testing.T) {
 	t.Run("testGoJsonnet", testGoJsonnet)
 	t.Run("testJb", testJb)
 	t.Run("testVictoriaMetrics", testVictoriaMetrics)
+	t.Run("testMkcert", testMkcert)
 }
 
 func testGrafana(t *testing.T) {
@@ -250,5 +251,21 @@ func testJb(t *testing.T) {
 
 	//// uninstall
 	err = g.Uninstall()
+	require.NoError(t, err)
+}
+
+func testMkcert(t *testing.T) {
+	m := components.NewMkcert(db)
+	m.SetVersion("1.4.3")
+	err := m.Download()
+	require.NoError(t, err)
+
+	err = m.Install()
+	require.NoError(t, err)
+
+	err = m.Update("1.4.3")
+	require.NoError(t, err)
+
+	err = m.Uninstall()
 	require.NoError(t, err)
 }

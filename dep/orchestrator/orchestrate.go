@@ -69,7 +69,7 @@ func NewOrchestrator(app string) *Orchestrator {
 	}
 
 	// setup registry
-	registry, err := rg.NewRegistry(db, ac)
+	registry, err := rg.NewRegistry(db)
 	if err != nil {
 		logger.Fatalf("error creating components: %v", err)
 	}
