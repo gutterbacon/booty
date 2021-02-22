@@ -19,9 +19,8 @@ func Download(dlUrl string, targetDir string) error {
 	}
 	var notex bool
 
-	httpGetter := getter.HttpGetter{Netrc: true}
-
 	if notex, err = isEmptyDir(targetDir); notex || err != nil {
+		httpGetter := getter.HttpGetter{Netrc: true}
 		pbar := progressBar{}
 		progress := getter.WithProgress(&pbar)
 		client := &getter.Client{
