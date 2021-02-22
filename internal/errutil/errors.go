@@ -19,6 +19,7 @@ const (
 	ErrInstallComponent
 	ErrUninstallComponent
 	ErrUpdateComponent
+	ErrCleaningCache
 )
 
 // Error contains error reason and the actual error if any
@@ -61,6 +62,8 @@ func (err Error) description() string {
 		return "Failed to update component"
 	case ErrSettingVersion:
 		return "Error setting component's version"
+	case ErrCleaningCache:
+		return "Error cleaning cache directory"
 	}
 
 	return "Unknown error"

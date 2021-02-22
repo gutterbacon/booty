@@ -22,6 +22,7 @@ type Executor interface {
 	UninstallAll() error                // uninstall all components
 	Backup(name string) error           // backup single component by its name
 	BackupAll() error                   // backup all components
+	CleanCache() error
 }
 
 // Agent is responsible for

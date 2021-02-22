@@ -5,6 +5,7 @@ import (
 	"go.amplifyedge.org/booty-v2/internal/fileutil"
 	"go.amplifyedge.org/booty-v2/internal/osutil"
 	"go.amplifyedge.org/booty-v2/internal/store"
+	"go.amplifyedge.org/booty-v2/internal/update"
 	"os"
 	"path/filepath"
 )
@@ -32,4 +33,19 @@ func commonInstall(c dep.Component, filesMap map[string][]interface{}) (*store.I
 		ip.FilesMap[installedName] = sum
 	}
 	return &ip, nil
+}
+
+func commonUpdate(c dep.Component, version update.Version) error {
+	var err error
+	c.SetVersion(version)
+	if err = c.RunStop(); err != nil {
+		return err
+	}
+	if err = c.Uninstall(); err != nil {
+		return err
+	}
+	if err = c.Download(); err != nil {
+		return err
+	}
+	return c.Install()
 }

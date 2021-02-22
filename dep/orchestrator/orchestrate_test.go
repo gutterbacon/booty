@@ -99,4 +99,8 @@ func testAll(t *testing.T) {
 	t.Log("uninstall all components")
 	err = composer.UninstallAll()
 	require.NoError(t, err)
+
+	t.Log("clean all cache dir")
+	err = composer.CleanCache()
+	require.NoError(t, err)
 }

@@ -9,7 +9,7 @@ const (
 	gbyte = 1 << 30
 )
 
-func isEmptyDir(name string) (bool, error) {
+func IsEmptyDir(name string) (bool, error) {
 	entries, err := ioutil.ReadDir(name)
 	if err != nil {
 		return false, err

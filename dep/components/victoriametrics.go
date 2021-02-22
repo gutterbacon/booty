@@ -25,18 +25,29 @@ const (
 )
 
 type VicMet struct {
-	version update.Version
-	db      store.Storer
-	svcs    []*service.Svc
+	version       update.Version
+	db            store.Storer
+	svcs          []*service.Svc
+	vmStoragePath string
+	vmConfigPath  string
 }
 
 func (v *VicMet) IsService() bool {
 	return true
 }
 
+const (
+	vname = "victoria-metrics"
+)
+
 func NewVicMet(db store.Storer) *VicMet {
+	vmStoragePath := filepath.Join(osutil.GetEtcDir(), vname, "storage")
+	_ = os.MkdirAll(vmStoragePath, 0700)
+	vmConfigPath := filepath.Join(osutil.GetEtcDir(), vname, "prometheus.yml")
 	return &VicMet{
-		db: db,
+		db:            db,
+		vmStoragePath: vmStoragePath,
+		vmConfigPath:  vmConfigPath,
 	}
 }
 
@@ -44,16 +55,16 @@ func (v *VicMet) SetVersion(ver update.Version) {
 	v.version = ver
 }
 
-func (v *VicMet) service(promCfgPath, vmStoragePath string) ([]*service.Svc, error) {
+func (v *VicMet) service() ([]*service.Svc, error) {
 	vmConfig := &ks.Config{
 		Name:        v.Name(),
 		DisplayName: v.Name(),
 		Description: "fast, cost-effective monitoring solution and time series database",
 		Arguments: []string{
-			"--promscrape.config=" + promCfgPath,
+			"--promscrape.config=" + v.vmConfigPath,
 			"--opentsdbListenAddr=:4242",
 			"--httpListenAddr=:8428",
-			"--storageDataPath=" + vmStoragePath,
+			"--storageDataPath=" + v.vmStoragePath,
 		},
 		Executable: filepath.Join(osutil.GetBinDir(), v.Name()),
 		Option:     map[string]interface{}{},
@@ -82,7 +93,7 @@ func (v *VicMet) service(promCfgPath, vmStoragePath string) ([]*service.Svc, err
 }
 
 func (v *VicMet) Name() string {
-	return "victoria-metrics"
+	return vname
 }
 
 func (v *VicMet) Version() update.Version {
@@ -123,31 +134,23 @@ func (v *VicMet) Install() error {
 			filepath.Join(binDir, r), 0755,
 		}
 	}
-	vmStoragePath := filepath.Join(osutil.GetDataDir(), v.Name(), "storage")
-	if err = os.MkdirAll(vmStoragePath, 0755); err != nil {
-		return err
-	}
-	vmConfigPath := filepath.Join(osutil.GetEtcDir(), v.Name(), "prometheus.yml")
-	if err = os.MkdirAll(vmConfigPath, 0755); err != nil {
-		return err
-	}
 	ip, err := commonInstall(v, filesMap)
 	if err != nil {
 		return err
 	}
 
 	// install default config
-	if exists := osutil.Exists(vmConfigPath); !exists {
+	if exists := osutil.Exists(v.vmConfigPath); !exists {
 		promData, err := prometheusCfgSample.ReadFile("files/prometheus.yml")
 		if err != nil {
 			return err
 		}
-		if err = ioutil.WriteFile(vmConfigPath, promData, 0600); err != nil {
+		if err = ioutil.WriteFile(v.vmConfigPath, promData, 0600); err != nil {
 			return err
 		}
 	}
 	// install services
-	svcs, err := v.service(vmConfigPath, vmStoragePath)
+	svcs, err := v.service()
 	if err != nil {
 		return err
 	}
@@ -180,10 +183,9 @@ func (v *VicMet) Uninstall() error {
 			return err
 		}
 	}
-	vmStoragePath := filepath.Join(osutil.GetDataDir(), v.Name(), "storage")
-	vmConfigPath := filepath.Join(osutil.GetEtcDir(), v.Name(), "prometheus.yml")
+
 	if v.svcs == nil {
-		v.svcs, _ = v.service(vmConfigPath, vmStoragePath)
+		v.svcs, _ = v.service()
 	}
 	for _, s := range v.svcs {
 		_ = s.Uninstall()
@@ -196,10 +198,8 @@ func (v *VicMet) Run(args ...string) error {
 	if osutil.GetOS() == "windows" {
 		return nil
 	}
-	vmStoragePath := filepath.Join(osutil.GetDataDir(), v.Name(), "storage")
-	vmConfigPath := filepath.Join(osutil.GetEtcDir(), v.Name(), "prometheus.yml")
 	if v.svcs == nil {
-		svcs, err := v.service(vmConfigPath, vmStoragePath)
+		svcs, err := v.service()
 		if err != nil {
 			return err
 		}
@@ -217,24 +217,15 @@ func (v *VicMet) Update(version update.Version) error {
 	if osutil.GetOS() == "windows" {
 		return nil
 	}
-	v.version = version
-	if err := v.Uninstall(); err != nil {
-		return err
-	}
-	if err := v.Download(); err != nil {
-		return err
-	}
-	return v.Install()
+	return commonUpdate(v, version)
 }
 
 func (v *VicMet) RunStop() error {
 	if osutil.GetOS() == "windows" {
 		return nil
 	}
-	vmStoragePath := filepath.Join(osutil.GetDataDir(), v.Name(), "storage")
-	vmConfigPath := filepath.Join(osutil.GetEtcDir(), v.Name(), "prometheus.yml")
 	if v.svcs == nil {
-		svcs, err := v.service(vmConfigPath, vmStoragePath)
+		svcs, err := v.service()
 		if err != nil {
 			return err
 		}

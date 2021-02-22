@@ -171,14 +171,7 @@ func (c *Caddy) Uninstall() error {
 }
 
 func (c *Caddy) Update(version update.Version) error {
-	c.SetVersion(version)
-	if err := c.Uninstall(); err != nil {
-		return err
-	}
-	if err := c.Download(); err != nil {
-		return err
-	}
-	return c.Install()
+	return commonUpdate(c, version)
 }
 
 func (c *Caddy) Run(_ ...string) error {

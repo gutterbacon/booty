@@ -105,14 +105,7 @@ func (g *GoJsonnet) SetVersion(v update.Version) {
 }
 
 func (g *GoJsonnet) Update(version update.Version) error {
-	g.SetVersion(version)
-	if err := g.Uninstall(); err != nil {
-		return err
-	}
-	if err := g.Download(); err != nil {
-		return err
-	}
-	return g.Install()
+	return commonUpdate(g, version)
 }
 
 func (g *GoJsonnet) RunStop() error {

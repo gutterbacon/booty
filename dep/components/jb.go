@@ -106,14 +106,7 @@ func (j *Jb) Run(args ...string) error {
 }
 
 func (j *Jb) Update(version update.Version) error {
-	j.SetVersion(version)
-	if err := j.Uninstall(); err != nil {
-		return err
-	}
-	if err := j.Download(); err != nil {
-		return err
-	}
-	return j.Install()
+	return commonUpdate(j, version)
 }
 
 func (j *Jb) RunStop() error {

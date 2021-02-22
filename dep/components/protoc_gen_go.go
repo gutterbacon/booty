@@ -103,14 +103,7 @@ func (p *ProtocGenGo) Run(args ...string) error {
 }
 
 func (p *ProtocGenGo) Update(version update.Version) error {
-	p.version = version
-	if err := p.Uninstall(); err != nil {
-		return err
-	}
-	if err := p.Download(); err != nil {
-		return err
-	}
-	return p.Install()
+	return commonUpdate(p, version)
 }
 
 func (p *ProtocGenGo) RunStop() error {
