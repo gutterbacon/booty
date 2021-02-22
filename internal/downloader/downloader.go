@@ -2,6 +2,7 @@ package downloader
 
 import (
 	"fmt"
+	"go.amplifyedge.org/booty-v2/internal/osutil"
 	"net/url"
 	"os"
 	"path/filepath"
@@ -26,11 +27,13 @@ func Download(dlUrl string, targetDir string) error {
 	filename := filepath.Base(u.Path)
 	dlDir := filepath.Dir(targetDir)
 	destPath := filepath.Join(dlDir, filename)
-	if err = downloadFile(dlUrl, destPath, filename); err != nil {
-		return err
-	}
-	if err = extractDownloadedFile(destPath, filename, targetDir); err != nil {
-		return err
+	if ex, err := osutil.IsEmptyDir(targetDir); err != nil || ex {
+		if err = downloadFile(dlUrl, destPath, filename); err != nil {
+			return err
+		}
+		if err = extractDownloadedFile(destPath, filename, targetDir); err != nil {
+			return err
+		}
 	}
 	return nil
 }

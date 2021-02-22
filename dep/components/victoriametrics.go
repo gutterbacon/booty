@@ -164,7 +164,7 @@ func (v *VicMet) Install() error {
 	if err = v.db.New(ip); err != nil {
 		return err
 	}
-	return os.RemoveAll(dlPath)
+	return nil
 }
 
 func (v *VicMet) Uninstall() error {
@@ -194,6 +194,7 @@ func (v *VicMet) Uninstall() error {
 	for _, s := range v.svcs {
 		_ = s.Uninstall()
 	}
+	_ = os.RemoveAll(getDlPath(v.Name(), v.version.String()))
 	return nil
 }
 

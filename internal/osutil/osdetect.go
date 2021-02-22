@@ -2,6 +2,8 @@ package osutil
 
 import (
 	"fmt"
+	"io/fs"
+	"io/ioutil"
 	"log"
 	"os"
 	"os/exec"
@@ -233,4 +235,13 @@ func DirExists(dpath string) bool {
 func checkEnv(key string) bool {
 	env := os.Getenv(key)
 	return env != ""
+}
+
+func IsEmptyDir(name string) (bool, error) {
+	var entries []fs.FileInfo
+	entries, err = ioutil.ReadDir(name)
+	if err != nil {
+		return false, err
+	}
+	return len(entries) == 0, nil
 }

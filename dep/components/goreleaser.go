@@ -90,7 +90,7 @@ func (g *Goreleaser) Install() error {
 	if err = g.db.New(ip); err != nil {
 		return err
 	}
-	return os.RemoveAll(dlPath)
+	return nil
 }
 
 func (g *Goreleaser) Uninstall() error {
