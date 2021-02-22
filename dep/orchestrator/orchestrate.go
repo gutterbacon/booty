@@ -241,7 +241,7 @@ func (o *Orchestrator) InstallAll() error {
 
 func (o *Orchestrator) Uninstall(name string) error {
 	var err error
-	o.logger.Info("uninstall %s version %s", name)
+	o.logger.Infof("uninstall %s", name)
 	c := o.Component(name)
 	if c == nil {
 		return errutil.New(errutil.ErrUninstallComponent, fmt.Errorf("name: %s, err: no package of that name available", name))
