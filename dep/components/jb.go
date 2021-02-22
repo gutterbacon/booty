@@ -48,7 +48,11 @@ func (j *Jb) Version() update.Version {
 func (j *Jb) Download() error {
 	targetDir := getDlPath(j.Name(), j.version.String())
 	if osutil.DirExists(targetDir) {
-		return downloader.GitCheckout("v"+j.version.String(), targetDir)
+		err := downloader.GitCheckout("v"+j.version.String(), targetDir)
+		if err != nil && err.Error() == "already up-to-date" {
+			return nil
+		}
+		return nil
 	}
 	return downloader.GitClone(jbRepo, targetDir, "")
 }

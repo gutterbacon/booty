@@ -95,7 +95,11 @@ func (v *VicMet) Download() error {
 	}
 	targetDir := getDlPath(v.Name(), v.version.String())
 	if osutil.DirExists(targetDir) {
-		return downloader.GitCheckout("v"+v.version.String(), targetDir)
+		err := downloader.GitCheckout("v"+v.version.String(), targetDir)
+		if err != nil && err.Error() == "already up-to-date" {
+			return nil
+		}
+		return nil
 	}
 	return downloader.GitClone(vicmetUrlFmt, targetDir, "v"+v.version.String())
 }

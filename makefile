@@ -21,4 +21,4 @@ release:
 	./bin/booty release release
 
 test:
-	go test -v -race -coverprofile=coverage.txt -covermode=atomic ./dep/orchestrator
+	go test -v -short=false -race -coverprofile=coverage.txt -covermode=atomic ./dep/orchestrator

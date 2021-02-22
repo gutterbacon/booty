@@ -55,7 +55,7 @@ func testAll(t *testing.T) {
 	require.NoError(t, err)
 
 	t.Log("installing single component")
-	err = composer.Install("goreleaser", "0.155.1")
+	err = composer.Install("goreleaser", "0.157.0")
 	require.NoError(t, err)
 
 	t.Log("installing single non-existent component")
