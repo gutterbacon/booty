@@ -6,6 +6,7 @@ require (
 	github.com/PuerkitoBio/goquery v1.6.1
 	github.com/cheggaaa/pb/v3 v3.0.6
 	github.com/fatih/color v1.10.0
+	github.com/go-git/go-git/v5 v5.2.0
 	github.com/google/go-github v17.0.0+incompatible
 	github.com/google/go-querystring v1.0.0 // indirect
 	github.com/hashicorp/go-getter v1.5.2

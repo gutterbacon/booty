@@ -11,6 +11,7 @@ import (
 
 var (
 	filedb *file.DB
+	repoDb *file.DB
 	ips    = []*store.InstalledPackage{
 		{
 			Name:    "grafana",
@@ -27,20 +28,29 @@ var (
 			},
 		},
 	}
+	repos = map[string]string{
+		"sys-share": "./testdata/sys-share",
+		"sys":       "./testdata/sys",
+	}
 )
 
 func init() {
 	var err error
 	l := zaplog.NewZapLogger(zaplog.DEBUG, "store-test", true)
 	l.InitLogger(nil)
-	filedb, err = file.NewDB(l, "./fileops_test.json")
+	filedb, err = file.NewDB(l, "./fileops_test.json", false)
 	if err != nil {
 		l.Fatalf("error creating file: %v", err)
+	}
+	repoDb, err = file.NewDB(l, "repoops_test.json", true)
+	if err != nil {
+		l.Fatalf("error creating repo database: %v", err)
 	}
 }
 
 func TestFileDB(t *testing.T) {
 	t.Run("testAll", testAll)
+	t.Run("testRepo", testRepo)
 }
 
 func testAll(t *testing.T) {
@@ -74,4 +84,28 @@ func testAll(t *testing.T) {
 	listIps, _ = filedb.List()
 	require.Equal(t, 1, len(listIps))
 	require.Equal(t, ips[1], listIps[0])
+}
+
+func testRepo(t *testing.T) {
+	for k, v := range repos {
+		err := repoDb.RegisterRepo(k, v)
+		require.NoError(t, err)
+
+		dirPath := repoDb.GetRepo(k)
+		require.Equal(t, v, dirPath)
+	}
+
+	listRepo, err := repoDb.ListRepo()
+	require.NoError(t, err)
+	require.Equal(t, repos, listRepo)
+
+	err = repoDb.UnregisterRepo("sys-share")
+	require.NoError(t, err)
+
+	listRepo, err = repoDb.ListRepo()
+	require.Equal(t, 1, len(listRepo))
+	require.Equal(t, repos["sys"], listRepo["sys"])
+
+	err = repoDb.UnregisterAll()
+	require.NoError(t, err)
 }

@@ -63,3 +63,21 @@ type Component interface {
 	IsService() bool
 	RepoUrl() update.RepositoryURL
 }
+
+// replacing os.mk and help.mk
+type InformationCenter interface {
+	OSInfo() []byte
+	GitInfo() []byte
+}
+
+// replacing gitr.mk
+type GitWrapper interface {
+	SetupFork(upstreamOwner string) error
+	CatchupFork() error
+	RegisterRepos(directories ...string) error
+	Stage() error
+	Commit(msg string) error
+	SubmitPR(prMsg string) error
+	CreateTag(tagName string, tagMsg string) error
+	DeleteTag(tagName string)
+}
