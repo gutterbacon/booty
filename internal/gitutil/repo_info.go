@@ -82,13 +82,15 @@ func (gh *GitHelper) RepoInfo(dirpath string) (*RepoInfo, error) {
 	if err != nil {
 		return nil, err
 	}
+	repo := strings.Split(ep.Path, "/")
 	if userName == "" && originUrl != "" {
-		repo := strings.Split(ep.Path, "/")
 		if len(repo) == 2 {
 			userName = repo[0]
-			repoName = repo[1]
-			repoName = strings.TrimSuffix(repoName, ".git")
 		}
+	}
+	if len(repo) == 2 {
+		repoName = repo[1]
+		repoName = strings.TrimSuffix(repoName, ".git")
 	}
 	originOwner = userName
 	repoHost = ep.Host

@@ -167,11 +167,14 @@ func (gh *GitHelper) SubmitPR() error {
 
 func (gh *GitHelper) RegisterRepos(dirs ...string) error {
 	// iterate over directories specified
-	var err error
 	// register repos to the db
 	for _, d := range dirs {
+		abspath, err := filepath.Abs(d)
+		if err != nil {
+			return err
+		}
 		repoName := filepath.Base(d)
-		if err = gh.db.RegisterRepo(repoName, d); err != nil {
+		if err = gh.db.RegisterRepo(repoName, abspath); err != nil {
 			return err
 		}
 	}
