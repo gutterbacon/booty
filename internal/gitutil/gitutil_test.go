@@ -11,6 +11,10 @@ import (
 
 var gh *gitutil.GitHelper
 
+const (
+	remoteTemplate = `git@{{ .RepoHost }}:{{ .UpstreamOwner }}/{{ .Name }}`
+)
+
 func init() {
 	l := zaplog.NewZapLogger(zaplog.DEBUG, "gitutil-test", true)
 	l.InitLogger(nil)
@@ -26,6 +30,4 @@ func TestGit(t *testing.T) {
 	repoInfo, err := gh.RepoInfo(wd)
 	require.NoError(t, err)
 	t.Log(repoInfo.String())
-
-
 }

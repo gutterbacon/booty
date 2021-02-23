@@ -17,7 +17,7 @@ import (
 )
 
 const (
-	remoteTemplate = `git@{{ .RepoHost }}:{{ .UpstreamOwner }}/{{ .RepoName }}`
+	remoteTemplate = `git@{{ .RepoHost }}:{{ .UpstreamOwner }}/{{ .Name }}`
 )
 
 type GitHelper struct {
@@ -47,22 +47,23 @@ func (gh *GitHelper) CatchupFork() error {
 	if err != nil {
 		return err
 	}
-	//err = r.Fetch(&git.FetchOptions{RemoteName: "upstream"})
-	//if err != nil {
-	//	return err
-	//}
+	err = r.Fetch(&git.FetchOptions{RemoteName: "upstream"})
+	if err != nil {
+		return err
+	}
 	wt, err := r.Worktree()
 	var auth transport.AuthMethod
 	auth, err = gh.publicKey()
 	if err != nil {
 		auth = nil
 	}
-	return wt.Pull(&git.PullOptions{
+	err = wt.Pull(&git.PullOptions{
 		RemoteName:    "upstream",
-		ReferenceName: "master",
+		ReferenceName: "refs/head/master",
 		SingleBranch:  false,
 		Auth:          auth,
 	})
+	return err
 }
 
 func (gh *GitHelper) StageAll() error {
@@ -200,7 +201,7 @@ func (gh *GitHelper) SetupFork(upstreamOwner string) error {
 			info.UpstreamOwner = upstreamOwner
 			t := template.Must(template.New("upstreamUrl").Parse(remoteTemplate))
 			buf := new(bytes.Buffer)
-			if err = t.ExecuteTemplate(buf, "upstreamUrl", &info); err != nil {
+			if err = t.ExecuteTemplate(buf, "upstreamUrl", info); err != nil {
 				return err
 			}
 			info.Upstream = buf.String()
