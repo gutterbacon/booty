@@ -5,10 +5,11 @@ import (
 	"github.com/go-git/go-git/v5"
 	"github.com/go-git/go-git/v5/config"
 	"github.com/go-git/go-git/v5/plumbing/transport/ssh"
+	stdssh     "golang.org/x/crypto/ssh"
 	"go.amplifyedge.org/booty-v2/internal/osutil"
 	"go.amplifyedge.org/booty-v2/internal/store"
-	"io/ioutil"
 	"os"
+	"os/user"
 	"path/filepath"
 	"text/template"
 )
@@ -19,21 +20,32 @@ const (
 
 type GitHelper struct {
 	db         store.RepoStorer
-	sshKeyPath string
+	userEmail  string
 }
 
-func NewHelper(db store.RepoStorer, sshKeyPath string) *GitHelper {
-	return &GitHelper{db: db, sshKeyPath: sshKeyPath}
+func NewHelper(db store.RepoStorer, userEmail string) *GitHelper {
+	return &GitHelper{db: db, userEmail: userEmail}
 }
 
-func publicKey(filePath string) (*ssh.PublicKeys, error) {
-	var publicKey *ssh.PublicKeys
-	sshKey, _ := ioutil.ReadFile(filePath)
-	publicKey, err := ssh.NewPublicKeys("git", []byte(sshKey), "")
+func (gh *GitHelper) publicKey() (*ssh.PublicKeys, error) {
+	var pkey *ssh.PublicKeys
+	currentUser, err := user.Current()
 	if err != nil {
 		return nil, err
 	}
-	return publicKey, err
+	cb, err := ssh.NewSSHAgentAuth(currentUser.Name)
+	if err != nil {
+		return nil, err
+	}
+	signers, err := cb.Callback()
+	if err != nil {
+		return nil, err
+	}
+	for _, s := range signers {
+		pk := s.PublicKey().Marshal()
+		stdssh.ParseAuthorizedKey(pk)
+	}
+	return pkey, err
 }
 
 func (gh *GitHelper) CatchupFork() error {
@@ -93,14 +105,6 @@ func (gh *GitHelper) SubmitPR(prMsg string) error {
 	return nil
 }
 
-func (gh *GitHelper) CreateTag(tagName string, tagMsg string) error {
-	return nil
-}
-
-func (gh *GitHelper) DeleteTag(tagName string) {
-	return
-}
-
 func (gh *GitHelper) RegisterRepos(dirs ...string) error {
 	// iterate over directories specified
 	var err error
@@ -154,6 +158,9 @@ func (gh *GitHelper) SetupFork(upstreamOwner string) error {
 		}
 		if cfg.User.Name == "" {
 			cfg.User.Name = info.UserName
+		}
+		if cfg.User.Email == "" {
+			cfg.User.Email = gh.userEmail
 		}
 		if err = r.SetConfig(cfg); err != nil {
 			return err

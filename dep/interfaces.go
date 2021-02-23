@@ -79,5 +79,6 @@ type GitWrapper interface {
 	Commit(msg string) error
 	SubmitPR(prMsg string) error
 	CreateTag(tagName string, tagMsg string) error
+	PushTag(tagName string) error
 	DeleteTag(tagName string)
 }
