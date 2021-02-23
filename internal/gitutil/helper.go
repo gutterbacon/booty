@@ -2,15 +2,17 @@ package gitutil
 
 import (
 	"bytes"
+	"fmt"
 	"github.com/go-git/go-git/v5"
 	"github.com/go-git/go-git/v5/config"
+	"github.com/go-git/go-git/v5/plumbing/transport"
 	"github.com/go-git/go-git/v5/plumbing/transport/ssh"
-	stdssh     "golang.org/x/crypto/ssh"
 	"go.amplifyedge.org/booty-v2/internal/osutil"
 	"go.amplifyedge.org/booty-v2/internal/store"
 	"os"
 	"os/user"
 	"path/filepath"
+	"strings"
 	"text/template"
 )
 
@@ -19,33 +21,21 @@ const (
 )
 
 type GitHelper struct {
-	db         store.RepoStorer
-	userEmail  string
+	db        store.RepoStorer
+	userEmail string
 }
 
 func NewHelper(db store.RepoStorer, userEmail string) *GitHelper {
 	return &GitHelper{db: db, userEmail: userEmail}
 }
 
-func (gh *GitHelper) publicKey() (*ssh.PublicKeys, error) {
-	var pkey *ssh.PublicKeys
+func (gh *GitHelper) publicKey() (*ssh.PublicKeysCallback, error) {
 	currentUser, err := user.Current()
 	if err != nil {
 		return nil, err
 	}
 	cb, err := ssh.NewSSHAgentAuth(currentUser.Name)
-	if err != nil {
-		return nil, err
-	}
-	signers, err := cb.Callback()
-	if err != nil {
-		return nil, err
-	}
-	for _, s := range signers {
-		pk := s.PublicKey().Marshal()
-		stdssh.ParseAuthorizedKey(pk)
-	}
-	return pkey, err
+	return cb, err
 }
 
 func (gh *GitHelper) CatchupFork() error {
@@ -57,17 +47,25 @@ func (gh *GitHelper) CatchupFork() error {
 	if err != nil {
 		return err
 	}
-	err = r.Fetch(&git.FetchOptions{RemoteName: "upstream"})
+	//err = r.Fetch(&git.FetchOptions{RemoteName: "upstream"})
+	//if err != nil {
+	//	return err
+	//}
+	wt, err := r.Worktree()
+	var auth transport.AuthMethod
+	auth, err = gh.publicKey()
 	if err != nil {
-		return err
+		auth = nil
 	}
-	if err = osutil.Exec("git", "merge", "upstream/master"); err != nil {
-		return err
-	}
-	return nil
+	return wt.Pull(&git.PullOptions{
+		RemoteName:    "upstream",
+		ReferenceName: "master",
+		SingleBranch:  false,
+		Auth:          auth,
+	})
 }
 
-func (gh *GitHelper) Stage() error {
+func (gh *GitHelper) StageAll() error {
 	wd, err := os.Getwd()
 	if err != nil {
 		return err
@@ -83,8 +81,29 @@ func (gh *GitHelper) Stage() error {
 	return wt.AddGlob("*")
 }
 
-func (gh *GitHelper) Commit(msg string) error {
+func (gh *GitHelper) Stage(args ...string) error {
+	wd, err := os.Getwd()
+	if err != nil {
+		return err
+	}
+	r, err := gh.openGitDir(wd)
+	if err != nil {
+		return err
+	}
+	wt, err := r.Worktree()
+	if err != nil {
+		return err
+	}
+	for _, i := range args {
+		_, err = wt.Add(i)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
 
+func (gh *GitHelper) Commit(msg string) error {
 	wd, err := os.Getwd()
 	if err != nil {
 		return err
@@ -101,8 +120,49 @@ func (gh *GitHelper) Commit(msg string) error {
 	return err
 }
 
-func (gh *GitHelper) SubmitPR(prMsg string) error {
-	return nil
+func (gh *GitHelper) Push() error {
+	wd, err := os.Getwd()
+	if err != nil {
+		return err
+	}
+	r, err := gh.openGitDir(wd)
+	if err != nil {
+		return err
+	}
+	auth, err := gh.publicKey()
+	if err != nil {
+		auth = nil
+	}
+	return r.Push(&git.PushOptions{
+		Auth: auth,
+	})
+}
+
+func (gh *GitHelper) SubmitPR() error {
+	wd, err := os.Getwd()
+	if err != nil {
+		return err
+	}
+	info, err := gh.RepoInfo(wd)
+	if err != nil {
+		return err
+	}
+	if info.Upstream == "" {
+		return fmt.Errorf("empty upstream url")
+	}
+	var executable string
+	switch osutil.GetOS() {
+	case "darwin":
+		executable = "open"
+	case "linux":
+		executable = "xdg-open"
+	case "windows":
+		executable = "start"
+	}
+	// https://github.com/amplify-edge/booty/compare/master...alexadhy:master
+	host := strings.Split(info.RepoHost, "-")[0]
+	compareUrl := fmt.Sprintf("https://%s/%s/%s/compare/master..%s:%s", host, info.UpstreamOwner, info.Name, info.UserName, info.CurrentBranch)
+	return osutil.Exec(executable, compareUrl)
 }
 
 func (gh *GitHelper) RegisterRepos(dirs ...string) error {
@@ -124,7 +184,7 @@ func (gh *GitHelper) SetupFork(upstreamOwner string) error {
 		return err
 	}
 	for _, v := range repos {
-		info, err := gh.GetInfo(v)
+		info, err := gh.RepoInfo(v)
 		if err != nil {
 			return err
 		}
@@ -159,10 +219,27 @@ func (gh *GitHelper) SetupFork(upstreamOwner string) error {
 		if cfg.User.Name == "" {
 			cfg.User.Name = info.UserName
 		}
-		if cfg.User.Email == "" {
+		if cfg.User.Email == "" && gh.userEmail != "" {
 			cfg.User.Email = gh.userEmail
 		}
 		if err = r.SetConfig(cfg); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func (gh *GitHelper) CatchupAll() error {
+	repos, err := gh.db.ListRepo()
+	if err != nil {
+		return err
+	}
+	for _, v := range repos {
+		err = os.Chdir(v)
+		if err != nil {
+			return err
+		}
+		if err = gh.CatchupFork(); err != nil {
 			return err
 		}
 	}

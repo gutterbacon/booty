@@ -6,6 +6,7 @@ import (
 	"github.com/fatih/color"
 	"github.com/spf13/cobra"
 	"go.amplifyedge.org/booty-v2/internal/downloader"
+	"go.amplifyedge.org/booty-v2/internal/gitutil"
 	"io"
 	"io/ioutil"
 	"os"
@@ -34,6 +35,7 @@ type Orchestrator struct {
 	logger     logging.Logger
 	command    *cobra.Command
 	db         store.Storer
+	gw         dep.GitWrapper
 }
 
 // constructor
@@ -65,10 +67,16 @@ func NewOrchestrator(app string) *Orchestrator {
 	ac = config.NewAppConfig(logger, fileContent)
 
 	// setup file database for package tracking
-	db, err := file.NewDB(logger, filepath.Join(osutil.GetDataDir(), "packages"))
+	db, err := file.NewDB(logger, filepath.Join(osutil.GetDataDir(), "packages"), false)
 	if err != nil {
 		logger.Fatalf("error creating database: %v", err)
 	}
+
+	repoDb, err := file.NewDB(logger, filepath.Join(osutil.GetDataDir(), "repos"), true)
+	if err != nil {
+		logger.Fatalf("error creating repo database: %v", err)
+	}
+	gw := gitutil.NewHelper(repoDb, ac.GitEmail)
 
 	// setup registry
 	registry, err := rg.NewRegistry(db)
@@ -87,6 +95,7 @@ func NewOrchestrator(app string) *Orchestrator {
 		logger:     logger,
 		command:    rootCmd,
 		db:         db,
+		gw:         gw,
 	}
 }
 
@@ -106,6 +115,7 @@ func (o *Orchestrator) Command() *cobra.Command {
 		sharedCmd.EncryptCmd(),
 		sharedCmd.DecryptCmd(),
 		langCmd.RootCmd,
+		cmd.GitWrapperCmd(o.gw),
 	}
 	if o.cfg.DevMode {
 		extraCmds = append(

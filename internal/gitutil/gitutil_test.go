@@ -18,12 +18,14 @@ func init() {
 	if err != nil {
 		l.Fatalf("error creating repo database: %v", err)
 	}
-	gh = gitutil.NewHelper(repoDb)
+	gh = gitutil.NewHelper(repoDb, "alex.dhyatma@ubuntusoftware.net")
 }
 
 func TestGit(t *testing.T) {
 	wd, _ := os.Getwd()
-	repoInfo, err := gh.GetInfo(wd)
+	repoInfo, err := gh.RepoInfo(wd)
 	require.NoError(t, err)
 	t.Log(repoInfo.String())
+
+
 }

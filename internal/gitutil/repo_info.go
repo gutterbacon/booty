@@ -56,7 +56,7 @@ func (gh *GitHelper) openGitDir(dirpath string) (*git.Repository, error) {
 	return git.PlainOpen(root)
 }
 
-func (gh *GitHelper) GetInfo(dirpath string) (*RepoInfo, error) {
+func (gh *GitHelper) RepoInfo(dirpath string) (*RepoInfo, error) {
 	r, err := gh.openGitDir(dirpath)
 	if err != nil {
 		return nil, err

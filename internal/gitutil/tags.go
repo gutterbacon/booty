@@ -27,8 +27,16 @@ func (gh *GitHelper) CreateTag(tagName string, tagMsg string) error {
 	return nil
 }
 
-func (gh *GitHelper) DeleteTag(tagName string) {
-	return
+func (gh *GitHelper) DeleteTag(tagName string) error {
+	wd, err := os.Getwd()
+	if err != nil {
+		return err
+	}
+	r, err := gh.openGitDir(wd)
+	if err != nil {
+		return err
+	}
+	return r.DeleteTag(tagName)
 }
 
 func tagExists(tag string, r *git.Repository) bool {
@@ -70,18 +78,20 @@ func setTag(r *git.Repository, tag, msg string) (bool, error) {
 	return true, nil
 }
 
-func pushTags(r *git.Repository, publicKeyPath string) error {
+func (gh *GitHelper) pushTags(r *git.Repository, upstreamRemoteName string) error {
 
-	auth, _ := publicKey(publicKeyPath)
+	auth, err := gh.publicKey()
+	if err != nil {
+		return err
+	}
 
 	po := &git.PushOptions{
-		RemoteName: "origin",
+		RemoteName: upstreamRemoteName,
 		Progress:   os.Stdout,
 		RefSpecs:   []config.RefSpec{config.RefSpec("refs/tags/*:refs/tags/*")},
 		Auth:       auth,
 	}
-	err := r.Push(po)
-
+	err = r.Push(po)
 	if err != nil {
 		if err == git.NoErrAlreadyUpToDate {
 			return nil
@@ -90,4 +100,16 @@ func pushTags(r *git.Repository, publicKeyPath string) error {
 	}
 
 	return nil
+}
+
+func (gh *GitHelper) PushTag() error {
+	wd, err := os.Getwd()
+	if err != nil {
+		return err
+	}
+	r, err := gh.openGitDir(wd)
+	if err != nil {
+		return err
+	}
+	return gh.pushTags(r, "upstream")
 }
