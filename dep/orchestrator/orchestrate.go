@@ -116,6 +116,7 @@ func (o *Orchestrator) Command() *cobra.Command {
 		sharedCmd.DecryptCmd(),
 		langCmd.RootCmd,
 		cmd.GitWrapperCmd(o.gw),
+		cmd.OsPrintCommand(o),
 	}
 	if o.cfg.DevMode {
 		extraCmds = append(
@@ -389,4 +390,12 @@ func setVersion(ac *config.AppConfig, c dep.Component) func() error {
 		c.SetVersion(update.Version(v))
 		return nil
 	}
+}
+
+// ================================================================
+// OSInfo
+// ================================================================
+
+func (o *Orchestrator) OSInfo() string {
+	return osutil.GetOSInfo()
 }

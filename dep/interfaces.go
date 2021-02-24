@@ -67,7 +67,7 @@ type Component interface {
 
 // replacing os.mk and help.mk
 type OSPrinter interface {
-	OSInfo() []byte
+	OSInfo() string
 }
 
 // replacing gitr.mk
