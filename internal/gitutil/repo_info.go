@@ -26,19 +26,24 @@ type RepoInfo struct {
 
 func (r *RepoInfo) String() string {
 	return fmt.Sprintf(`
+	--------- Basic Info ----------------
 	Repository Name:    %s
 	Repository Dir :    %s
-	# Upstream Info
+
+	--------- Upstream Info --------------
 	Upstream URL   :    %s
 	Upstream Owner :    %s
-	# Origin Info
+
+	--------- Origin Info ----------------
 	Origin URL     :    %s
 	Origin Owner   :    %s
-	# Current git directory information
+
+	--------- Git Config Info ------------
 	User           :    %s
 	Email          :    %s
 	Host           :    %s
-	# Tags, Refs, Branches
+
+	--------- Tag & Refs -----------------
 	Last Tag       :    %s
 	Current Ref    :    %s
 	Current Branch :    %s

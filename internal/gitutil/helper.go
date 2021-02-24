@@ -29,7 +29,7 @@ func NewHelper(db store.RepoStorer, userEmail string) *GitHelper {
 	return &GitHelper{db: db, userEmail: userEmail}
 }
 
-func (gh *GitHelper) publicKey() (*ssh.PublicKeysCallback, error) {
+func (gh *GitHelper) publicKey() (transport.AuthMethod, error) {
 	currentUser, err := user.Current()
 	if err != nil {
 		return nil, err
@@ -48,22 +48,14 @@ func (gh *GitHelper) CatchupFork() error {
 		return err
 	}
 	err = r.Fetch(&git.FetchOptions{RemoteName: "upstream"})
-	if err != nil {
+	if err != nil && err != git.NoErrAlreadyUpToDate {
 		return err
 	}
-	wt, err := r.Worktree()
-	var auth transport.AuthMethod
-	auth, err = gh.publicKey()
-	if err != nil {
-		auth = nil
+	err = osutil.Exec("git", "merge", "upstream/master")
+	if err != nil && err != git.NoErrAlreadyUpToDate {
+		return err
 	}
-	err = wt.Pull(&git.PullOptions{
-		RemoteName:    "upstream",
-		ReferenceName: "refs/head/master",
-		SingleBranch:  false,
-		Auth:          auth,
-	})
-	return err
+	return nil
 }
 
 func (gh *GitHelper) StageAll() error {
@@ -160,7 +152,6 @@ func (gh *GitHelper) SubmitPR() error {
 	case "windows":
 		executable = "start"
 	}
-	// https://github.com/amplify-edge/booty/compare/master...alexadhy:master
 	host := strings.Split(info.RepoHost, "-")[0]
 	compareUrl := fmt.Sprintf("https://%s/%s/%s/compare/master..%s:%s", host, info.UpstreamOwner, info.Name, info.UserName, info.CurrentBranch)
 	return osutil.Exec(executable, compareUrl)
