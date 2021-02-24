@@ -10,6 +10,7 @@ require (
 	github.com/google/go-github v17.0.0+incompatible
 	github.com/google/go-querystring v1.0.0 // indirect
 	github.com/hashicorp/go-getter v1.5.2
+	github.com/kardianos/osext v0.0.0-20190222173326-2bc1f35cddc0
 	github.com/kardianos/service v1.2.0
 	github.com/otiai10/copy v1.5.0
 	github.com/spf13/cobra v1.1.3
@@ -18,5 +19,4 @@ require (
 	go.amplifyedge.org/shared-v2/tool/bs-lang v0.0.0-20210219053301-6556f04a088c
 	go.uber.org/zap v1.16.0
 	golang.org/x/mod v0.4.1
-	golang.org/x/sys v0.0.0-20201015000850-e3ed0017c211
 )

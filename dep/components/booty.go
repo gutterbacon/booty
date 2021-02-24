@@ -2,6 +2,7 @@ package components
 
 import (
 	"fmt"
+	"github.com/kardianos/osext"
 	ks "github.com/kardianos/service"
 	"go.amplifyedge.org/booty-v2/dep"
 	"go.amplifyedge.org/booty-v2/internal/downloader"
@@ -10,6 +11,7 @@ import (
 	"go.amplifyedge.org/booty-v2/internal/store"
 	"go.amplifyedge.org/booty-v2/internal/update"
 	"os"
+	"os/exec"
 	"path/filepath"
 )
 
@@ -42,7 +44,15 @@ func (b *Booty) service() (*service.Svc, error) {
 	if osutil.GetOS() == "windows" {
 		ex += ".exe"
 	}
-	executablePath := filepath.Join(osutil.GetGoPath(), "bin", ex)
+	// lookup for absolute booty path
+	executablePath, err := exec.LookPath(ex)
+	if err != nil {
+		// if it's not found get this program directory
+		executablePath, err = osext.ExecutableFolder()
+		if err != nil {
+			return nil, err
+		}
+	}
 	config := &ks.Config{
 		Name:        b.Name(),
 		DisplayName: b.Name(),
@@ -87,14 +97,17 @@ func (b *Booty) Dependencies() []dep.Component {
 }
 
 func (b *Booty) Install() error {
-	goBinDir := filepath.Join(osutil.GetGoPath(), "bin")
+	bootyExePath, err := osext.Executable()
+	if err != nil {
+		return err
+	}
 	dlPath := getDlPath(b.Name(), b.version.String())
 	executableName := b.Name()
 	if osutil.GetOS() == "windows" {
 		executableName += ".exe"
 	}
 	filesMap := map[string][]interface{}{
-		filepath.Join(dlPath, executableName): {filepath.Join(goBinDir, executableName)},
+		filepath.Join(dlPath, executableName): {bootyExePath, 0755},
 	}
 	ip, err := commonInstall(b, filesMap)
 	if err != nil {
