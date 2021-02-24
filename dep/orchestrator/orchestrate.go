@@ -2,10 +2,12 @@ package orchestrator
 
 import (
 	"bytes"
+	"embed"
 	"fmt"
 	"github.com/fatih/color"
 	"github.com/spf13/cobra"
 	"go.amplifyedge.org/booty-v2/internal/downloader"
+	"go.amplifyedge.org/booty-v2/internal/fileutil"
 	"go.amplifyedge.org/booty-v2/internal/gitutil"
 	"io"
 	"io/ioutil"
@@ -27,6 +29,9 @@ import (
 	sharedCmd "go.amplifyedge.org/shared-v2/tool/bs-crypt/cmd"
 	langCmd "go.amplifyedge.org/shared-v2/tool/bs-lang/cmd"
 )
+
+//go:embed makefiles/*
+var makefilesFs embed.FS
 
 const binName = "booty"
 
@@ -128,6 +133,7 @@ func (o *Orchestrator) Command() *cobra.Command {
 			cmd.ReleaseCommand(o),
 			cmd.JbCommand(o),
 			cmd.JsonnetCommand(o),
+			cmd.ExtractCommand(o),
 		)
 	}
 	o.command.AddCommand(extraCmds...)
@@ -415,4 +421,28 @@ func setVersion(ac *config.AppConfig, c dep.Component) func() error {
 
 func (o *Orchestrator) OSInfo() string {
 	return osutil.GetOSInfo()
+}
+
+// ================================================================
+// Extractor
+// ================================================================
+func (o *Orchestrator) Extract(dirpath string) error {
+	dirExists := osutil.DirExists(dirpath)
+	if !dirExists {
+		if err := os.MkdirAll(dirpath, 0755); err != nil {
+			return err
+		}
+	}
+	files, err := makefilesFs.ReadDir("makefiles")
+	if err != nil {
+		return err
+	}
+	for _, f := range files {
+		srcPath := filepath.Join("makefiles", f.Name())
+		destPath := filepath.Join(dirpath, f.Name())
+		if _, err = fileutil.Copy(srcPath, destPath); err != nil {
+			return err
+		}
+	}
+	return nil
 }
