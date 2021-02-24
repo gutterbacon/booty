@@ -17,6 +17,6 @@ require (
 	go.amplifyedge.org/shared-v2/tool/bs-crypt v0.0.0-20210219053301-6556f04a088c
 	go.amplifyedge.org/shared-v2/tool/bs-lang v0.0.0-20210219053301-6556f04a088c
 	go.uber.org/zap v1.16.0
-	golang.org/x/crypto v0.0.0-20210218145215-b8e89b74b9df
 	golang.org/x/mod v0.4.1
+	golang.org/x/sys v0.0.0-20201015000850-e3ed0017c211
 )

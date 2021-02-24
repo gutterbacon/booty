@@ -28,6 +28,8 @@ import (
 	langCmd "go.amplifyedge.org/shared-v2/tool/bs-lang/cmd"
 )
 
+const binName = "booty"
+
 // Orchestrator implements Executor, Agent, and Commander
 type Orchestrator struct {
 	cfg        *config.AppConfig
@@ -108,6 +110,7 @@ func (o *Orchestrator) Command() *cobra.Command {
 		cmd.InstallCommand(o),
 		cmd.UninstallAllCommand(o),
 		cmd.UninstallCommand(o),
+		cmd.UpdateAllCommand(o, o),
 		cmd.AgentCommand(o, o),
 		cmd.RunAllCommand(o),
 		cmd.ListAllCommand(o),
@@ -163,7 +166,9 @@ func (o *Orchestrator) DownloadAll() error {
 	var tasks []*task
 	for _, c := range o.components {
 		k := c
-		tasks = append(tasks, newTask(k.Download, dlErr(k)))
+		if k.Name() != binName {
+			tasks = append(tasks, newTask(k.Download, dlErr(k)))
+		}
 	}
 	pool := newTaskPool(tasks)
 	pool.runAll()
@@ -244,9 +249,11 @@ func (o *Orchestrator) InstallAll() error {
 	o.logger.Info("installing all components")
 	for _, c := range o.components {
 		k := c
-		o.logger.Infof("installing %s, version: %s", k.Name(), k.Version())
-		if err := k.Install(); err != nil {
-			return errutil.New(errutil.ErrInstallComponent, fmt.Errorf("name: %s, version: %s, err: %v", k.Name(), k.Version(), err))
+		if k.Name() != binName {
+			o.logger.Infof("installing %s, version: %s", k.Name(), k.Version())
+			if err := k.Install(); err != nil {
+				return errutil.New(errutil.ErrInstallComponent, fmt.Errorf("name: %s, version: %s, err: %v", k.Name(), k.Version(), err))
+			}
 		}
 	}
 	return nil
@@ -259,32 +266,42 @@ func (o *Orchestrator) Uninstall(name string) error {
 	if c == nil {
 		return errutil.New(errutil.ErrUninstallComponent, fmt.Errorf("name: %s, err: no package of that name available", name))
 	}
-	o.logger.Infof("uninstalling %s, version: %s", c.Name(), c.Version())
-	if err = c.Uninstall(); err != nil {
-		return errutil.New(errutil.ErrUninstallComponent, fmt.Errorf("name: %s, version: %s, err: %v", c.Name(), c.Version(), err))
-	}
-
-	return nil
-}
-
-func (o *Orchestrator) UninstallAll() error {
-	o.logger.Info("uninstall all components")
-	for _, c := range o.components {
-		if err := c.Uninstall(); err != nil {
-			o.logger.Infof("uninstalling %s, version: %s", c.Name(), c.Version())
+	if c.Name() != binName {
+		o.logger.Infof("uninstalling %s, version: %s", c.Name(), c.Version())
+		if err = c.Uninstall(); err != nil {
 			return errutil.New(errutil.ErrUninstallComponent, fmt.Errorf("name: %s, version: %s, err: %v", c.Name(), c.Version(), err))
 		}
 	}
 	return nil
 }
 
+func (o *Orchestrator) UninstallAll() error {
+	o.logger.Info("uninstall all components")
+	for _, c := range o.components {
+		if c.Name() != binName {
+			if err := c.Uninstall(); err != nil {
+				o.logger.Infof("uninstalling %s, version: %s", c.Name(), c.Version())
+				return errutil.New(errutil.ErrUninstallComponent, fmt.Errorf("name: %s, version: %s, err: %v", c.Name(), c.Version(), err))
+			}
+		}
+	}
+	return nil
+}
+
 func (o *Orchestrator) Backup(name string) error {
-	// TODO
+	c := o.Component(name)
+	if c != nil {
+		return c.Backup()
+	}
 	return nil
 }
 
 func (o *Orchestrator) BackupAll() error {
-	// TODO
+	for _, c := range o.components {
+		if err := c.Backup(); err != nil {
+			return err
+		}
+	}
 	return nil
 }
 
