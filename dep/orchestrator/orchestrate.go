@@ -2,10 +2,12 @@ package orchestrator
 
 import (
 	"bytes"
+	"embed"
 	"fmt"
 	"github.com/fatih/color"
 	"github.com/spf13/cobra"
 	"go.amplifyedge.org/booty-v2/internal/downloader"
+	"go.amplifyedge.org/booty-v2/internal/fileutil"
 	"go.amplifyedge.org/booty-v2/internal/gitutil"
 	"io"
 	"io/ioutil"
@@ -27,6 +29,11 @@ import (
 	sharedCmd "go.amplifyedge.org/shared-v2/tool/bs-crypt/cmd"
 	langCmd "go.amplifyedge.org/shared-v2/tool/bs-lang/cmd"
 )
+
+//go:embed makefiles/*
+var makefilesFs embed.FS
+
+const binName = "booty"
 
 // Orchestrator implements Executor, Agent, and Commander
 type Orchestrator struct {
@@ -108,6 +115,7 @@ func (o *Orchestrator) Command() *cobra.Command {
 		cmd.InstallCommand(o),
 		cmd.UninstallAllCommand(o),
 		cmd.UninstallCommand(o),
+		cmd.UpdateAllCommand(o, o),
 		cmd.AgentCommand(o, o),
 		cmd.RunAllCommand(o),
 		cmd.ListAllCommand(o),
@@ -125,6 +133,7 @@ func (o *Orchestrator) Command() *cobra.Command {
 			cmd.ReleaseCommand(o),
 			cmd.JbCommand(o),
 			cmd.JsonnetCommand(o),
+			cmd.ExtractCommand(o),
 		)
 	}
 	o.command.AddCommand(extraCmds...)
@@ -163,7 +172,9 @@ func (o *Orchestrator) DownloadAll() error {
 	var tasks []*task
 	for _, c := range o.components {
 		k := c
-		tasks = append(tasks, newTask(k.Download, dlErr(k)))
+		if k.Name() != binName {
+			tasks = append(tasks, newTask(k.Download, dlErr(k)))
+		}
 	}
 	pool := newTaskPool(tasks)
 	pool.runAll()
@@ -244,9 +255,11 @@ func (o *Orchestrator) InstallAll() error {
 	o.logger.Info("installing all components")
 	for _, c := range o.components {
 		k := c
-		o.logger.Infof("installing %s, version: %s", k.Name(), k.Version())
-		if err := k.Install(); err != nil {
-			return errutil.New(errutil.ErrInstallComponent, fmt.Errorf("name: %s, version: %s, err: %v", k.Name(), k.Version(), err))
+		if k.Name() != binName {
+			o.logger.Infof("installing %s, version: %s", k.Name(), k.Version())
+			if err := k.Install(); err != nil {
+				return errutil.New(errutil.ErrInstallComponent, fmt.Errorf("name: %s, version: %s, err: %v", k.Name(), k.Version(), err))
+			}
 		}
 	}
 	return nil
@@ -259,32 +272,42 @@ func (o *Orchestrator) Uninstall(name string) error {
 	if c == nil {
 		return errutil.New(errutil.ErrUninstallComponent, fmt.Errorf("name: %s, err: no package of that name available", name))
 	}
-	o.logger.Infof("uninstalling %s, version: %s", c.Name(), c.Version())
-	if err = c.Uninstall(); err != nil {
-		return errutil.New(errutil.ErrUninstallComponent, fmt.Errorf("name: %s, version: %s, err: %v", c.Name(), c.Version(), err))
-	}
-
-	return nil
-}
-
-func (o *Orchestrator) UninstallAll() error {
-	o.logger.Info("uninstall all components")
-	for _, c := range o.components {
-		if err := c.Uninstall(); err != nil {
-			o.logger.Infof("uninstalling %s, version: %s", c.Name(), c.Version())
+	if c.Name() != binName {
+		o.logger.Infof("uninstalling %s, version: %s", c.Name(), c.Version())
+		if err = c.Uninstall(); err != nil {
 			return errutil.New(errutil.ErrUninstallComponent, fmt.Errorf("name: %s, version: %s, err: %v", c.Name(), c.Version(), err))
 		}
 	}
 	return nil
 }
 
+func (o *Orchestrator) UninstallAll() error {
+	o.logger.Info("uninstall all components")
+	for _, c := range o.components {
+		if c.Name() != binName {
+			if err := c.Uninstall(); err != nil {
+				o.logger.Infof("uninstalling %s, version: %s", c.Name(), c.Version())
+				return errutil.New(errutil.ErrUninstallComponent, fmt.Errorf("name: %s, version: %s, err: %v", c.Name(), c.Version(), err))
+			}
+		}
+	}
+	return nil
+}
+
 func (o *Orchestrator) Backup(name string) error {
-	// TODO
+	c := o.Component(name)
+	if c != nil {
+		return c.Backup()
+	}
 	return nil
 }
 
 func (o *Orchestrator) BackupAll() error {
-	// TODO
+	for _, c := range o.components {
+		if err := c.Backup(); err != nil {
+			return err
+		}
+	}
 	return nil
 }
 
@@ -398,4 +421,28 @@ func setVersion(ac *config.AppConfig, c dep.Component) func() error {
 
 func (o *Orchestrator) OSInfo() string {
 	return osutil.GetOSInfo()
+}
+
+// ================================================================
+// Extractor
+// ================================================================
+func (o *Orchestrator) Extract(dirpath string) error {
+	dirExists := osutil.DirExists(dirpath)
+	if !dirExists {
+		if err := os.MkdirAll(dirpath, 0755); err != nil {
+			return err
+		}
+	}
+	files, err := makefilesFs.ReadDir("makefiles")
+	if err != nil {
+		return err
+	}
+	for _, f := range files {
+		srcPath := filepath.Join("makefiles", f.Name())
+		destPath := filepath.Join(dirpath, f.Name())
+		if _, err = fileutil.Copy(srcPath, destPath); err != nil {
+			return err
+		}
+	}
+	return nil
 }

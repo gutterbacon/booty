@@ -19,6 +19,7 @@ func NewRegistry(db store.Storer) (*Registry, error) {
 	protoCobra := components.NewProtocGenCobra(db)
 
 	comps := []dep.Component{
+		components.NewBooty(db),
 		components.NewGoreleaser(db),
 		components.NewCaddy(db),
 		components.NewGrafana(db),

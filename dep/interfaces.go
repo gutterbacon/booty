@@ -37,6 +37,11 @@ type Commander interface {
 	Command() *cobra.Command
 }
 
+// Extractor extracts embedded files to some determined place
+type Extractor interface {
+	Extract(string) error // extract makefiles to a directory
+}
+
 // Component is an interface
 // each component has to be able to
 // a. Download (along with its 3rd party dependencies)
