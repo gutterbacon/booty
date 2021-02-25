@@ -168,7 +168,7 @@ func gitRoot(path string) (string, error) {
 			if !fi.IsDir() {
 				return "", fmt.Errorf(".git exist but is not a directory")
 			}
-			return filepath.Join(path, ".git"), nil
+			return filepath.Dir(filepath.Join(path, ".git")), nil
 		}
 		if !os.IsNotExist(err) {
 			// unknown error

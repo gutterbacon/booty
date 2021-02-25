@@ -71,7 +71,7 @@ func (gh *GitHelper) StageAll() error {
 	if err != nil {
 		return err
 	}
-	return wt.AddGlob("*")
+	return wt.AddGlob(".")
 }
 
 func (gh *GitHelper) Stage(args ...string) error {
@@ -109,7 +109,9 @@ func (gh *GitHelper) Commit(msg string) error {
 	if err != nil {
 		return err
 	}
-	_, err = wt.Commit(msg, nil)
+	_, err = wt.Commit(msg, &git.CommitOptions{
+		All:       false,
+	})
 	return err
 }
 
@@ -122,12 +124,12 @@ func (gh *GitHelper) Push() error {
 	if err != nil {
 		return err
 	}
-	auth, err := gh.publicKey()
-	if err != nil {
-		auth = nil
-	}
+	//auth, err := gh.publicKey()
+	//if err != nil {
+	//	auth = nil
+	//}
 	return r.Push(&git.PushOptions{
-		Auth: auth,
+		//Auth: auth,
 	})
 }
 
