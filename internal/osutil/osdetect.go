@@ -69,6 +69,23 @@ type runtimeInfo struct {
 	altArch string // alt architecture
 }
 
+func (ri runtimeInfo) String() string {
+	return fmt.Sprintf(`
+	--------- Basic Info ----------------
+	OS: %s
+	Arch: %s
+
+	--------- Booty Info ----------------
+	Prefix: %s
+
+	-------------------------------------
+`, ri.osName, ri.arch, getInstallPrefix())
+}
+
+func GetOSInfo() string {
+	return rinfo.String()
+}
+
 func setupRuntimeInfo() runtimeInfo {
 	osName := runtime.GOOS
 	arch := runtime.GOARCH
@@ -234,4 +251,3 @@ func checkEnv(key string) bool {
 	env := os.Getenv(key)
 	return env != ""
 }
-

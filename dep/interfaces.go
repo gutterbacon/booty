@@ -4,6 +4,7 @@ package dep
 
 import (
 	"github.com/spf13/cobra"
+	"go.amplifyedge.org/booty-v2/internal/gitutil"
 	"go.amplifyedge.org/booty-v2/internal/logging"
 	"go.amplifyedge.org/booty-v2/internal/update"
 )
@@ -36,6 +37,11 @@ type Commander interface {
 	Command() *cobra.Command
 }
 
+// Extractor extracts embedded files to some determined place
+type Extractor interface {
+	Extract(string) error // extract makefiles to a directory
+}
+
 // Component is an interface
 // each component has to be able to
 // a. Download (along with its 3rd party dependencies)
@@ -62,4 +68,26 @@ type Component interface {
 	IsDev() bool
 	IsService() bool
 	RepoUrl() update.RepositoryURL
+}
+
+// replacing os.mk and help.mk
+type OSPrinter interface {
+	OSInfo() string
+}
+
+// replacing gitr.mk
+type GitWrapper interface {
+	SetupFork(upstreamOwner string) error
+	CatchupFork() error
+	CatchupAll() error
+	RegisterRepos(directories ...string) error
+	StageAll() error
+	Stage(args ...string) error
+	Commit(msg string) error
+	Push() error
+	SubmitPR() error
+	CreateTag(tagName string, tagMsg string) error
+	PushTag() error
+	DeleteTag(tagName string) error
+	RepoInfo(dirpath string) (*gitutil.RepoInfo, error)
 }

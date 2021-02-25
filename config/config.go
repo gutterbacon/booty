@@ -21,6 +21,7 @@ type BinaryInfo struct {
 type AppConfig struct {
 	DevMode  bool         `json:"dev"`
 	Binaries []BinaryInfo `json:"binaries,omitempty"`
+	GitEmail string       `json:"git_email"`
 }
 
 func NewAppConfig(logger logging.Logger, r []byte) *AppConfig {

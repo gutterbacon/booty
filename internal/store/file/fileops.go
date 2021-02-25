@@ -145,8 +145,8 @@ func (d *DB) getAllPkgs() (*allInstalledPackages, error) {
 	return &allPkgs, nil
 }
 
-func NewDB(logger logging.Logger, fpath string) (*DB, error) {
-	f, size, err := newOrExistingWrite(&mu, fpath)
+func NewDB(logger logging.Logger, fpath string, repoMode bool) (*DB, error) {
+	f, size, err := newOrExistingWrite(&mu, fpath, repoMode)
 	if err != nil {
 		return nil, err
 	}
@@ -161,7 +161,7 @@ func NewDB(logger logging.Logger, fpath string) (*DB, error) {
 }
 
 // open new or existing file
-func newOrExistingWrite(mu *sync.Mutex, fpath string) (*os.File, int64, error) {
+func newOrExistingWrite(mu *sync.Mutex, fpath string, repoMode bool) (*os.File, int64, error) {
 	mu.Lock()
 	defer mu.Unlock()
 	f, err := openFile(fpath, true)
@@ -173,12 +173,20 @@ func newOrExistingWrite(mu *sync.Mutex, fpath string) (*os.File, int64, error) {
 		return nil, 0, errutil.New(errutil.ErrOpenFile, err)
 	}
 	size := info.Size()
-	if size == 0 {
+	if size == 0 && !repoMode {
 		allPkgs := &allInstalledPackages{Packages: []*store.InstalledPackage{}}
 		b, err := json.Marshal(&allPkgs)
 		if err != nil {
 			return nil, 0, errutil.New(errutil.ErrOpenFile, err)
 		}
+		wlen, err := f.WriteAt(b, 0)
+		if err != nil {
+			return nil, 0, errutil.New(errutil.ErrOpenFile, err)
+		}
+		size = int64(wlen)
+	} else if size == 0 && repoMode {
+		allRepos := map[string]string{}
+		b, err := marshalGob(allRepos)
 		wlen, err := f.WriteAt(b, 0)
 		if err != nil {
 			return nil, 0, errutil.New(errutil.ErrOpenFile, err)
