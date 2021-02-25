@@ -124,13 +124,8 @@ func (gh *GitHelper) Push() error {
 	if err != nil {
 		return err
 	}
-	//auth, err := gh.publicKey()
-	//if err != nil {
-	//	auth = nil
-	//}
-	return r.Push(&git.PushOptions{
-		//Auth: auth,
-	})
+
+	return r.Push(&git.PushOptions{})
 }
 
 func (gh *GitHelper) SubmitPR() error {
