@@ -79,17 +79,10 @@ func setTag(r *git.Repository, tag, msg string) (bool, error) {
 }
 
 func (gh *GitHelper) pushTags(r *git.Repository, upstreamRemoteName string) error {
-
-	//auth, err := gh.publicKey()
-	//if err != nil {
-	//	return err
-	//}
-
 	po := &git.PushOptions{
 		RemoteName: upstreamRemoteName,
 		Progress:   os.Stdout,
 		RefSpecs:   []config.RefSpec{config.RefSpec("refs/tags/*:refs/tags/*")},
-		//Auth:       auth,
 	}
 	err := r.Push(po)
 	if err != nil {
