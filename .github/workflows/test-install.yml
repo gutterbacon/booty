@@ -25,8 +25,3 @@ jobs:
         working-directory: ${{ github.workspace }}\${{ github.repository }}
         run: |
           .\scripts\install.ps1
-
-      - name: Test booty exists
-        shell: pwsh
-        run: |
-          (Get-Command booty).Path

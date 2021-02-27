@@ -57,4 +57,8 @@ add_envpath $pathExtract "User"
 
 ls -recurse $pathExtract
 
+booty.exe
+
+booty
+
 Write-Host 'For more information, see: https://github.com/amplify-edge/booty'
