@@ -15,7 +15,7 @@ import (
 const (
 	// version -- version -- os.arch
 	genRpcRepo       = "https://github.com/grpc/grpc-go"
-	genGrpcUrlFormat = genRpcRepo + "/releases/download/cmd/protoc-gen-go-grpc/v%s/protoc-gen-go-grpc.v%s.%s.tar.gz"
+	genGrpcUrlFormat = genRpcRepo + "/archive/v%s.tar.gz"
 )
 
 type ProtocGenGoGrpc struct {
@@ -40,11 +40,7 @@ func (p *ProtocGenGoGrpc) SetVersion(v update.Version) {
 }
 
 func (p *ProtocGenGoGrpc) Download() error {
-	if osutil.GetArch() != "amd64" {
-		return fmt.Errorf("error: unsupported arch: %v", osutil.GetArch())
-	}
-	osName := fmt.Sprintf("%s.%s", osutil.GetOS(), osutil.GetArch())
-	fetchUrl := fmt.Sprintf(genGrpcUrlFormat, p.version, p.version, osName)
+	fetchUrl := fmt.Sprintf(genGrpcUrlFormat, p.version)
 	target := getDlPath(p.Name(), p.version.String())
 	err := downloader.Download(fetchUrl, target)
 	if err != nil {
@@ -55,26 +51,32 @@ func (p *ProtocGenGoGrpc) Download() error {
 
 func (p *ProtocGenGoGrpc) Install() error {
 	var err error
+	dlPath := getDlPath(p.Name(), p.version.String())
+	dlPath = filepath.Join(dlPath, "grpc-go-"+p.version.String())
 	// install to path
-	goBinDir := filepath.Join(osutil.GetGoPath(), "bin")
-	_ = os.MkdirAll(goBinDir, 0755)
-
+	if err = os.Chdir(filepath.Join(dlPath, "cmd", p.Name())); err != nil {
+		return err
+	}
 	executableName := p.Name()
 	if osutil.GetOS() == "windows" {
 		executableName += ".exe"
 	}
 
+	if err = osutil.Exec("go", "build", "-ldflags", `-s -w`, "-o", executableName, filepath.Join(dlPath, "cmd", p.Name())); err != nil {
+		return err
+	}
+	goBinDir := filepath.Join(osutil.GetGoPath(), "bin")
+	_ = os.MkdirAll(goBinDir, 0755)
+
 	// all files that are going to be installed
-	dlPath := getDlPath(p.Name(), p.version.String())
 	filesMap := map[string][]interface{}{
-		filepath.Join(dlPath, executableName): {filepath.Join(goBinDir, executableName), 0755},
+		filepath.Join(dlPath, "cmd", p.Name(), executableName): {filepath.Join(goBinDir, executableName), 0755},
 	}
 
 	ip, err := commonInstall(p, filesMap)
 	if err != nil {
 		return err
 	}
-
 
 	if err = p.db.New(ip); err != nil {
 		return err

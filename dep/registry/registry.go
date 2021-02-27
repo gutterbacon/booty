@@ -25,12 +25,10 @@ func NewRegistry(db store.Storer) (*Registry, error) {
 		components.NewGrafana(db),
 		components.NewProtoc(
 			db,
-			[]dep.Component{
-				protoGenGo,
-				protoGenGrpc,
-				protoCobra,
-			},
 		),
+		protoGenGo,
+		protoGenGrpc,
+		protoCobra,
 		components.NewGoJsonnet(db),
 		components.NewVicMet(db),
 		components.NewJb(db),

@@ -22,17 +22,15 @@ const (
 type Protoc struct {
 	version      update.Version
 	db           store.Storer
-	dependencies []dep.Component
 }
 
 func (p *Protoc) IsService() bool {
 	return false
 }
 
-func NewProtoc(db store.Storer, deps []dep.Component) *Protoc {
+func NewProtoc(db store.Storer) *Protoc {
 	return &Protoc{
 		db:           db,
-		dependencies: deps,
 	}
 }
 
@@ -51,12 +49,6 @@ func (p *Protoc) SetVersion(v update.Version) {
 func (p *Protoc) Download() error {
 	if osutil.GetArch() != "amd64" {
 		return fmt.Errorf("error: unsupported arch: %v", osutil.GetArch())
-	}
-	// download all dependencies
-	for _, d := range p.dependencies {
-		if err := d.Download(); err != nil {
-			return err
-		}
 	}
 
 	var osName string
@@ -88,13 +80,6 @@ func (p *Protoc) Install() error {
 		executableName += ".exe"
 	}
 
-	// install all dependencies
-	for _, d := range p.dependencies {
-		if err = d.Install(); err != nil {
-			return err
-		}
-	}
-
 	// all files that are going to be installed
 	dlPath := getDlPath("protobuf", p.version.String())
 	filesMap := map[string][]interface{}{
@@ -120,13 +105,6 @@ func (p *Protoc) Update(version update.Version) error {
 
 func (p *Protoc) Uninstall() error {
 	var err error
-
-	// uninstall all dependencies
-	for _, d := range p.dependencies {
-		if err = d.Uninstall(); err != nil {
-			return err
-		}
-	}
 
 	var pkg *store.InstalledPackage
 	pkg, err = p.db.Get(p.Name())
@@ -173,7 +151,7 @@ func (p *Protoc) Backup() error {
 }
 
 func (p *Protoc) Dependencies() []dep.Component {
-	return p.dependencies
+	return nil
 }
 
 func (p *Protoc) IsDev() bool {
