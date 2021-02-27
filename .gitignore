@@ -33,3 +33,4 @@ dist
 /coverage.txt
 /internal/store/file/repoops_test.json
 /internal/gitutil/git_repo_test.json
+**/.nvimlog

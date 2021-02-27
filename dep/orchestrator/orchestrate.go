@@ -7,7 +7,6 @@ import (
 	"github.com/fatih/color"
 	"github.com/spf13/cobra"
 	"go.amplifyedge.org/booty-v2/internal/downloader"
-	"go.amplifyedge.org/booty-v2/internal/fileutil"
 	"go.amplifyedge.org/booty-v2/internal/gitutil"
 	"io"
 	"io/ioutil"
@@ -125,6 +124,7 @@ func (o *Orchestrator) Command() *cobra.Command {
 		langCmd.RootCmd,
 		cmd.GitWrapperCmd(o.gw),
 		cmd.OsPrintCommand(o),
+		cmd.CleanCacheCmd(o),
 	}
 	if o.cfg.DevMode {
 		extraCmds = append(
@@ -440,7 +440,17 @@ func (o *Orchestrator) Extract(dirpath string) error {
 	for _, f := range files {
 		srcPath := filepath.Join("makefiles", f.Name())
 		destPath := filepath.Join(dirpath, f.Name())
-		if _, err = fileutil.Copy(srcPath, destPath); err != nil {
+		srcContent, err := makefilesFs.ReadFile(srcPath)
+		if err != nil {
+			return err
+		}
+		dst, err := os.Create(destPath)
+		if err != nil {
+			return err
+		}
+		src := bytes.NewBuffer(srcContent)
+		_, err = io.Copy(dst, src)
+		if err != nil {
 			return err
 		}
 	}
