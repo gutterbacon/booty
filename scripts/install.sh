@@ -1,14 +1,13 @@
 #!/usr/bin/env bash
 
 BIN_NAME=booty
-EX_CURL="$(
-	command -v 'curl' &
-	>/dev/null && echo true || echo false
-)"
-EX_GPG="$(
-	command -v 'gpg' &
-	>/dev/null && echo true || echo false
-)"
+EX_CURL="$(command -v 'curl' &>/dev/null && echo 0 || echo 1)"
+# TODO: uses gpg to release assets
+#EX_GPG="$(
+#	command -v 'gpg' &
+#	>/dev/null && echo 0 || echo 1
+#)"
+# shellcheck disable=SC2060
 OS="$(uname -s | tr [:upper:] [:lower:])"
 OS_ARCH=""
 RELEASE_URL="https://github.com/amplify-edge/booty/releases"
@@ -31,7 +30,7 @@ osArch() {
 	x86-64) ARCH="amd64" ;;
 	aarch64) ARCH="arm64" ;;
 	esac
-	OS_ARCH="$(echo ${OS}_${ARCH})"
+	OS_ARCH="$("${OS}"_${ARCH})"
 }
 
 validOsArchCombo() {
@@ -57,9 +56,13 @@ fetchAndInstall() {
 	runAsRoot install -m755 /tmp/${BIN_NAME} "${INSTALL_LOC}/${BIN_NAME}"
 }
 
+if [ ! "$EX_CURL" ]; then
+  echo "please install curl first"
+  exit 1
+fi
 osArch
 VALID=$(validOsArchCombo)
-if [ ${VALID} ]; then
+if [ "${VALID}" ]; then
 	echo "unsupported os and arch ${OS_ARCH}"
 	exit 1
 fi
