@@ -124,6 +124,7 @@ func (o *Orchestrator) Command() *cobra.Command {
 		langCmd.RootCmd,
 		cmd.GitWrapperCmd(o.gw),
 		cmd.OsPrintCommand(o),
+		cmd.CleanCacheCmd(o),
 	}
 	if o.cfg.DevMode {
 		extraCmds = append(

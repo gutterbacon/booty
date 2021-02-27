@@ -1,7 +1,6 @@
 package components_test
 
 import (
-	"go.amplifyedge.org/booty-v2/dep"
 	"go.amplifyedge.org/booty-v2/dep/components"
 	"go.amplifyedge.org/booty-v2/internal/logging/zaplog"
 	"go.amplifyedge.org/booty-v2/internal/osutil"
@@ -23,7 +22,7 @@ func init() {
 	l := zaplog.NewZapLogger(zaplog.WARN, "store-test", true)
 	l.InitLogger(nil)
 	var err error
-	db, err = file.NewDB(l, filepath.Join(osutil.GetDataDir(), "pkgs.json"))
+	db, err = file.NewDB(l, filepath.Join(osutil.GetDataDir(), "pkgs.json"), false)
 	if err != nil {
 		l.Fatal(err)
 	}
@@ -102,10 +101,12 @@ func testProto(t *testing.T) {
 	pgrpc := components.NewProtocGenGoGrpc(db)
 	pgrpc.SetVersion("1.1.0")
 
-	p := components.NewProtoc(db, []dep.Component{
-		pgc, pgg, pgrpc,
-	})
-	p.SetVersion("3.13.0")
+	p := components.NewProtoc(db,
+		//	[]dep.Component{
+		//	pgc, pgg, pgrpc,
+		//},
+	)
+	p.SetVersion("3.15.3")
 	err := p.Download()
 	require.NoError(t, err)
 
@@ -114,7 +115,7 @@ func testProto(t *testing.T) {
 	require.NoError(t, err)
 
 	// update
-	err = p.Update("3.14.0")
+	err = p.Update("3.15.3")
 	require.NoError(t, err)
 
 	// uninstall
@@ -169,7 +170,7 @@ func testProtocGenCobra(t *testing.T) {
 
 func testProtocGenGrpc(t *testing.T) {
 	p := components.NewProtocGenGoGrpc(db)
-	p.SetVersion("1.1.0")
+	p.SetVersion("1.36.0")
 	err := p.Download()
 	require.NoError(t, err)
 
@@ -181,7 +182,7 @@ func testProtocGenGrpc(t *testing.T) {
 	require.Equal(t, true, exists)
 
 	// update
-	err = p.Update("1.1.0")
+	err = p.Update("1.37.0-dev")
 	require.NoError(t, err)
 
 	// uninstall
