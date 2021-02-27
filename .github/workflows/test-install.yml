@@ -1,0 +1,32 @@
+name: Test-Windows-Install-Script
+
+on: [ pull_request ]
+
+jobs:
+  all:
+    name: Test-Windwos-Install-Script
+
+    strategy:
+      fail-fast: true
+      matrix:
+        os: [ windows-latest ]
+
+    runs-on: ${{ matrix.os }}
+
+    steps:
+      - name: Check out THIS code into the Go module directory
+        uses: actions/checkout@v2
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          path: ${{ github.workspace }}/${{ github.repository }}
+
+      - name: Run install.ps1
+        shell: pwsh
+        working-directory: ${{ github.workspace }}\${{ github.repository }}
+        run: |
+          .\scripts\install.ps1
+
+      - name: Test booty exists
+        shell: pwsh
+        run: |
+          (Get-Command booty).Path
