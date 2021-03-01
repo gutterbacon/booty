@@ -3,9 +3,19 @@
 
 # (WIP) Booty
 
-### Spec & Design: 
+### Spec & Design:
 
 - [Issue 108](https://github.com/amplify-edge/main/issues/108)
+
+## Installation
+
+#### Linux / Mac (amd64)
+
+`curl -fsSL https://raw.githubusercontent.com/amplify-edge/booty/master/scripts/install.sh | bash`
+
+#### Windows (amd64) (Needs powershell)
+
+`Invoke-WebRequest -useb https://raw.githubusercontent.com/amplify-edge/booty/master/scripts/install.ps1 | Invoke-Expression`
 
 ## Usage (for devs)
 
@@ -16,7 +26,7 @@
 
 ## Tinker Tanker
 
-To add a component, implement the `Component` 
+To add a component, implement the `Component`
 interface in [here](https://github.com/alexadhy/booty/blob/master/dep/component.go)
 
 This program installs config under:
@@ -27,15 +37,14 @@ This program installs config under:
 
 The file `config.reference.json` is provided as a reference should you want to change the program behaviour.
 
-
 ## Implemented
 
 1. Download 3rd party binaries and libraries our project needs
 2. Install said binaries
-3. Also install service, managed by OS' service supervisor, preferably as user service on dev and as system-wide service running under unprivileged user on production.
+3. Also install service, managed by OS' service supervisor, preferably as user service on dev and as system-wide service
+   running under unprivileged user on production.
 4. Ability to run each service on the foreground like pingcap's `tiup playground`
 5. Ability to self update and check for updates for third party binaries
-
 
 ## Short Term TODO
 
