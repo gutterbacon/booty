@@ -16,7 +16,9 @@ type Executor interface {
 	AllInstalledComponents() ([]byte, error) // list all installed components
 	DownloadAll() error                      // fetch all components
 	Run(name string, args ...string) error
-	RunAll() error                      // run all service components
+	RunAll() error // run all service components
+	Stop(name string) error
+	StopAll() error
 	Install(name, version string) error // installs a single component by its name
 	InstallAll() error                  // install all components
 	Uninstall(name string) error        // uninstalls a component

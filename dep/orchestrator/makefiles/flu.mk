@@ -1,5 +1,11 @@
 # flu utils
 
+SOURCE_PROTOC :=
+ifeq ($(OS),Windows_NT)
+	SOURCE_PROTOC:=
+else
+	SOURCE_PROTOC:=export PATH=$$HOME/.pub-cache/bin:$$PATH
+endif
 
 current_dir = $(shell pwd)
 
@@ -9,6 +15,7 @@ FLU_LIB_FSPATH = $(PWD)/$(FLU_LIB_NAME)
 FLU_SAMPLE_NAME = ???
 FLU_SAMPLE_FSPATH = $(PWD)/$(FLU_SAMPLE_NAME)
 
+TOOL_LANG_BIN_NAME = booty lang
 
 ## Prints the flutter settings
 flu-print:
@@ -31,6 +38,9 @@ flu-print:
 ## Configures flutter to be on right channel.
 flu-config:
 	flutter channel beta
+	dart pub global activate protoc_plugin
+	$(SOURCE_PROTOC)
+	flutter config --enable-web
 	flutter upgrade --force
 
 ## Updates flutter dependencies.
@@ -58,7 +68,6 @@ flu-test:
 
 ## Runs Flutter Web.
 flu-web-run:
-	flutter config --enable-web
 	cd $(FLU_SAMPLE_FSPATH) && flutter run -d chrome
 
 ## Runs Flutter Web in release mode
