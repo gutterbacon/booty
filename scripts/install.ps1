@@ -14,8 +14,8 @@ function download_latest()
     Invoke-WebRequest -Uri $downloadUrl -Out $pathZip
     Remove-Item -Path $pathExtract -Recurse -Force -ErrorAction SilentlyContinue
     Expand-Archive -Path $pathZip -DestinationPath $pathExtract -Force
+    Write-Host "installed to $pathExtract"
     Remove-Item $pathZip -Force
-    #    Move-Item "$pathExtract\booty.exe" "$pathExtract\booty"
 }
 
 function add_envpath
@@ -54,5 +54,6 @@ function add_envpath
 
 download_latest
 add_envpath $pathExtract "User"
+add_envpath $pathExtract "Machine"
 
 Write-Host 'For more information, see: https://github.com/amplify-edge/booty'
