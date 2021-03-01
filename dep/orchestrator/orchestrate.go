@@ -117,6 +117,8 @@ func (o *Orchestrator) Command() *cobra.Command {
 		cmd.UpdateAllCommand(o, o),
 		cmd.AgentCommand(o, o),
 		cmd.RunAllCommand(o),
+		cmd.StopAllCommand(o),
+		cmd.StopCommand(o),
 		cmd.ListAllCommand(o),
 		// here we exported all the internal tools we might need (bs-crypt, bs-lang, etc)
 		sharedCmd.EncryptCmd(),
@@ -216,6 +218,25 @@ func dlErr(c dep.Component) func(err error) error {
 func (o *Orchestrator) Run(name string, args ...string) error {
 	comp := o.Component(name)
 	return comp.Run(args...)
+}
+
+func (o *Orchestrator) Stop(name string) error {
+	c := o.Component(name)
+	if c == nil {
+		return nil
+	}
+	return c.RunStop()
+}
+
+func (o *Orchestrator) StopAll() error {
+	for _, c := range o.components {
+		if c.IsService() {
+			if err := c.RunStop(); err != nil {
+				return err
+			}
+		}
+	}
+	return nil
 }
 
 func (o *Orchestrator) Install(name, version string) error {
