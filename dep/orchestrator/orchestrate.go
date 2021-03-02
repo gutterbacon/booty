@@ -5,6 +5,7 @@ import (
 	"embed"
 	"fmt"
 	"github.com/fatih/color"
+	"github.com/kardianos/osext"
 	"github.com/spf13/cobra"
 	"go.amplifyedge.org/booty-v2/internal/downloader"
 	"go.amplifyedge.org/booty-v2/internal/gitutil"
@@ -81,6 +82,23 @@ func NewOrchestrator(app string, buildVersion, buildRevision string) *Orchestrat
 	db, err := file.NewDB(logger, filepath.Join(osutil.GetDataDir(), "packages"), false)
 	if err != nil {
 		logger.Fatalf("error creating database: %v", err)
+	}
+
+	exPath, err := osext.Executable()
+	if err != nil {
+		logger.Fatalf("unable to get path to executable: %v", err)
+	}
+
+	err = db.New(&store.InstalledPackage{
+		Name:    binName,
+		Version: buildVersion,
+		FilesMap: map[string]string{
+			exPath: buildRevision,
+		},
+	})
+
+	if err != nil {
+		logger.Fatalf("error populating initial package: %v", err)
 	}
 
 	repoDb, err := file.NewDB(logger, filepath.Join(osutil.GetDataDir(), "repos"), true)

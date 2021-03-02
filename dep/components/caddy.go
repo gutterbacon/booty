@@ -170,6 +170,9 @@ func (c *Caddy) Uninstall() error {
 	_ = c.svc.Stop()
 	_ = c.svc.Uninstall()
 	// remove downloaded files
+	if err = c.db.Delete(c.Name()); err != nil {
+		return err
+	}
 	return os.RemoveAll(dlPath)
 }
 

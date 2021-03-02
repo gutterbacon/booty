@@ -41,10 +41,10 @@ func (d *DB) New(ip *store.InstalledPackage) error {
 	}
 	// check if it exists
 	exists := false
-	for _, p := range allPkgs.Packages {
-		if p.Name == ip.Name {
+	for i := 0; i < len(allPkgs.Packages); i++ {
+		if allPkgs.Packages[i].Name == ip.Name {
 			exists = true
-			p = ip
+			allPkgs.Packages[i] = ip
 		}
 	}
 	if !exists {

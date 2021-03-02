@@ -139,6 +139,9 @@ func (b *Booty) Install() error {
 
 func (b *Booty) Uninstall() error {
 	// can't uninstall booty
+	if err := b.db.Delete(b.Name()); err != nil {
+		return err
+	}
 	return nil
 }
 

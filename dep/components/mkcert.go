@@ -89,6 +89,9 @@ func (m *Mkcert) Uninstall() error {
 			return err
 		}
 	}
+	if err = m.db.Delete(m.Name()); err != nil {
+		return err
+	}
 	// remove downloaded files
 	return os.RemoveAll(dlPath)
 }

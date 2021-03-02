@@ -159,6 +159,9 @@ func (g *Grafana) Uninstall() error {
 	}
 	_ = g.svc.Uninstall()
 	dlPath := getDlPath(g.Name(), g.version.String())
+	if err = g.db.Delete(g.Name()); err != nil {
+		return err
+	}
 	return os.RemoveAll(dlPath)
 }
 

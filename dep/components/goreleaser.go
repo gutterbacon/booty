@@ -117,6 +117,9 @@ func (g *Goreleaser) Uninstall() error {
 		}
 	}
 	// remove downloaded files
+	if err = g.db.Delete(g.Name()); err != nil {
+		return err
+	}
 	return os.RemoveAll(dlPath)
 }
 

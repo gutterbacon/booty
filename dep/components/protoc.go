@@ -123,6 +123,9 @@ func (p *Protoc) Uninstall() error {
 			return err
 		}
 	}
+	if err = p.db.Delete(p.Name()); err != nil {
+		return err
+	}
 	return nil
 }
 
