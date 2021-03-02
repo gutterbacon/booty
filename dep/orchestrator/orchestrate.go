@@ -12,6 +12,7 @@ import (
 	"io/ioutil"
 	"os"
 	"os/exec"
+	"os/user"
 	"path/filepath"
 	"strings"
 	"text/tabwriter"
@@ -198,11 +199,18 @@ func (o *Orchestrator) getShell() (string, error) {
 		splitted := strings.TrimSpace(strings.Split(string(out), ":")[1])
 		shellName = filepath.Base(splitted)
 	case "linux":
-		out, err := exec.Command("echo", "$SHELL").Output()
+		u, err := user.Current()
 		if err != nil {
 			return "", err
 		}
-		shellName = strings.TrimSpace(filepath.Base(string(out)))
+
+		out, err := exec.Command("getent", "passwd", u.Uid).Output()
+		if err != nil {
+			return "", err
+		}
+
+		shell := strings.Split(strings.TrimSuffix(string(out), "\n"), ":")
+		return filepath.Base(shell[6]), nil
 	case "windows":
 		shellName = "powershell"
 	}
