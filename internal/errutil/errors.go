@@ -20,6 +20,7 @@ const (
 	ErrUninstallComponent
 	ErrUpdateComponent
 	ErrCleaningCache
+	ErrUnsupportedShell
 )
 
 // Error contains error reason and the actual error if any
@@ -64,6 +65,8 @@ func (err Error) description() string {
 		return "Error setting component's version"
 	case ErrCleaningCache:
 		return "Error cleaning cache directory"
+	case ErrUnsupportedShell:
+		return "Error unsupported shell"
 	}
 
 	return "Unknown error"

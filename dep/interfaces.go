@@ -37,6 +37,7 @@ type Agent interface {
 type Commander interface {
 	Logger() logging.Logger
 	Command() *cobra.Command
+	Completion() ([]byte, error)
 }
 
 // Extractor extracts embedded files to some determined place
