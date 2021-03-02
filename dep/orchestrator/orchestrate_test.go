@@ -19,7 +19,7 @@ var (
 func init() {
 	_ = os.MkdirAll("./testdata", 0755)
 	_ = os.Setenv("BOOTY_HOME", "./testdata")
-	composer = orchestrator.NewOrchestrator("booty")
+	composer = orchestrator.NewOrchestrator("booty", "0.0.0-dev", "some_ref")
 }
 
 func TestOrchestrator(t *testing.T) {

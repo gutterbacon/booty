@@ -4,6 +4,7 @@ import (
 	"go.amplifyedge.org/booty-v2/dep"
 	"go.amplifyedge.org/booty-v2/dep/components"
 	"go.amplifyedge.org/booty-v2/internal/store"
+	"go.amplifyedge.org/booty-v2/internal/update"
 )
 
 type Registry struct {
@@ -11,12 +12,14 @@ type Registry struct {
 	Components    map[string]dep.Component
 }
 
-func NewRegistry(db store.Storer) (*Registry, error) {
+func NewRegistry(db store.Storer, buildVersion string) (*Registry, error) {
 	var err error
 	// protoc deps
 	protoGenGo := components.NewProtocGenGo(db)
 	protoGenGrpc := components.NewProtocGenGoGrpc(db)
 	protoCobra := components.NewProtocGenCobra(db)
+	bootyComp := components.NewBooty(db)
+	bootyComp.SetVersion(update.Version(buildVersion))
 
 	comps := []dep.Component{
 		components.NewBooty(db),

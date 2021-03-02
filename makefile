@@ -1,7 +1,7 @@
 .PHONY: all dep mock-release release
 .DEFAULT_GOAL := all
 VERSION_GITHASH = $(shell git rev-parse master | tr -d '\n')
-GO_LDFLAGS = CGO_ENABLED=0 go build -ldflags "-s -w -X main.build=${VERSION_GITHASH}" -a -tags netgo
+GO_LDFLAGS = CGO_ENABLED=0 go build -ldflags "-s -w -X main.revision=${VERSION_GITHASH} -X main.version=0.0.0-dev" -a -tags netgo
 
 
 all: build

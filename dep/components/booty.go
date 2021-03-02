@@ -1,7 +1,10 @@
 package components
 
 import (
+	"bytes"
+	"crypto/sha256"
 	"fmt"
+	gupd "github.com/inconshreveable/go-update"
 	"github.com/kardianos/osext"
 	ks "github.com/kardianos/service"
 	"go.amplifyedge.org/booty-v2/dep"
@@ -10,6 +13,7 @@ import (
 	"go.amplifyedge.org/booty-v2/internal/service"
 	"go.amplifyedge.org/booty-v2/internal/store"
 	"go.amplifyedge.org/booty-v2/internal/update"
+	"io/ioutil"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -69,6 +73,9 @@ func (b *Booty) Name() string {
 }
 
 func (b *Booty) Version() update.Version {
+	if v := commonGetVersion(b, b.db); v != nil {
+		return *v
+	}
 	return b.version
 }
 
@@ -86,7 +93,7 @@ func (b *Booty) Download() error {
 	}
 	ver := b.version.String()
 	fetchUrl := fmt.Sprintf(
-		bootyRepoUrl+"/releases/download/v%s/booty-%s-%s_%s.%s",
+		bootyRepoUrl+"/releases/download/v%s/booty-v%s-%s_%s.%s",
 		ver, ver, osutil.GetOS(), osutil.GetArch(), ext,
 	)
 	return downloader.Download(fetchUrl, getDlPath(b.Name(), ver))
@@ -106,15 +113,28 @@ func (b *Booty) Install() error {
 	if osutil.GetOS() == "windows" {
 		executableName += ".exe"
 	}
-	filesMap := map[string][]interface{}{
-		filepath.Join(dlPath, executableName): {bootyExePath, 0755},
-	}
-	ip, err := commonInstall(b, filesMap)
+
+	content, err := ioutil.ReadFile(filepath.Join(dlPath, executableName))
 	if err != nil {
 		return err
 	}
+
+	ip := &store.InstalledPackage{
+		Name:    b.Name(),
+		Version: b.Version().String(),
+		FilesMap: map[string]string{
+			bootyExePath: fmt.Sprintf("%x", sha256.Sum256(content)),
+		},
+	}
+
+	if err = gupd.Apply(bytes.NewBuffer(content), gupd.Options{TargetPath: bootyExePath}); err != nil {
+		return err
+	}
+	if err = b.db.New(ip); err != nil {
+		return err
+	}
 	_ = b.svc.Install()
-	return b.db.New(ip)
+	return nil
 }
 
 func (b *Booty) Uninstall() error {
@@ -127,7 +147,8 @@ func (b *Booty) Run(args ...string) error {
 }
 
 func (b *Booty) Update(version update.Version) error {
-	return commonUpdate(b, b.version)
+	b.version = version
+	return b.Install()
 }
 
 func (b *Booty) RunStop() error {

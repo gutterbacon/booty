@@ -28,6 +28,9 @@ func (m *Mkcert) Name() string {
 }
 
 func (m *Mkcert) Version() update.Version {
+	if v := commonGetVersion(m, m.db); v != nil {
+		return *v
+	}
 	return m.version
 }
 

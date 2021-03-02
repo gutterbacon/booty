@@ -47,6 +47,9 @@ func (c *Caddy) SetVersion(v update.Version) {
 }
 
 func (c *Caddy) Version() update.Version {
+	if v := commonGetVersion(c, c.db); v != nil {
+		return *v
+	}
 	return c.version
 }
 

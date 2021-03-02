@@ -8,10 +8,12 @@ import (
 var (
 	// best variable name
 	conductor dep.Commander
+	version   = ""
+	revision  = ""
 )
 
 func init() {
-	conductor = orchestrator.NewOrchestrator("booty")
+	conductor = orchestrator.NewOrchestrator("booty", version, revision)
 }
 
 func main() {

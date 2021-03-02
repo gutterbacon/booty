@@ -37,6 +37,9 @@ func NewGoreleaser(db store.Storer) *Goreleaser {
 }
 
 func (g *Goreleaser) Version() update.Version {
+	if v := commonGetVersion(g, g.db); v != nil {
+		return *v
+	}
 	return g.version
 }
 

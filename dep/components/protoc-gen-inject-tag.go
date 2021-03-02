@@ -29,6 +29,9 @@ func (p *ProtocGenInjectTag) Name() string {
 }
 
 func (p *ProtocGenInjectTag) Version() update.Version {
+	if v := commonGetVersion(p, p.db); v != nil {
+		return *v
+	}
 	return p.version
 }
 

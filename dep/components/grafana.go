@@ -38,7 +38,10 @@ func NewGrafana(db store.Storer) *Grafana {
 
 // Gets grafana's version
 func (g *Grafana) Version() update.Version {
-	return update.Version(g.version)
+	if v := commonGetVersion(g, g.db); v != nil {
+		return *v
+	}
+	return g.version
 }
 
 func (g *Grafana) SetVersion(v update.Version) {

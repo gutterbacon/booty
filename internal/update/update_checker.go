@@ -91,7 +91,7 @@ func (c *Checker) fetchLatest(r *repoInfo, ghc *github.Client) error {
 		v = versionNumber(*release.TagName)
 	}
 	if isTagNewer(r.curVer.toSemver(), parseReleaseTag(v)) {
-		c.logger.Infof("latest version is newer: %s than current: %s, updating...", r.curVer, Version(v))
+		c.logger.Infof("latest version is newer: %s than current: %s, updating...", Version(v), r.curVer)
 		// assign it to the repos
 		c.repos[r.repoUrl] = Version(v)
 		// do the update function
