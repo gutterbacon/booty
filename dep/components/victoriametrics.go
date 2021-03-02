@@ -97,6 +97,9 @@ func (v *VicMet) Name() string {
 }
 
 func (v *VicMet) Version() update.Version {
+	if v := commonGetVersion(v, v.db); v != nil {
+		return *v
+	}
 	return v.version
 }
 

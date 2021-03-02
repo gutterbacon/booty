@@ -43,6 +43,9 @@ func (j *Jb) Name() string {
 }
 
 func (j *Jb) Version() update.Version {
+	if v := commonGetVersion(j, j.db); v != nil {
+		return *v
+	}
 	return j.version
 }
 

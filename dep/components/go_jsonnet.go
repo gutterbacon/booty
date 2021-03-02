@@ -30,6 +30,9 @@ func (g *GoJsonnet) Name() string {
 }
 
 func (g *GoJsonnet) Version() update.Version {
+	if v := commonGetVersion(g, g.db); v != nil {
+		return *v
+	}
 	return g.version
 }
 

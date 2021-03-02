@@ -49,3 +49,15 @@ func commonUpdate(c dep.Component, version update.Version) error {
 	}
 	return c.Install()
 }
+
+func commonGetVersion(c dep.Component, db store.Storer) *update.Version {
+	pkg, err := db.Get(c.Name())
+	if err != nil {
+		return nil
+	}
+	if pkg != nil {
+		v := update.Version(pkg.Version)
+		return &v
+	}
+	return nil
+}

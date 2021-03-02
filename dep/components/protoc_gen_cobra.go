@@ -38,6 +38,9 @@ func (p *ProtocGenCobra) Name() string {
 }
 
 func (p *ProtocGenCobra) Version() update.Version {
+	if v := commonGetVersion(p, p.db); v != nil {
+		return *v
+	}
 	return p.version
 }
 

@@ -36,20 +36,23 @@ const binName = "booty"
 
 // Orchestrator implements Executor, Agent, and Commander
 type Orchestrator struct {
-	cfg        *config.AppConfig
-	components map[string]dep.Component
-	logger     logging.Logger
-	command    *cobra.Command
-	db         store.Storer
-	gw         dep.GitWrapper
+	cfg           *config.AppConfig
+	components    map[string]dep.Component
+	logger        logging.Logger
+	command       *cobra.Command
+	db            store.Storer
+	gw            dep.GitWrapper
+	buildVersion  update.Version
+	buildRevision string
 }
 
 // constructor
-func NewOrchestrator(app string) *Orchestrator {
+func NewOrchestrator(app string, buildVersion, buildRevision string) *Orchestrator {
 	var ac *config.AppConfig
 	var comps map[string]dep.Component
 	var rootCmd = &cobra.Command{
 		Use: app,
+		Version: fmt.Sprintf("%s-%s", buildVersion, buildRevision),
 	}
 	// setup logger
 	logger := zaplog.NewZapLogger(zaplog.INFO, app, true)
@@ -85,10 +88,11 @@ func NewOrchestrator(app string) *Orchestrator {
 	gw := gitutil.NewHelper(repoDb, ac.GitEmail)
 
 	// setup registry
-	registry, err := rg.NewRegistry(db)
+	registry, err := rg.NewRegistry(db, buildVersion)
 	if err != nil {
 		logger.Fatalf("error creating components: %v", err)
 	}
+
 	if ac.DevMode {
 		comps = registry.DevComponents
 	} else {
@@ -96,12 +100,14 @@ func NewOrchestrator(app string) *Orchestrator {
 	}
 
 	return &Orchestrator{
-		cfg:        ac,
-		components: comps,
-		logger:     logger,
-		command:    rootCmd,
-		db:         db,
-		gw:         gw,
+		cfg:           ac,
+		components:    comps,
+		logger:        logger,
+		command:       rootCmd,
+		db:            db,
+		gw:            gw,
+		buildVersion:  update.Version(buildVersion),
+		buildRevision: buildRevision,
 	}
 }
 
@@ -197,7 +203,11 @@ func (o *Orchestrator) setupVersions() error {
 				tasks = append(tasks, newTask(setVersion(o.cfg, d), dlErr(d)))
 			}
 		}
-		tasks = append(tasks, newTask(setVersion(o.cfg, k), dlErr(k)))
+		if k.Name() == binName {
+			k.SetVersion(o.buildVersion)
+		} else {
+			tasks = append(tasks, newTask(setVersion(o.cfg, k), dlErr(k)))
+		}
 	}
 	pool := newTaskPool(tasks)
 	pool.runAll()

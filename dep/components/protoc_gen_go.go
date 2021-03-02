@@ -31,6 +31,9 @@ func (p *ProtocGenGo) Name() string {
 }
 
 func (p *ProtocGenGo) Version() update.Version {
+	if v := commonGetVersion(p, p.db); v != nil {
+		return *v
+	}
 	return p.version
 }
 
