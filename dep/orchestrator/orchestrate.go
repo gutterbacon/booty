@@ -144,6 +144,7 @@ func (o *Orchestrator) Command() *cobra.Command {
 			cmd.JsonnetCommand(o),
 			cmd.ExtractCommand(o),
 			cmd.CertCommand(o),
+			cmd.CopyCertCommand(o),
 		)
 	}
 	o.command.AddCommand(extraCmds...)
