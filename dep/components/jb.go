@@ -101,6 +101,9 @@ func (j *Jb) Uninstall() error {
 			return err
 		}
 	}
+	if err = j.db.Delete(j.Name()); err != nil {
+		return err
+	}
 	return os.RemoveAll(getDlPath(j.Name(), j.version.String()))
 }
 

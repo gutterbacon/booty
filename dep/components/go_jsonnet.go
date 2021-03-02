@@ -96,6 +96,9 @@ func (g *GoJsonnet) Uninstall() error {
 			return err
 		}
 	}
+	if err = g.db.Delete(g.Name()); err != nil {
+		return err
+	}
 	return nil
 }
 

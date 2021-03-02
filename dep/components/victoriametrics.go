@@ -193,6 +193,9 @@ func (v *VicMet) Uninstall() error {
 	for _, s := range v.svcs {
 		_ = s.Uninstall()
 	}
+	if err = v.db.Delete(v.Name()); err != nil {
+		return err
+	}
 	_ = os.RemoveAll(getDlPath(v.Name(), v.version.String()))
 	return nil
 }

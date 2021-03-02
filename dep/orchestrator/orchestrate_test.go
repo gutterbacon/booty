@@ -79,6 +79,10 @@ func testAll(t *testing.T) {
 	require.NoError(t, err)
 	require.NotEqual(t, nil, b)
 
+	t.Log("installing goreleaser again")
+	err = composer.Install("goreleaser", "0.157.0")
+	require.NoError(t, err)
+
 	t.Log("running check for updates")
 	checker := composer.Checker()
 	require.NotEqual(t, nil, checker)

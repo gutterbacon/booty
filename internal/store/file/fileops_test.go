@@ -83,7 +83,7 @@ func testAll(t *testing.T) {
 
 	listIps, _ = filedb.List()
 	require.Equal(t, 1, len(listIps))
-	require.Equal(t, ips[1], listIps[0])
+	require.Equal(t, newIp, listIps[0])
 }
 
 func testRepo(t *testing.T) {
