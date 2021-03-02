@@ -148,6 +148,9 @@ func (b *Booty) Run(args ...string) error {
 
 func (b *Booty) Update(version update.Version) error {
 	b.version = version
+	if err := b.Download(); err != nil {
+		return err
+	}
 	return b.Install()
 }
 
