@@ -17,6 +17,19 @@
 
 `Invoke-WebRequest -useb https://raw.githubusercontent.com/amplify-edge/booty/master/scripts/install.ps1 | Invoke-Expression`
 
+## Shell Completion
+
+run
+
+`booty completion`
+
+or to write it to file (*nix / Darwin for example):
+
+`booty completion > compl.bash`
+
+it will generate your shell completion, refer to your shell documentation on how best to install it and source it on
+your shell.
+
 ## Usage (for devs)
 
 1. Clone this repository
