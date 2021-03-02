@@ -11,7 +11,9 @@ import (
 	"io"
 	"io/ioutil"
 	"os"
+	"os/exec"
 	"path/filepath"
+	"strings"
 	"text/tabwriter"
 
 	"go.amplifyedge.org/booty-v2/cmd"
@@ -26,7 +28,6 @@ import (
 	"go.amplifyedge.org/booty-v2/internal/store/file"
 	"go.amplifyedge.org/booty-v2/internal/update"
 	sharedCmd "go.amplifyedge.org/shared-v2/tool/bs-crypt/cmd"
-	langCmd "go.amplifyedge.org/shared-v2/tool/bs-lang/cmd"
 )
 
 //go:embed makefiles/*
@@ -130,10 +131,11 @@ func (o *Orchestrator) Command() *cobra.Command {
 		// here we exported all the internal tools we might need (bs-crypt, bs-lang, etc)
 		sharedCmd.EncryptCmd(),
 		sharedCmd.DecryptCmd(),
-		langCmd.RootCmd,
+		//langCmd.RootCmd,
 		cmd.GitWrapperCmd(o.gw),
 		cmd.OsPrintCommand(o),
 		cmd.CleanCacheCmd(o),
+		cmd.CompletionCommand(o),
 	}
 	if o.cfg.DevMode {
 		extraCmds = append(
@@ -148,7 +150,63 @@ func (o *Orchestrator) Command() *cobra.Command {
 		)
 	}
 	o.command.AddCommand(extraCmds...)
+	o.command.TraverseChildren = true
 	return o.command
+}
+
+func (o *Orchestrator) Completion() ([]byte, error) {
+	shell, err := o.getShell()
+	if err != nil {
+		return nil, err
+	}
+	buf := bytes.Buffer{}
+	o.logger.Info("user shell is: " + shell)
+	switch shell {
+	case "powershell":
+		if err = o.command.GenPowerShellCompletion(&buf); err != nil {
+			return nil, err
+		}
+		return buf.Bytes(), nil
+	case "zsh":
+		if err = o.command.GenZshCompletion(&buf); err != nil {
+			return nil, err
+		}
+		return buf.Bytes(), nil
+	case "bash":
+		if err = o.command.GenBashCompletion(&buf); err != nil {
+			return nil, err
+		}
+		return buf.Bytes(), nil
+	case "fish":
+		if err = o.command.GenFishCompletion(&buf, true); err != nil {
+			return nil, err
+		}
+		return buf.Bytes(), nil
+	default:
+		return nil, errutil.New(errutil.ErrUnsupportedShell, fmt.Errorf("%s", shell))
+	}
+}
+
+func (o *Orchestrator) getShell() (string, error) {
+	var shellName string
+	switch osutil.GetOS() {
+	case "darwin":
+		out, err := exec.Command("dscl", "localhost", "-read", "/Local/Default/Users/"+os.Getenv("USER"), "UserShell").Output()
+		if err != nil {
+			return "", err
+		}
+		splitted := strings.TrimSpace(strings.Split(string(out), ":")[1])
+		shellName = filepath.Base(splitted)
+	case "linux":
+		out, err := exec.Command("echo", "$SHELL").Output()
+		if err != nil {
+			return "", err
+		}
+		shellName = strings.TrimSpace(filepath.Base(string(out)))
+	case "windows":
+		shellName = "powershell"
+	}
+	return shellName, nil
 }
 
 func (o *Orchestrator) Logger() logging.Logger {

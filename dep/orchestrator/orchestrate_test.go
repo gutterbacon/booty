@@ -103,4 +103,9 @@ func testAll(t *testing.T) {
 	t.Log("clean all cache dir")
 	err = composer.CleanCache()
 	require.NoError(t, err)
+
+	t.Log("test completion generation")
+	b, err = composer.Completion()
+	require.NoError(t, err)
+	require.NotEqual(t, nil, b)
 }
