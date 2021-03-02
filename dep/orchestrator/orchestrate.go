@@ -52,7 +52,7 @@ func NewOrchestrator(app string, buildVersion, buildRevision string) *Orchestrat
 	var comps map[string]dep.Component
 	var rootCmd = &cobra.Command{
 		Use:     app,
-		Version: fmt.Sprintf("version: %s \n revision: %s", buildVersion, buildRevision),
+		Version: fmt.Sprintf("%s revision: %s", buildVersion, buildRevision),
 	}
 	// setup logger
 	logger := zaplog.NewZapLogger(zaplog.INFO, app, true)
@@ -122,6 +122,7 @@ func (o *Orchestrator) Command() *cobra.Command {
 		cmd.UninstallCommand(o),
 		cmd.UpdateAllCommand(o, o),
 		cmd.AgentCommand(o, o),
+		cmd.RunCommand(o),
 		cmd.RunAllCommand(o),
 		cmd.StopAllCommand(o),
 		cmd.StopCommand(o),
@@ -142,6 +143,7 @@ func (o *Orchestrator) Command() *cobra.Command {
 			cmd.JbCommand(o),
 			cmd.JsonnetCommand(o),
 			cmd.ExtractCommand(o),
+			cmd.CertCommand(o),
 		)
 	}
 	o.command.AddCommand(extraCmds...)
