@@ -51,8 +51,8 @@ func NewOrchestrator(app string, buildVersion, buildRevision string) *Orchestrat
 	var ac *config.AppConfig
 	var comps map[string]dep.Component
 	var rootCmd = &cobra.Command{
-		Use: app,
-		Version: fmt.Sprintf("%s-%s", buildVersion, buildRevision),
+		Use:     app,
+		Version: fmt.Sprintf("version: %s \n revision: %s", buildVersion, buildRevision),
 	}
 	// setup logger
 	logger := zaplog.NewZapLogger(zaplog.INFO, app, true)
