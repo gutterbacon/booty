@@ -155,6 +155,7 @@ func (o *Orchestrator) Command() *cobra.Command {
 		cmd.OsPrintCommand(o),
 		cmd.CleanCacheCmd(o),
 		cmd.CompletionCommand(o),
+		cmd.HugoCommand(o),
 	}
 	if o.cfg.DevMode {
 		extraCmds = append(
@@ -166,6 +167,7 @@ func (o *Orchestrator) Command() *cobra.Command {
 			cmd.ExtractCommand(o),
 			cmd.CertCommand(o),
 			cmd.CopyCertCommand(o),
+			cmd.HoverCommand(o),
 		)
 	}
 	o.command.AddCommand(extraCmds...)

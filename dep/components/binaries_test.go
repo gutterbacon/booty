@@ -41,6 +41,8 @@ func TestBinaries(t *testing.T) {
 	t.Run("testVictoriaMetrics", testVictoriaMetrics)
 	t.Run("testMkcert", testMkcert)
 	t.Run("testProtocGenInject", testProtocGenInject)
+	t.Run("testHugo", testHugo)
+	t.Run("testHover", testHover)
 }
 
 func testGrafana(t *testing.T) {
@@ -285,5 +287,37 @@ func testProtocGenInject(t *testing.T) {
 	require.NoError(t, err)
 
 	err = m.Uninstall()
+	require.NoError(t, err)
+}
+
+func testHugo(t *testing.T) {
+	h := components.NewHugo(db)
+	h.SetVersion("0.81.0")
+	err := h.Download()
+	require.NoError(t, err)
+
+	err = h.Install()
+	require.NoError(t, err)
+
+	err = h.Update("0.81.0")
+	require.NoError(t, err)
+
+	err = h.Uninstall()
+	require.NoError(t, err)
+}
+
+func testHover(t *testing.T) {
+	h := components.NewHover(db)
+	h.SetVersion("0.46.2")
+	err := h.Download()
+	require.NoError(t, err)
+
+	err = h.Install()
+	require.NoError(t, err)
+
+	err = h.Update("0.46.2")
+	require.NoError(t, err)
+
+	err = h.Uninstall()
 	require.NoError(t, err)
 }
