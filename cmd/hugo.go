@@ -10,7 +10,7 @@ func HugoCommand(e dep.Executor) *cobra.Command {
 	runCmd.DisableFlagParsing = true
 	runCmd.Flags().SetInterspersed(true)
 	runCmd.RunE = func(cmd *cobra.Command, args []string) error {
-		return e.Run("hugo", args[1:]...)
+		return e.Run("hugo", args...)
 	}
 	return runCmd
 }

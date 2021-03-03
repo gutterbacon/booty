@@ -10,7 +10,7 @@ func HoverCommand(e dep.Executor) *cobra.Command {
 	runCmd.DisableFlagParsing = true
 	runCmd.Flags().SetInterspersed(true)
 	runCmd.RunE = func(cmd *cobra.Command, args []string) error {
-		return e.Run("hover", args[1:]...)
+		return e.Run("hover", args...)
 	}
 	return runCmd
 }
