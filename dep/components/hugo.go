@@ -119,7 +119,7 @@ func (h *Hugo) Uninstall() error {
 }
 
 func (h *Hugo) Run(args ...string) error {
-	return osutil.Exec(h.Name(), args...)
+	return osutil.Exec(filepath.Join(osutil.GetBinDir(), h.Name()), args...)
 }
 
 func (h *Hugo) Update(version update.Version) error {
@@ -143,5 +143,5 @@ func (h *Hugo) IsService() bool {
 }
 
 func (h *Hugo) RepoUrl() update.RepositoryURL {
-	return "https://"+hugoBase
+	return "https://" + hugoBase
 }
