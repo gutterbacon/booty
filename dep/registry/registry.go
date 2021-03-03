@@ -37,6 +37,8 @@ func NewRegistry(db store.Storer, buildVersion string) (*Registry, error) {
 		components.NewJb(db),
 		components.NewMkcert(db),
 		components.NewProtocGenInjectTag(db),
+		components.NewHugo(db),
+		components.NewHover(db),
 	}
 
 	// register it
